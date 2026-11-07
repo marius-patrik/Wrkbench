@@ -1518,9 +1518,11 @@ function validResourceForParent(
   if (name === "drafts") {
     if (typeof item.id !== "string") return false;
     const parsed = parseDocumentResourceId(item.id);
-    return !!parsed && parsed.workspaceId === item.workspaceId &&
-      parsed.principalKey === snapshot.ownership?.principalKey &&
-      encodeDocumentResourceId(snapshot, parsed.path) === item.id;
+    if (!parsed || parsed.workspaceId !== item.workspaceId ||
+        parsed.principalKey !== snapshot.ownership?.principalKey)
+      return false;
+    try { return encodeDocumentResourceId(snapshot, parsed.path) === item.id; }
+    catch { return false; }
   }
   if (name === "blobs")
     return typeof item.key === "string" && item.key.startsWith(item.workspaceId + ":") &&
