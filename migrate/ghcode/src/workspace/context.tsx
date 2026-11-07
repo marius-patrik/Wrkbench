@@ -62,6 +62,7 @@ import {
   finalizeConfirmedPush,
   forkOwnedWorkspaceState,
   loadPendingPushOperation,
+  samePushCommitOrder,
   exportOwnedWorkspaceSnapshot,
   clearStaged,
   commitLocalChanges,
@@ -983,10 +984,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         attempted = operation;
       }
       assertCurrent(lease);
+      // Local commits form an ordered Git ancestry, not an unordered set.
+      // Reordered or duplicate IDs must not silently publish a different
+      // chain than the durable journal established before the first network call.
       if (operation.expectedRemoteSha !== workspace.baseSha ||
-          operation.commitIds.length !== commits.length ||
-          operation.commitIds.some((id) => !commits.some((item) => item.id === id))) {
-        throw new Error("Pending push differs from current local commits. Reconcile before retrying.");
+          !samePushCommitOrder(commits, operation.commitIds)) {
+        throw new Error("Pending push commit sequence differs from the durable local snapshot. Reconcile before retrying.");
       }
       const liveRef = await getGithubBranchRef(workspace.repository.fullName, workspace.ref, token);
       assertCurrent(lease);
