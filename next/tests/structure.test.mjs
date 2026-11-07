@@ -115,7 +115,7 @@ test('core editors are implemented by their feature packages, not a shared prese
  for(const id of ['code','explorer','terminal','markdown']){
   const view=read(`features/${id}/src/View.tsx`);
   assert.match(view,new RegExp(`export function (CodeView|ExplorerView|TerminalView|MarkdownView)`));
-  assert.doesNotMatch(view,/from ['"][^'"]*packages\\/client\\/src\\/views\\/Editors/);
+  assert.ok(!view.includes('packages/client/src/views/Editors.tsx'),'Feature must not use central Editors presenter');
   assert.match(view,/export default function FeatureView/);
  }
  assert.match(read('features/code/src/View.tsx'),/loader\.config\(\{monaco\}\)/);
