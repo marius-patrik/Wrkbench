@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { defaultContext, type ViewContext, type WorkbenchId, type RuntimeId } from '../../../packages/core/src/index.ts';
+import { defaultContext, type ViewContext, type WorkbenchId, type RuntimeId } from '../../core/src/index.ts';
 export type ChatMessage={id:string;role:'user'|'system';text:string;time:number};
 export type TimelineClip={id:string;name:string;start:number;duration:number;track:number;kind:'audio'|'video'};
 export type CanvasNode={id:string;label:string;x:number;y:number};
@@ -14,7 +14,7 @@ interface UIState {
  themeToggle:()=>void;switchWorkbench:(id:WorkbenchId)=>void;setActiveView:(id:string|null)=>void;
  setContext:(value:Partial<ViewContext>,viewId?:string)=>void;resetContext:(viewId:string)=>void;
  selectFile:(path:string)=>void;cacheDocument:(path:string,content:string,revision:number)=>void;editDocument:(path:string,content:string)=>void;
- markSaved:(path:string,revision:number)=>void;moveDocument:(from:string,to:string)=>void;removeDocument:(path:string)=>void;
+ markSaved:(path:string,revision:number,savedContent:string)=>void;moveDocument:(from:string,to:string)=>void;removeDocument:(path:string)=>void;
  appendTerminal:(id:string,line:string)=>void;clearTerminal:(id:string)=>void;appendAgent:(id:string,msg:ChatMessage)=>void;clearAgent:(id:string)=>void;
  addClip:(clip:TimelineClip)=>void;updateClip:(id:string,change:Partial<TimelineClip>)=>void;removeClip:(id:string)=>void;
  setPlayhead:(v:number)=>void;setPlaying:(v:boolean)=>void;setVolume:(i:number,v:number)=>void;toggleMute:(i:number)=>void;
@@ -32,7 +32,7 @@ export const useUI=create<UIState>()(persist((set,get)=>({
  resetContext:(viewId)=>set(s=>{const next={...s.contextOverrides};delete next[viewId];return {contextOverrides:next}}),
  selectFile:(filePath)=>set({filePath}),cacheDocument:(path,content,revision)=>set(s=>({documents:{...s.documents,[path]:{content,revision,dirty:false}}})),
  editDocument:(path,content)=>set(s=>({documents:{...s.documents,[path]:{content,revision:s.documents[path]?.revision??0,dirty:true}}})),
- markSaved:(path,revision)=>set(s=>({documents:{...s.documents,[path]:{...s.documents[path],revision,dirty:false}}})),
+ markSaved:(path,revision,savedContent)=>set(s=>{const current=s.documents[path];if(!current)return s;return {documents:{...s.documents,[path]:{...current,revision,dirty:current.content!==savedContent}}}}),
  moveDocument:(from,to)=>set(s=>{const documents={...s.documents};if(documents[from]){documents[to]={...documents[from],revision:documents[from].revision+1};delete documents[from]}return {documents,filePath:s.filePath===from?to:s.filePath}}),
  removeDocument:(path)=>set(s=>{const documents={...s.documents};delete documents[path];return {documents}}),
  appendTerminal:(id,line)=>set(s=>({terminalHistories:{...s.terminalHistories,[id]:[...(s.terminalHistories[id]??[]),line].slice(-500)}})),

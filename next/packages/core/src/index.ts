@@ -3,7 +3,8 @@ export const runtimeSchema = z.enum(['browser', 'remote-ssh', 'container', 'loca
 export const workbenchSchema = z.enum(['development','research','audio','video','operations','agents','trading']);
 export type WorkbenchId = z.infer<typeof workbenchSchema>;
 export type RuntimeId = z.infer<typeof runtimeSchema>;
-export type ViewKind = 'explorer'|'code'|'terminal'|'agent'|'git'|'preview'|'timeline'|'mixer'|'docker'|'tailscale'|'runtime'|'models'|'notes'|'documents'|'sheets'|'decks'|'canvas'|'graphics'|'planner'|'markets'|'chart'|'browser'|'plugins'|'settings'|'debug'|'tests'|'markdown'|'pdf'|'cad'|'approvals'|'news';
+// Extensible plugin identifiers are not restricted to first-party feature IDs.
+export type ViewKind = string;
 export type ViewContext = { runtime: RuntimeId; session: string; project: string; account: string };
 export interface FeatureDefinition { id: ViewKind; title: string; category: 'Development'|'Creative'|'Operations'|'Research'|'System'; description: string; icon: string; supportsMultiple?: boolean; capabilities?: string[] }
 export type ToolContext = { viewId?: string; workbench: WorkbenchId; context: ViewContext; requestApproval?: (message:string)=>Promise<boolean> };
