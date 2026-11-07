@@ -107,3 +107,17 @@ test('first-party view modules live in feature packages, not the shell or a mega
  assert.match(agent,/scrollIntoView/);
  assert.match(agent,/useEffect\(\(\)=>\{/);
 });
+
+
+test('core editors are implemented by their feature packages, not a shared presenter',()=>{
+ const shared=read('packages/client/src/views/Editors.tsx');
+ assert.doesNotMatch(shared,/export function (CodeView|ExplorerView|TerminalView|MarkdownView)/);
+ for(const id of ['code','explorer','terminal','markdown']){
+  const view=read(`features/${id}/src/View.tsx`);
+  assert.match(view,new RegExp(`export function (CodeView|ExplorerView|TerminalView|MarkdownView)`));
+  assert.ok(!view.includes('packages/client/src/views/Editors.tsx'),'Feature must not use central Editors presenter');
+  assert.match(view,/export default function FeatureView/);
+ }
+ assert.match(read('features/code/src/View.tsx'),/loader\.config\(\{monaco\}\)/);
+ assert.match(read('features/terminal/src/View.tsx'),/import \{Terminal as XTerm\}/);
+});
