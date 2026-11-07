@@ -7,10 +7,13 @@ import type {
   WorkbenchSurfaceState,
 } from "./model";
 
-// Unattributed v1/v2 layouts can contain private tabs or editor text; preserve but never restore.
-const OWNED_LAYOUT_PREFIX = "ghcode-layout-owned-v1:";
-const keyFor = (principal: PrincipalKey) =>
-  `${OWNED_LAYOUT_PREFIX}${encodeURIComponent(principal)}`;
+// Older principal-wide layouts can contain tabs from multiple private
+// repositories. Preserve them byte-for-byte for manual recovery, but never
+// restore them under a new repository. Only an immutable verified workspace
+// ID can authorize loading a document-bearing Dockview layout.
+const OWNED_WORKSPACE_LAYOUT_PREFIX = "ghcode-layout-workspace-v2:";
+const keyFor = (principal: PrincipalKey, workspaceId: string | null) =>
+  `${OWNED_WORKSPACE_LAYOUT_PREFIX}${encodeURIComponent(principal)}:${encodeURIComponent(workspaceId ?? "no-workspace")}`;
 
 const DEFAULT_VISIBILITY: Record<WorkbenchSurface, boolean> = {
   primary: true,
@@ -86,15 +89,20 @@ function parsePersisted(raw: string | null, theme: AppearanceMode): PersistedWor
   }
 }
 
-export function loadWorkbench(theme: AppearanceMode, principal: PrincipalKey): PersistedWorkbench {
+export function loadWorkbench(
+  theme: AppearanceMode, principal: PrincipalKey, workspaceId: string | null,
+): PersistedWorkbench {
   return (
-    parsePersisted(localStorage.getItem(keyFor(principal)), theme) ?? emptyPersistedWorkbench(theme)
+    parsePersisted(localStorage.getItem(keyFor(principal, workspaceId)), theme) ??
+      emptyPersistedWorkbench(theme)
   );
 }
 
-export function saveWorkbench(state: PersistedWorkbench, principal: PrincipalKey) {
+export function saveWorkbench(
+  state: PersistedWorkbench, principal: PrincipalKey, workspaceId: string | null,
+) {
   try {
-    localStorage.setItem(keyFor(principal), JSON.stringify(state));
+    localStorage.setItem(keyFor(principal, workspaceId), JSON.stringify(state));
   } catch {
     // Layout persistence must not make the workbench unusable.
   }
