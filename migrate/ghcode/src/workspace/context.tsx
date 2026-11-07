@@ -60,6 +60,7 @@ import {
   advancePushOperation,
   finalizeConfirmedPush,
   loadPendingPushOperation,
+  exportOwnedWorkspaceSnapshot,
   clearStaged,
   commitLocalChanges,
   loadBlob,
@@ -1279,7 +1280,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const files = virtualFiles(workspace.tree, committedFiles, overlays);
+      // Export a single transaction-consistent, persisted, verified-owner
+      // snapshot; React state can be stale across browser tabs or identities.
+      const persisted = await exportOwnedWorkspaceSnapshot(workspace.id);
+      assertCurrent(lease);
+      if (!isOwnedWorkspace(persisted.workspace, lease.principalKey) ||
+          persisted.workspace.repository.id !== workspace.repository.id ||
+          persisted.workspace.ref !== workspace.ref ||
+          persisted.workspace.baseSha !== workspace.baseSha)
+        throw new Error("Workspace changed before export; reload and retry.");
+      const files = virtualFiles(persisted.workspace.tree,
+        persisted.committedFiles, persisted.overlays);
       const zipFiles = [];
       for (const file of files) {
         const bytes =
@@ -1297,7 +1308,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     } finally {
       if (isCurrent(lease)) setLoading(false);
     }
-  }, [assertCurrent, capture, committedFiles, isCurrent, overlays, token, workspace]);
+  }, [assertCurrent, capture, isCurrent, token, workspace]);
 
   const exportRemoteArchive = useCallback(async () => {
     if (!workspace) throw new Error("No workspace is open.");
