@@ -566,30 +566,19 @@ test("GHC-00 pending private edits block repository switch until a committed sav
   await page.getByRole("button", { name: "Open", exact: true }).click();
   await expect(page.locator(".workspace-repository-button")).toContainText(PUBLIC_REPOSITORY);
 
-  // Switching the visible repository must never delete the prior principal's
-  // acknowledged working tree; it remains isolated under the original session.
-  const preserved = await page.evaluate(async () => {
-    const request = indexedDB.open("darkfactory-workbench");
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    try {
-      const tx = db.transaction(["workspaces", "overlays"], "readonly");
-      const workspaces = tx.objectStore("workspaces").getAll();
-      const overlays = tx.objectStore("overlays").getAll();
-      return await new Promise<boolean>((resolve, reject) => {
-        tx.oncomplete = () => resolve(overlays.result.some((item) =>
-          item.path === "README.md" && item.content === "# SWITCH_PRIVATE_SENTINEL\n" &&
-          workspaces.result.some((workspace) =>
-            workspace.id === item.workspaceId &&
-            workspace.repository?.fullName === MOCK_REPOSITORY &&
-            workspace.ownership?.principalKey === "gh:github.com:1001")));
-        tx.onerror = () => reject(tx.error);
-      });
-    } finally { db.close(); }
-  });
-  expect(preserved).toBe(true);
+  // The public repository must not render the private draft. Prove durability
+  // through the actual repository/Monaco UI after a fresh browser reload,
+  // rather than inspecting another concurrent IndexedDB connection which can
+  // wait indefinitely on blocked transactions during a context transition.
+  await expect(page.getByText("SWITCH_PRIVATE_SENTINEL")).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByTitle("Sign out")).toBeVisible();
+  await openPrivateRepository(page);
+  await tab(page, "primary", "Explorer").click();
+  await surface(page, "primary").getByTitle("README.md").click();
+  await expect(tab(page, "main", "README.md")).toBeVisible();
+  await expect(surface(page, "main").locator(".monaco-editor .view-line")
+    .filter({ hasText: "SWITCH_PRIVATE_SENTINEL" })).toBeVisible();
 });
 
 test("GitHub entity surfaces and omnibar navigate files, symbols, entities, commands, and refs", async ({ page }) => {
