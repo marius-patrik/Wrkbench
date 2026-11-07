@@ -1,98 +1,80 @@
-# RSCode native preview distribution — issue #27
+# RSCode portable native distribution — migrated source acceptance
 
-This branch builds **unsigned, non-notarized, portable extracted applications**,
-not operating-system installers. The isolated workflow runs for pull requests
-and manual dispatch only: it never creates a release or tag.
+**Status:** source-only acceptance candidate on `integration/tri-source-migration-baseline`, not a released or signed application. The original RSC-05 PR #28 was imported and subsequently repaired for real Windows/macOS/Linux hosts. The original source snapshot is not the current tested implementation.
 
-## Payload and native build
+## Packaged installation
 
-Each per-host-OS archive includes a native Bun executable (v1.3.11), the
-frozen installed dependency tree, the Rsbuild web assets under dist/web,
-the server source tree, and its own provisioned Playwright Chromium browser
-under browsers/. The wrapper uses the bundled Bun, configures
-PLAYWRIGHT_BROWSERS_PATH, and starts the unchanged Bun server. Users need
-neither a repository clone, installed Bun, npm packages, nor browser downloads.
+Each native archive contains:
 
-- macOS data: ~/Library/Application Support/RSCode
-- Windows data: %APPDATA%\RSCode
-- Linux data: $XDG_DATA_HOME/rscode or ~/.local/share/rscode
-- CANVAS_HOME overrides the persistent data root.
-- CANVAS_WORKSPACE_CWD overrides the initial workspace working directory.
-- CANVAS_PORT defaults to 4567. Server is bound to 127.0.0.1 only.
+- An OS-native bundled Bun executable (Windows x64: **Bun 1.4.4**; Linux x64 and macOS x64/ARM64: **Bun 1.3.11**).
+- Installed source and dependency tree from a frozen `bun.lock`.
+- The compiled Rsbuild client under `dist/web`.
+- A bundled Playwright Chromium installation and native browser probes.
+- `distribution.json` with exact source SHA, OS/architecture, Bun version and browser provenance.
+- A SHA-256 manifest for byte-integrity checking (not a publisher signature).
 
-Extract the archive into a writable application directory and run:
+The package is a portable extracted application, **not** an MSI/MSIX, a notarized .app, or an auto-updating installer. The installed app needs neither a repository checkout nor a network install of Bun, packages or Chromium. Its default privileged local service binds to `127.0.0.1` only.
 
-- macOS/Linux: ./canvas
-- Windows: canvas.cmd
+Run after extraction:
 
-Archives are versioned by app version, operating system and architecture.
-Replacing an extracted install folder does not touch the user data directory.
-Do not delete the user data directory during upgrades.
+- macOS/Linux: `./canvas`
+- Windows: `canvas.cmd`
 
-macOS ARM64 and macOS x64 are separate distribution artifacts. On macOS,
-Gatekeeper may block unsigned executables. Signing and notarization have
-not been performed. On Windows, this is an unsigned command-driven portable
-application, not an MSI, MSIX, or signed executable.
+User data is outside the extracted application and survives replacement:
 
-## CI acceptance and evidence
+- macOS: `~/Library/Application Support/RSCode`
+- Windows: `%APPDATA%\\RSCode`
+- Linux: `$XDG_DATA_HOME/rscode` or `~/.local/share/rscode`
 
-The native workflow uses Ubuntu 24.04 x64, Windows 2025 x64,
-macOS 15 ARM64 and macOS 15 Intel runners. An architecture assertion
-ensures each package is built on its real target platform, not merely
-cross-compiled.
+`CANVAS_HOME`, `CANVAS_WORKSPACE_CWD` and `CANVAS_PORT` override data location, initial working directory and loopback service port respectively.
 
-scripts/distribution/build.ts stages the payload. archive.py normalizes
-archive metadata and emits a SHA-256 checksum. accept.py validates the
-checksum, extracts to an independent temporary directory and exercises the
-**installed bundled Bun**. It verifies entrypoint startup, the actual
-frontend, HTTP health, real API workspace writes, Playwright Chromium launch,
-a persistent Chromium profile, shutdown, restart and persisted workspace
-state. A WebSocket PTY probe executes on Unix and tests actual terminal output.
+## Read-only, PR-only acceptance
 
-Each CI job uploads the archive, checksum and detailed JSON acceptance report.
-distribution.json records the exact source SHA, architecture, Bun version
-and browser provision. No PASS is inferred from successful compilation.
-Windows blocked capabilities are explicit in the report.
+`.github/workflows/migration-native-distribution.yml` builds, extracts and validates **on the actual host OS**:
 
-For a manual local build, set PLAYWRIGHT_BROWSERS_PATH to a fresh absolute
-directory *before* installing Chromium and packaging:
+| Target | Runner | Bun |
+|---|---|---|
+| Linux x64 | Ubuntu 24.04 | 1.3.11 |
+| Windows x64 | Windows 2025 | 1.4.4 |
+| macOS ARM64 | macOS 15 | 1.3.11 |
+| macOS x64 | macOS 15 Intel | 1.3.11 |
 
-    bun install --frozen-lockfile
-    bunx playwright install chromium
-    bun run build:web
-    bun scripts/distribution/build.ts
-    python3 scripts/distribution/archive.py
-    python3 scripts/distribution/accept.py
+The acceptance script `scripts/distribution/accept.py` verifies the archive checksum, extracts outside the source checkout, and invokes the **bundled** Bun. Required checks are:
 
-Python 3.12 is required for the acceptance harness. Linux additionally
-needs shared Chromium system dependencies; the Ubuntu CI runner provisions
-them through the Playwright install-deps command. Other Linux distributions
-are not verified by Ubuntu runner acceptance.
+1. Real extracted wrapper, health endpoint, frontend assets and isolated persistent data directory.
+2. Actual host filesystem workspace create/edit/read and Git repository discovery/status.
+3. Native PTY subprocess, including Windows ConPTY with native `ComSpec`/CMD.
+4. Bundled Chromium running the installed frontend and retaining browser storage on restart.
+5. **Server-owned Chromium CDP stream through the installed `/api/browser/stream` WebSocket**, including PNG IHDR/dimension validation, viewport resize, real page navigation and title.
+6. Graceful server shutdown using SIGTERM or scoped Windows CTRL_BREAK/SIGBREAK, then restart, persisted workspace/browser data and clean port reuse.
 
-## Limitations and release integration
+After the server-stream probe, `accept.py` now **requires every listed check to be PASS**. An old compatibility branch that labels Windows filesystem operations BLOCKED cannot produce a passing acceptance report. A failed subprocess or timeout preserves diagnostic report data and fails the job.
 
-- Windows controlled workspace creation and filesystem operations are **BLOCKED**:
-  src/server/store.ts safeAbsolute requires POSIX '/'-prefixed paths and rejects
-  native Windows drive-letter paths. This is an integration-owned runtime fix.
-- Windows terminal panes are **BLOCKED**: the existing server fallback tries
-  /bin/bash and Windows Bun PTY compatibility has not been established.
-- Windows shutdown is **BLOCKED** as graceful lifecycle acceptance:
-  TerminateProcess is used rather than a confirmed graceful server shutdown.
-- The Chromium probe starts a real packaged Chromium and opens the installed
-  UI, but full application CDP streaming has not been independently verified
-  by this packaging workflow.
-- A SHA-256 checksum detects corruption but does not prove publisher identity
-  or signing. Windows code signing and macOS notarization remain outstanding.
-- No dedicated update installer, auto-update, rollback or migration engine
-  has been introduced.
-- Cross-run byte-for-byte reproducibility still requires controlled runner
-  images, toolchain and browser binaries and an independent second build.
-- Do not expose the application over a public network: it has privileged
-  filesystem and terminal access, without remote-user authentication.
-- This branch is based on the pre-security main SHA. Integration must include
-  RSC-03 cross-origin WebSocket remediation (PR #25) and acceptance of the
-  separate RSC-02 persistence work before a distributable release.
+The real source browser stress gate is separate: `migration-source-verification.yml` repeats `browserService.test.ts` in three independent Ubuntu runners, ten full runs each. This matches the original RSC-ROOT PR #40 stress breadth and checks actual native launch, frames, resize, input, dialog, quota/capacity behavior and shutdown.
 
-A platform is accepted only when its own uploaded evidence establishes all
-required checks. A Windows build may exist but cannot be called fully verified
-while terminal/lifecycle checks remain blocked.
+## Packaging locally
+
+Use a fresh absolute `PLAYWRIGHT_BROWSERS_PATH`, on the **target host OS and architecture**, before installation:
+
+```sh
+bun install --frozen-lockfile
+bunx playwright install chromium
+bun run build:web
+bun scripts/distribution/build.ts
+python3 scripts/distribution/archive.py
+python3 scripts/distribution/accept.py
+```
+
+Python 3.12 is required for acceptance. Linux needs Chromium's additional system libraries (`bunx playwright install-deps chromium` on supported Ubuntu/Debian hosts). This is not a cross-build workflow.
+
+## Outstanding release gates
+
+- All four exact-head native acceptance jobs **and** all 30 migrated Chromium stress passes must complete; older green runs do not certify modified code.
+- Bounded SIGSEGV retry protects only native process crashes. It must not delete another process's persistent Chromium singleton locks on initial launch, and it does not automatically fix unrelated blank-page/compositor or dialog races.
+- A reproducibility rerun must compare two independently built artifacts with fixed toolchains, inputs and runner images.
+- Windows signing, macOS signing/notarization, dependency-license/SPDX/attribution and distribution rights are unaccepted.
+- There is no updater, installer, automated rollback or user-data migration engine.
+- A healthy standalone source archive does not establish that the single merged Wrkbench app is integrated; these tests apply to **`migrate/rscode`** only.
+- Do not expose the privileged local filesystem/terminal service over a public network or assume it has remote-user authentication.
+
+Prior source acceptance reports and the integrated capability map are in `../../docs/migrations` relative to the repository root. No native binaries are published by the migration workflows.
