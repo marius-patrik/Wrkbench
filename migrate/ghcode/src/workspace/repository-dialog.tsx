@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogIn, X } from "lucide-react";
 import {
   beginGithubSignIn,
@@ -7,13 +7,22 @@ import {
   type GithubAuthResult,
 } from "@/github/auth";
 import { useWorkspace } from "./context";
-import { quarantineUnattributedLegacyRecords } from "./storage";
+import {
+  exportOwnedWorkspaceSnapshot,
+  importOwnedWorkspaceSnapshot,
+  quarantineUnattributedLegacyRecords,
+  type AuthorizedWorkspaceExport,
+} from "./storage";
+import { downloadText } from "./export";
+import { documentService } from "./document-service";
 
 export function RepositoryDialog() {
   const workspace = useWorkspace();
   const [input, setInput] = useState("");
   const [quarantineStatus, setQuarantineStatus] = useState<string | null>(null);
   const [quarantineBusy, setQuarantineBusy] = useState(false);
+  const backupInput = useRef<HTMLInputElement | null>(null);
+  const [backupBusy, setBackupBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [authResult, setAuthResult] = useState<GithubAuthResult>(() => getGithubAuthResult());
   const authConfig = getGithubAuthConfiguration();
@@ -72,6 +81,56 @@ export function RepositoryDialog() {
     }
   };
 
+  const exportOwnedBackup = async () => {
+    const selected = workspace.workspace;
+    if (!selected || backupBusy) return;
+    setBackupBusy(true);
+    setLocalError(null);
+    try {
+      documentService.assertSafeToNavigate();
+      const data = await exportOwnedWorkspaceSnapshot(selected.id);
+      if (data.workspace.repository.id !== selected.repository.id ||
+          data.workspace.baseSha !== selected.baseSha ||
+          data.workspace.ref !== selected.ref)
+        throw new Error("Repository changed during local backup export.");
+      downloadText(
+        JSON.stringify({ schema: 1, data }, null, 2),
+        `${selected.repository.name}-owned-local-workspace.json`,
+        "application/json;charset=utf-8",
+      );
+    } catch (reason) {
+      setLocalError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const importOwnedBackup = async (file: File) => {
+    if (backupBusy) return;
+    setBackupBusy(true);
+    setLocalError(null);
+    try {
+      if (!workspace.workspace) throw new Error("Open the original authorized repository before import.");
+      if (file.size > 32_000_000) throw new Error("Local backup is too large.");
+      documentService.assertSafeToNavigate();
+      const candidate = JSON.parse(await file.text()) as {
+        schema?: unknown;
+        data?: AuthorizedWorkspaceExport;
+      };
+      if (candidate?.schema !== 1 || !candidate.data ||
+          candidate.data.workspace?.id !== workspace.workspace.id)
+        throw new Error("Backup must match the currently verified repository session.");
+      await importOwnedWorkspaceSnapshot(candidate.data);
+      // Recreate all React cache state from committed IDB. The same repository
+      // is re-authorized on reload, and no other principal's data is imported.
+      window.location.reload();
+    } catch (reason) {
+      setLocalError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
   return (
     <div className="workspace-dialog-backdrop" role="presentation">
       <section
@@ -127,6 +186,36 @@ export function RepositoryDialog() {
           {quarantineBusy ? "Preserving legacy data…" : "Preserve legacy browser data"}
         </button>
         {quarantineStatus && <div className="workspace-auth-status" role="status">{quarantineStatus}</div>}
+        {workspace.workspace && (
+          <section aria-label="Owned workspace backup">
+            <p className="workspace-help">
+              Export or restore this verified repository's local edits, staged changes and commits.
+              Import never overwrites existing local work and cannot adopt another account's data.
+            </p>
+            <button type="button" disabled={backupBusy} onClick={() => void exportOwnedBackup()}>
+              Export owned local backup
+            </button>
+            <button
+              type="button"
+              disabled={backupBusy}
+              onClick={() => backupInput.current?.click()}
+            >
+              Import owned local backup
+            </button>
+            <input
+              ref={backupInput}
+              type="file"
+              accept=".json,application/json"
+              hidden
+              aria-label="Owned local workspace backup file"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (file) void importOwnedBackup(file);
+              }}
+            />
+          </section>
+        )}
         {(workspace.authPhase === "failed" || workspace.authPhase === "invalidated") && (
           <button type="button" onClick={workspace.signOut}>
             Continue anonymously
