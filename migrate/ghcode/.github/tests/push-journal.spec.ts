@@ -530,3 +530,63 @@ test("real IndexedDB durable private draft survives reload, rejects account and 
     clearNewest: true, empty: true,
   });
 });
+
+
+test("real IndexedDB rename CAS updates source and destination atomically and rejects concurrent edits", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const principal = "gh:github.com:1001";
+    const sessionId = crypto.randomUUID();
+    const workspaceUuid = crypto.randomUUID();
+    const id = `ghcode-owned-v2:${encodeURIComponent(principal)}:${sessionId}`;
+    storage.bindStoragePrincipal(principal);
+    await storage.saveWorkspace({
+      version: 2, id, ref: "main", updatedAt: 1,
+      baseSha: "1".repeat(40), treeSha: "2".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: principal, workspace: { id: workspaceUuid, principalKey: principal },
+        session: {
+          id: sessionId, principalKey: principal, workspaceId: workspaceUuid,
+          repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main",
+        },
+      },
+    });
+    const source = {
+      key: `${id}:original.md`, workspaceId: id, path: "original.md",
+      status: "added", content: "data that must survive", updatedAt: 1,
+    };
+    const dest = {
+      ...source, key: `${id}:renamed.md`, path: "renamed.md", updatedAt: 2,
+    };
+    await storage.saveOverlay(source);
+    const changes = [
+      { path: "original.md", expected: source, next: null },
+      { path: "renamed.md", expected: null, next: dest },
+    ];
+    // One invalid expected revision aborts BOTH writes.
+    const stale = { ...source, updatedAt: 0 };
+    const deniedStale = await storage.compareAndApplyOverlays(id, [
+      { path: "original.md", expected: stale, next: null },
+      changes[1],
+    ]).then(() => false, () => true);
+    const unchanged = await storage.loadOverlays(id);
+    if (!deniedStale || unchanged.length !== 1 ||
+        unchanged[0].path !== "original.md") return { error: "Stale rename was not atomic" };
+    await storage.compareAndApplyOverlays(id, changes);
+    const renamed = await storage.loadOverlays(id);
+    const deniedReplay = await storage.compareAndApplyOverlays(id, changes)
+      .then(() => false, () => true);
+    return {
+      deniedStale, deniedReplay, count: renamed.length,
+      path: renamed[0]?.path, content: renamed[0]?.content,
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    deniedStale: true, deniedReplay: true,
+    count: 1, path: "renamed.md", content: "data that must survive",
+  });
+});
