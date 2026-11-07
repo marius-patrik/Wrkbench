@@ -1,33 +1,14 @@
-# Wrkbench client architecture — implementation boundaries
+# Wrkbench browser client — architecture ownership
 
-## One Dockview layout owner
+The Pages branch provides a real React 19/Cordis/Dockview build. This architecture branch corrects registration and layout ownership. **Phase 1 acceptance remains separate from successful compilation.**
 
-`DockviewReact` and `DockviewApi` own the layout graph, all tab groups, active panels, group splits, drag-and-drop and floating/popout windows. The app owns only view state and per-workbench serialized Dockview snapshots. `api.toJSON()` and `api.fromJSON()` are the layout persistence contract. React does not independently reorder panels or hold a parallel BSP tree.
+- **Cordis:** feature package lifecycle, service contributions, one tool registry and view factories. Disposing a plugin reversibly unregisters its tool and view; tabs remain as recoverable placeholders.
+- **Feature packages:** one independently imported lazy View entrypoint per feature. Shell no longer contains a switch over feature implementations. Presentational helpers are currently shared under `packages/client/src/views`; splitting business services further is future work.
+- **Dockview:** exclusive authority for tab ordering, groups, drag/drop, splits, floating windows, active tab and serialized layouts. `closeEmptyGroups={false}` preserves empty groups as drop targets. No competing layout tree.
+- **Cross-workbench:** journal tab ID/title/params/source/target *before* removing source. Persist destination Dockview snapshot before acknowledging handoff; retry pending records on navigation/reload. If storage fails, original tab is not removed.
+- **Filesystem:** IndexedDB transactions for revision-CAS saves and atomic rename. OPFS mirror is best effort, never canonical. Dirty buffers live in client state. Save completion does not clear newer unsaved content.
+- **Commands and context:** ToolRegistry validates Zod input/output and permission gates; ViewActionService routes feature-open actions to the active window manager, not window CustomEvents.
+- **Routing:** hash-based Wouter routing, compatible with the `/Wrkbench/` GitHub Pages project base path.
+- **External adapters:** agent inference, remote processes, Docker, Tailscale, trading, native monitor control and MCP server remain unconnected. A UI label does not imply a backend exists.
 
-The UI uses tab bars for *every* editor group including currently empty groups (`closeEmptyGroups={false}`). Dragging tab headers across groups uses Dockview's own mechanics. Tab context menus provide close, float, popout and workbench transfer. Transfer to a different workbench stages a view identity/params record and mounts the same panel ID in the destination; this is **a browser-local handoff**, not a transparent remote transfer.
-
-## Cordis plugin host
-
-`createClientHost()` uses `new Context()`, `ctx.plugin()` and `root.fiber.dispose()`. `FeatureCatalog extends Service` exposes feature contributions to the shell; `ToolService extends Service` exposes a single `ToolRegistry`. Each feature package registers through `defineFeature` with `ctx.effect()` for scoped, reversible registration. Each plugin registers both a view descriptor and a `feature.<kind>.open` Zod-validated ToolRegistry contribution; unloading the Cordis fiber disposes both.
-
-Current limitation: 31 packages own **registration descriptors**, while most UI renderers and local state are still hosted in shared `views/Features.tsx`. This is a genuine Cordis lifecycle integration, but not yet fully isolated feature-owned services and renderers. Separating feature-owned view bundles/services is required for full Phase 1 acceptance. External SDK/plugin install and unload UX are not implemented.
-
-## Data persistence
-
-The browser `BrowserFiles` module opens an IndexedDB store keyed by path. Save uses a readwrite transaction that reads current revision, verifies expected revision, then writes content and incremented revision atomically. A conflicting write aborts with `FileConflictError`. OPFS mirrors successful writes as a best-effort cache and is **not** authoritative. Per-tab scratch state, dirty docs, session transcripts and workbench preferences live in Zustand with `localStorage` persistence. Cross-tab collaboration, full migration/recovery, OPFS coherency and durable outbox have not been accepted.
-
-## Tool and context contracts
-
-`ToolRegistry` performs `z.input.parse`, permission gate, then `z.output.parse`. Context includes runtime/account/project/session, active view ID and workbench. Client ToolService registers local UI tools when Cordis host becomes ready. Context switching changes available future routing, but does not invent a connected external provider.
-
-## Security boundary
-
-No network access, external programs, native device control or agent calls are executed through placeholder providers. A runtime must be attached and authorized before any privileged tool is introduced. Shell escape is prohibited: the xterm view offers only a small fixed browser-command grammar.
-
-## Build model
-
-Normal build: Rsbuild + React19. Standalone: one Rsbuild production compilation with script and style inlining, plus validated inline Monaco worker bodies. The standalone pipeline is intentionally strict; it **fails** if assets or workers are not actually self-contained. No handwritten replacement React DOM implementation is acceptable.
-
-## Current verification
-
-Source syntax and structural checks can run offline. Actual dependency resolution, typecheck and Playwright navigation **must** be performed after `bun install`, and acceptance status must remain pending until those pass. See `docs/ACCEPTANCE.md`.
+**Verification:** `cd next && bun install && bun run typecheck && bun run test:core && bun run build && bun run test:e2e`. Tests must use an HTTP origin. The branch's CI is the authority for actual dependency compilation.

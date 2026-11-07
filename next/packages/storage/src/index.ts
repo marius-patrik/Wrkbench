@@ -8,7 +8,7 @@ export class BrowserFiles{
     if(this.pending)return this.pending;
     this.pending=new Promise((resolve,reject)=>{const req=indexedDB.open(this.dbName,3);
       req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('files'))db.createObjectStore('files',{keyPath:'path'});};
-      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+      req.onsuccess=()=>{const db=req.result;db.onversionchange=()=>{db.close();this.pending=null};resolve(db)};req.onerror=()=>{this.pending=null;reject(req.error)};req.onblocked=()=>{this.pending=null;reject(new Error('Storage blocked by older tab'))};
     });return this.pending;
   }
   private async readReq<T>(tx:IDBTransaction, req:IDBRequest<T>):Promise<T>{
@@ -30,11 +30,20 @@ export class BrowserFiles{
   }
   async remove(path:string){const db=await this.connect();await new Promise<void>((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(path);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
   async rename(oldPath:string,newPath:string){
-    const existing=await this.get(oldPath);if(!existing)throw new Error('Source file not found');
-    // Cross-record replacement belongs in one IndexedDB transaction.
-    const db=await this.connect();await new Promise<void>((resolve,reject)=>{const tx=db.transaction('files','readwrite');const store=tx.objectStore('files');
-      const req=store.get(newPath);req.onsuccess=()=>{if(req.result){tx.abort();return;}store.put({...existing,path:newPath,revision:existing.revision+1,updatedAt:Date.now()});store.delete(oldPath)};
-      tx.oncomplete=()=>resolve();tx.onabort=()=>reject(new Error('Destination exists or rename aborted'));tx.onerror=()=>reject(tx.error);
+    if(oldPath===newPath)return;
+    const db=await this.connect();
+    await new Promise<void>((resolve,reject)=>{
+      const tx=db.transaction('files','readwrite'),store=tx.objectStore('files');let error:Error|undefined;
+      const source=store.get(oldPath);
+      source.onsuccess=()=>{const current=source.result as WorkspaceFile|undefined;
+        if(!current){error=new Error('Source file not found');tx.abort();return;}
+        const destination=store.get(newPath);
+        destination.onsuccess=()=>{if(destination.result){error=new Error('Destination exists');tx.abort();return;}
+          store.put({...current,path:newPath,revision:current.revision+1,updatedAt:Date.now()});store.delete(oldPath);
+        };
+      };
+      tx.oncomplete=()=>resolve();tx.onabort=()=>reject(error??tx.error??new Error('Rename aborted'));
+      tx.onerror=()=>reject(error??tx.error??new Error('Rename failed'));
     });
   }
   async seed(files:Record<string,string>){const existing=await this.list();for(const [path,content]of Object.entries(files)){if(await this.get(path))continue;try{await this.save(path,content,0)}catch(e){if(!(e instanceof FileConflictError))throw e}}}

@@ -15,7 +15,7 @@
     "build:single": "WRKBENCH_SINGLE_HTML=1 rsbuild build && node scripts/inline-html.mjs",
     "preview": "rsbuild preview",
     "typecheck": "tsc --noEmit",
-    "test:core": "node --test tests/*.test.mjs",
+    "test:core": "node --experimental-strip-types --test tests/*.test.mjs",
     "test:e2e": "playwright test",
     "verify": "bun run typecheck && bun run test:core && bun run build && bun run test:e2e",
     "static:verify": "node scripts/static-verify.mjs"

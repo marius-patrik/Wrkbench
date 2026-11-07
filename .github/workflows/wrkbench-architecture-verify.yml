@@ -1,0 +1,42 @@
+name: Wrkbench client architecture acceptance
+on:
+  push:
+    branches: [pmarius/wrkbench-architecture-v2]
+  pull_request:
+    branches: [pmarius/wrkbench-pages-react19]
+    paths:
+      - 'next/**'
+      - '.github/workflows/wrkbench-architecture-verify.yml'
+permissions:
+  contents: read
+jobs:
+  verify-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.11'
+      - name: Install real dependencies
+        run: cd next && bun install
+      - name: TypeScript contracts
+        run: cd next && bun run typecheck
+      - name: Durable transfer and structural tests
+        run: cd next && bun run test:core
+      - name: Compile React 19, Cordis and Dockview
+        run: cd next && bun run build
+      - name: Install Chromium
+        run: cd next && bunx playwright install --with-deps chromium
+      - name: Test real browser navigation, reload and storage
+        run: cd next && bun run test:e2e
+      - name: Preserve browser traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wrkbench-architecture-browser
+          path: next/test-results/
+          if-no-files-found: ignore

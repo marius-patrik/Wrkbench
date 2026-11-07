@@ -4,7 +4,7 @@ import {test,expect} from '@playwright/test';
 async function boot(page:import('@playwright/test').Page){
  const exceptions:string[]=[];
  page.on('pageerror',e=>exceptions.push(e.message));
- await page.goto('/workbench/development',{waitUntil:'domcontentloaded'});
+ await page.goto('/#/workbench/development',{waitUntil:'domcontentloaded'});
  await expect(page.getByRole('navigation',{name:'Workbenches'})).toBeVisible();
  await expect(page.locator('.dv-groupview').first()).toBeVisible();
  return exceptions;
@@ -23,7 +23,7 @@ test('switches workbenches without discarding individual layouts',async({page})=
  const before=await page.locator('.dv-groupview').count();
  expect(before).toBeGreaterThan(1);
  await page.getByRole('button',{name:'Research workbench'}).click();
- await expect(page).toHaveURL(/workbench\/research/);
+ await expect(page).toHaveURL(/#\/workbench\/research/);
  await page.getByRole('button',{name:'Development workbench'}).click();
  await expect(page.locator('.dv-groupview')).toHaveCount(before);
  expect(exceptions).toEqual([]);
