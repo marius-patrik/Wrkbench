@@ -29,7 +29,7 @@ test('Dockview is actual layout owner',()=>{
 test('Cordis owns plugin lifecycle and feature registry',()=>{
  const source=read('packages/sdk/src/index.ts');
  assert.match(source,/import\s*\{\s*Context,\s*Service\s*\}\s*from\s*'cordis'/);
- assert.match(source,/root\.plugin\(feature\.activate\)/);
+ assert.match(source,/root\.plugin\(plugin\.activate\)/);
  assert.match(source,/ctx\.effect\(/);
  assert.match(source,/fiber\.dispose\(/);
  const features=path.join(root,'features');
@@ -41,6 +41,8 @@ test('Cordis owns plugin lifecycle and feature registry',()=>{
   const plugin=read(prefix+'src/index.ts');
   assert.ok(manifest.name.startsWith('@wrkbench/feature-'));
   assert.match(plugin,/defineFeature\(/);
+  assert.match(plugin,/render:/);
+  assert.ok(existsSync(path.join(root,prefix+'src/View.tsx')));
   assert.ok(existsSync(path.join(root,prefix+'src/index.ts')));
  }
 });
@@ -58,4 +60,34 @@ test('single-file step demands a genuine Rsbuild bundle',()=>{
  assert.match(source,/Standalone HTML contains external/);
  assert.match(read('rsbuild.config.ts'),/inlineScripts:\s*inline/);
  assert.match(read('rsbuild.config.ts'),/inlineStyles:\s*inline/);
+});
+
+test('Cordis features contribute renderers and tools, not metadata-only placeholders',()=>{
+ const app=read('apps/web/src/App.tsx');
+ const sdk=read('packages/sdk/src/index.ts');
+ assert.doesNotMatch(app,/switch\(kind\)/);
+ assert.match(app,/contribution\.render\(/);
+ assert.match(sdk,/class ViewActionService extends Service/);
+ assert.match(sdk,/ctx\.viewActions\.open/);
+ for(const pathPart of ['services.ts','state.ts','icons.tsx','views/Editors.tsx','views/Features.tsx']) {
+  assert.ok(existsSync(path.join(root,'packages/client/src',pathPart)));
+ }
+});
+test('every source-relative import resolves inside this monorepo',()=>{
+ let n=0;
+ for(const folder of ['apps','features','packages']){
+  const queue=[path.join(root,folder)];
+  while(queue.length){
+   const dir=queue.pop();
+   for(const ent of readdirSync(dir,{withFileTypes:true})){
+    const file=path.join(dir,ent.name);
+    if(ent.isDirectory()){queue.push(file);continue;}
+    if(!/\.tsx?$/.test(ent.name))continue;
+    for(const match of readFileSync(file,'utf8').matchAll(/(?:import|from)\s*(?:\(\s*)?['"](\.[^'"\s]+)['"]/g)){
+     n++; assert.ok(existsSync(path.resolve(dir,match[1])),path.relative(root,file)+' missing '+match[1]);
+    }
+   }
+  }
+ }
+ assert.ok(n>200,'too few imports verified');
 });
