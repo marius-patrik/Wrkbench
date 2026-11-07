@@ -6,7 +6,7 @@
 
 Each native archive contains:
 
-- An OS-native bundled Bun executable (Windows x64: **Bun 1.4.4**; Linux x64 and macOS x64/ARM64: **Bun 1.3.11**).
+- An OS-native bundled Bun executable (**Bun 1.4.4** on all four current acceptance targets; frozen dependency lock retained).
 - Installed source and dependency tree from a frozen `bun.lock`.
 - The compiled Rsbuild client under `dist/web`.
 - A bundled Playwright Chromium installation and native browser probes.
@@ -34,10 +34,10 @@ User data is outside the extracted application and survives replacement:
 
 | Target | Runner | Bun |
 |---|---|---|
-| Linux x64 | Ubuntu 24.04 | 1.3.11 |
+| Linux x64 | Ubuntu 24.04 | 1.4.4 |
 | Windows x64 | Windows 2025 | 1.4.4 |
-| macOS ARM64 | macOS 15 | 1.3.11 |
-| macOS x64 | macOS 15 Intel | 1.3.11 |
+| macOS ARM64 | macOS 15 | 1.4.4 |
+| macOS x64 | macOS 15 Intel | 1.4.4 |
 
 The acceptance script `scripts/distribution/accept.py` verifies the archive checksum, extracts outside the source checkout, and invokes the **bundled** Bun. Required checks are:
 
@@ -66,6 +66,12 @@ python3 scripts/distribution/accept.py
 ```
 
 Python 3.12 is required for acceptance. Linux needs Chromium's additional system libraries (`bunx playwright install-deps chromium` on supported Ubuntu/Debian hosts). This is not a cross-build workflow.
+
+## Exact-head CI status
+
+The earlier four-platform extracted acceptance was **PASS** at `6099af7f0b88` (Linux/macOS 1.3.11; Windows 1.4.4). The subsequent cross-platform Bun 1.4.4 candidate exposed macOS Chromium `.framework` symlinks rewritten as absolute source paths during `cp`; `scripts/distribution/build.ts` now rebases only validated links within the provisioned Chromium browser cache to relative paths inside the archive, rejecting any external path. Fresh four-platform acceptance is required before claiming that toolchain accepted.
+
+The independent 3×10 Chromium stress gate **remains red** in its prior Bun 1.3.11 and 1.4.4 executions due intermittent native launch/CDP screenshot stalls. Do not conflate green extracted distribution tests with passing repeated source stress, and do not suppress the red stress tests.
 
 ## Outstanding release gates
 
