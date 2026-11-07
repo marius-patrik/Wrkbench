@@ -626,6 +626,15 @@ export class BrowserFrameService {
     live.currentUrl = live.page.url();
     live.loading = false;
     await this.updateTitle(live);
+    // CDP screencasts do not guarantee a new frame after a navigation,
+    // particularly when Chromium restores a persisted profile. Do not leave
+    // the pane showing its former URL indefinitely: capture a real screenshot
+    // from the newly loaded page before acknowledging this navigation.
+    // A JavaScript dialog blocks screenshots; its separate dialogResponse
+    // lifecycle must settle before another capture can safely proceed.
+    if (live.subscribers.size > 0 && !live.pendingDialog) {
+      await this.captureInitialFrame(live);
+    }
   }
 
   private async setViewport(live: LiveBrowser, message: BrowserViewportMessage): Promise<void> {
