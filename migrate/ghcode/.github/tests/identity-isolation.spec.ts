@@ -312,6 +312,34 @@ test("legacy unattributed cache and layout remain intact but cannot render", asy
   expect(legacy.preserved).toEqual([true, true, true, true, true, true]);
   expect(legacy.recents).toContain("acme/private@main");
   expect(legacy.layout).toContain("LEGACY_PRIVATE_SENTINEL");
+
+  // Quarantine is explicitly requested by the user, never performed during
+  // sign-in or repository selection. It must not reattribute old private data.
+  await page.getByRole("button", { name: "Preserve legacy browser data" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Preserved 6 unattributed records locally" })).toBeVisible();
+  await expect(page.getByText("LEGACY_PRIVATE_BLOB")).toHaveCount(0);
+  const quarantine = await page.evaluate(async () => {
+    const opened = indexedDB.open("darkfactory-workbench", 5);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      opened.onsuccess = () => resolve(opened.result);
+      opened.onerror = () => reject(opened.error);
+    });
+    try {
+      const tx = db.transaction(["legacyBackups", "workspaces"], "readonly");
+      const records = tx.objectStore("legacyBackups").getAll();
+      const original = tx.objectStore("workspaces").get("acme/private@main");
+      return await new Promise<{ count: number; original: boolean }>((resolve, reject) => {
+        tx.oncomplete = () => resolve({
+          count: records.result.length,
+          original: original.result?.id === "acme/private@main",
+        });
+        tx.onerror = () => reject(tx.error);
+      });
+    } finally {
+      db.close();
+    }
+  });
+  expect(quarantine).toEqual({ count: 6, original: true });
 });
 
 test("different anonymous profiles never read one another's workspaces", async ({ page }) => {
