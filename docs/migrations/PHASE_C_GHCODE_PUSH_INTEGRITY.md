@@ -21,6 +21,21 @@ The prior preservation pass kept Git history and created a durable `pushOperatio
 
 **Invariants:** no force push, no duplicate ref mutation, no account-B adoption of account-A commits, no silent discard of uncertain publication, and no automatic adoption of v2 unattributed legacy bytes.
 
+## Phase C1 additional privacy correction: source-scoped Dockview
+
+The active historical GHC-00 repository-switch regression exposed a **separate, actual UI confidentiality defect**: switching from an authenticated private repository to another repository under the same principal left the old private README Monaco content visible in the shared Dockview tree. Commit history, byte-preserving source import and account-scoped IndexedDB alone could not prevent it.
+
+The implementation now enforces two independent boundaries:
+
+- `app.tsx` remounts `WorkbenchShell` whenever the verified principal epoch **or the immutable workspace ID** changes. The old repository's editor groups and tab titles no longer share a live Dockview surface with the new repository.
+- `workbench/persistence.ts` stores layouts under `ghcode-layout-workspace-v2:<principal>:<workspaceId>`. Legacy principal-wide `ghcode-layout-owned-v1` and unattributed layout values remain byte-preserved, but cannot be auto-loaded in a different repository session.
+- `workbench/shell.tsx` binds every newly opened resource tab to `resourceWorkspaceId`. A file path is not a global resource identity: opening README.md in B never reuses A's tab.
+- `tabs/editor-tab.tsx` verifies `resourceWorkspaceId === activeWorkspace.id` **before reading, rendering or mounting a private Monaco model**. Unauthorized/stale tabs show a neutral state; in-flight resource reads are fenced by the full `documentId`, not a path-only loaded flag.
+
+The active `workbench.spec.ts` test now exercises private draft → failed switch while dirty → Retry save → successful public workspace → public same-path README → no private sentinel → reload → reopen original private workspace and recover its exact sentinel. The historical private content and layouts remain recoverable only in the original authorized workspace.
+
+**No claim of acceptance until the exact-head browser and source CI pass**. These are source-only corrections, not a root runtime or public Pages deployment.
+
 ## What this does not accept
 
 This is a behavioral improvement in the **inert GHCode source tree**, not a production root implementation or a substitute for the remaining work:
