@@ -58,6 +58,49 @@ jobs:
       - run: bun run lint
       - run: bun test src
 
+  # RSC-ROOT PR #40 originally required three independent Chromium stress
+  # replicas with ten complete launch/stream/resize/dialog cycles each.
+  # Run the *migrated* service, not the inactive root service. PR-only/read-only.
+  rscode-chromium-stress:
+    name: RSC-ROOT migrated Chromium stress replica ${{ matrix.replica }}
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [1, 2, 3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: migrate/rscode
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.11
+      - run: bun install --frozen-lockfile
+      - name: Provision real headless Chromium and system dependencies
+        run: bunx playwright install --with-deps chromium
+      - name: Repeat browser launch, actual PNG frames, resize, dialogs and teardown
+        shell: bash
+        run: |
+          set -euo pipefail
+          for iteration in $(seq 1 10); do
+            echo "::group::migrated Chromium stress replica ${{ matrix.replica }} iteration ${iteration}/10"
+            bun test src/tests/browserService.test.ts 2>&1 | tee "$RUNNER_TEMP/rscode-chromium-${iteration}.log"
+            echo "::endgroup::"
+          done
+      - name: Retain Chromium stress diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rscode-chromium-stress-${{ matrix.replica }}-failure
+          path: ${{ runner.temp }}/rscode-chromium-*.log
+          if-no-files-found: warn
+          retention-days: 14
+
   # Real Windows validation of the provisional native filesystem source.
   # Does not package, publish, deploy or claim complete Windows native acceptance.
   rscode-windows-paths:
