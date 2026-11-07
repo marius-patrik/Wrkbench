@@ -1,6 +1,7 @@
 import { useEffect,useRef,useState,type ReactNode } from 'react';
 import { type ViewKind,type FeatureDefinition,uniqueId } from '../../../packages/core/src/index.ts';
-import {useUI,RUNTIMES,resolvedContext} from '../../../packages/client/src/state.ts';
+import {useUI,RUNTIMES,resolvedContext,type ChatMessage} from '../../../packages/client/src/state.ts';
+const EMPTY_AGENT_MESSAGES: ChatMessage[]=[];
 import {Icon} from '../../../packages/client/src/icons.tsx';
 import {notify,tools,invocationContext} from '../../../packages/client/src/services.ts';
 import {ToolbarButton,ViewToolbar} from '../../../packages/client/src/views/Primitives.tsx';
