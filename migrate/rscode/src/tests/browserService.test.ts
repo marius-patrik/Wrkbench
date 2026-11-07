@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { type BrowserFrameMessage, BrowserFrameService, type BrowserStateMessage, retryChromiumNativeCrash } from "@/server/browserService";
@@ -157,6 +157,55 @@ test(
   20_000,
 );
 
+
+test("Chromium profile contention never deletes another process's singleton lock", async () => {
+  tempRoot = await mkdtemp(join(tmpdir(), "rscode-profile-lock-"));
+  const singleton = join(tempRoot, "SingletonLock");
+  await writeFile(singleton, "owned by another process", "utf8");
+  let cleanupCalls = 0;
+  let launchCalls = 0;
+  await expect(
+    retryChromiumNativeCrash(
+      async () => {
+        launchCalls++;
+        throw new Error("Chromium profile is already in use by another process");
+      },
+      async () => {
+        cleanupCalls++;
+        await rm(singleton, { force: true });
+      },
+    ),
+  ).rejects.toThrow("already in use");
+  expect(launchCalls).toBe(1);
+  expect(cleanupCalls).toBe(0);
+  expect(await readFile(singleton, "utf8")).toBe("owned by another process");
+});
+
+test("Chromium singleton recovery only runs after a confirmed native crash", async () => {
+  tempRoot = await mkdtemp(join(tmpdir(), "rscode-native-crash-"));
+  const singleton = join(tempRoot, "SingletonLock");
+  await writeFile(singleton, "stale after crash", "utf8");
+  let attempts = 0;
+  let cleanups = 0;
+  const result = await retryChromiumNativeCrash(
+    async () => {
+      attempts++;
+      if (attempts === 1) {
+        expect(await readFile(singleton, "utf8")).toBe("stale after crash");
+        throw new Error("Playwright Chromium process exited: Received signal 11 SIGSEGV");
+      }
+      await expect(readFile(singleton, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+      return "recovered";
+    },
+    async () => {
+      cleanups++;
+      await rm(singleton, { force: true });
+    },
+  );
+  expect(result).toBe("recovered");
+  expect(attempts).toBe(2);
+  expect(cleanups).toBe(1);
+});
 
 test("native Chromium SIGSEGV startup retries exactly once after cleanup", async () => {
   let launches = 0;
