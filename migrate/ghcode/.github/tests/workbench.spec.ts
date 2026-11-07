@@ -565,6 +565,12 @@ test("GHC-00 pending private edits block repository switch until a committed sav
   await page.getByRole("textbox", { name: "Repository" }).fill(PUBLIC_REPOSITORY);
   await page.getByRole("button", { name: "Open", exact: true }).click();
   await expect(page.locator(".workspace-repository-button")).toContainText(PUBLIC_REPOSITORY);
+  // Same path is not same identity: opening public README must make a distinct
+  // editor, not reactivate the private README left in an old Dockview tab.
+  await tab(page, "primary", "Explorer").click();
+  await surface(page, "primary").getByTitle("README.md").click();
+  await expect(surface(page, "main").locator(".dv-tab").filter({ hasText: "README.md" }))
+    .toHaveCount(2);
 
   // The public repository must not render the private draft. Prove durability
   // through the actual repository/Monaco UI after a fresh browser reload,
