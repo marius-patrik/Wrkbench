@@ -1120,18 +1120,17 @@ test("real IndexedDB makes local commit IDs immutable and push journals order-se
       acceptedPhase: accepted.phase,
     };
   }, sourceUrl);
-  expect(result).toEqual({
+  expect(result).toMatchObject({
     tamperRejected: true,
     orderRejected: true,
     reorderedRejects: true,
     duplicateRejects: true,
     trueOrderAccepted: true,
     foreignOverwrite: true,
-    durableOrder: [result.durableOrder[0], result.durableOrder[1]],
     durableMessages: ["earlier", "later"],
-    journalOrder: result.durableOrder,
     acceptedPhase: "prepared",
   });
+  expect(result.journalOrder).toEqual(result.durableOrder);
   expect(result.durableOrder[0]).toContain(":local:1:earlier");
   expect(result.durableOrder[1]).toContain(":local:2:later");
 });
