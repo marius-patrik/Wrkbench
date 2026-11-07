@@ -19,7 +19,7 @@
       "originalSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
       "reconciliationSourceSHA": "0e797adca5315e859d61e216d8a763f2920c39fc",
       "additionalSourceSHA": "6ed334bcad6e89a1837c299937c4c50207904541",
-      "snapshotTreeSHA": "73efb78a9f1a885ca690434e88382f3b5a38f548",
+      "snapshotTreeSHA": "505e68e60b6d476fcc98351e4a18e4749e6f0bba",
       "expectedOwner": "DarkFactory-web unified local provider",
       "acceptedChanges": [
         "RSC-03 exact-origin loopback security code and tests from existing verified integration tree",
@@ -113,7 +113,7 @@
         }
       },
       "phaseB": {
-        "sourceTreeSHA": "73efb78a9f1a885ca690434e88382f3b5a38f548",
+        "sourceTreeSHA": "505e68e60b6d476fcc98351e4a18e4749e6f0bba",
         "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
         "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
         "status": "REAL_CHROMIUM_STRESS_AND_NATIVE_RESTART_ACCEPTANCE_FAILED_DIAGNOSTICS_ACTIVE",
