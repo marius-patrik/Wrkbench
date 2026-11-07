@@ -19,7 +19,7 @@
       "originalSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
       "reconciliationSourceSHA": "0e797adca5315e859d61e216d8a763f2920c39fc",
       "additionalSourceSHA": "6ed334bcad6e89a1837c299937c4c50207904541",
-      "snapshotTreeSHA": "7f85844da59cf8b96f0d4883d30ae18dadbfb7a1",
+      "snapshotTreeSHA": "aa9ce92ccd5ec56029a942b67ec9f83b7c7e69c5",
       "expectedOwner": "DarkFactory-web unified local provider",
       "acceptedChanges": [
         "RSC-03 exact-origin loopback security code and tests from existing verified integration tree",
@@ -48,7 +48,8 @@
         "Phase B: CDP screenshot after initial stream/navigation uses bounded view capture first and a separately bounded surface-capture fallback; no fabricated image or success acknowledgment; deterministic unit fallback test.",
         "Phase B: managed Playwright install now prefers full Chromium new-headless channel over occasionally stalled headless-shell profile startup; explicit custom/system executable paths still supported; strict thirty-cycle acceptance pending.",
         "Phase B W04 reliability: Bun 1.4.4 (already validated on Windows in prior native runs) selected as a candidate for all four native runtimes and source stress to assess Bun 1.3.11/CDP pipe hangs; original 1.3.11 Windows issue informed upgrade; exact-head 30-cycle Chromium stress and native acceptance required.",
-        "Phase B Bun 1.4.4 native Mac portable archive: rebase only internal staged Chromium .framework symlinks copied as absolute source-cache links by fs.cp; preserve fail-closed external-link rejection; native four-OS rerun needed."
+        "Phase B Bun 1.4.4 native Mac portable archive: rebase only internal staged Chromium .framework symlinks copied as absolute source-cache links by fs.cp; preserve fail-closed external-link rejection; native four-OS rerun needed.",
+        "Phase B: Playwright-owned Chromium persistent-context startup timeout 12s cancels spawned process rather than leaving orphan on uncontrolled Promise race; no retry on profile contention/timeout."
       ],
       "knownUnresolved": [
         "Active root (not inert migrated RSCode) Chromium blank-page/dialog stress remains intermittently failing; PR #40 root runtime correction is preserved but unmerged into production.",
@@ -117,10 +118,10 @@
         }
       },
       "phaseB": {
-        "sourceTreeSHA": "7f85844da59cf8b96f0d4883d30ae18dadbfb7a1",
+        "sourceTreeSHA": "aa9ce92ccd5ec56029a942b67ec9f83b7c7e69c5",
         "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
         "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
-        "status": "BUN_1_4_4_MACOS_SYMLINK_PORTABILITY_RECHECK_PENDING_STRESS_STILL_RED",
+        "status": "EXACT_HEAD_ACCEPTANCE_PENDING; RSC_ROOT_CHROMIUM_STRESS_PREVIOUSLY_RED",
         "boundedNativeRecovery": "initial-profile-lock-preserving; retry only after observed SIGSEGV",
         "nativeAcceptance": "extracted bundled Bun, real server WebSocket Chromium stream + resize + navigation, required checks all PASS",
         "stress": "3 separate hosted Ubuntu runs x 10 browserService suites; PR-only and read-only",
