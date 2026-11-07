@@ -150,6 +150,34 @@ export function WorkbenchSurfaceView({
       document.documentElement.classList.remove("workbench-tab-dragging");
     };
 
+    // Dockview's onDidRemovePanel fires AFTER a destructive removal and also
+    // fires for legitimate cross-group moves. It cannot guard a dirty editor.
+    // Native middle-click close must be redirected BEFORE Dockview handles it,
+    // through the same authoritative guarded closeTab path as the visible ×.
+    const tabFor = (event: MouseEvent) => {
+      const element = event.target instanceof Element ? event.target : null;
+      const tab = element?.closest<HTMLElement>(".dv-tab");
+      if (!tab || !root.contains(tab)) return null;
+      return tab.dataset.tabPanelId ||
+        tab.querySelector<HTMLElement>("[data-workbench-tab-id]")?.dataset.workbenchTabId ||
+        null;
+    };
+    const preventNativeMiddleClose = (event: MouseEvent) => {
+      if (event.button !== 1 || !tabFor(event)) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    const guardedMiddleClose = (event: MouseEvent) => {
+      if (event.button !== 1) return;
+      const id = tabFor(event);
+      if (!id) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      runtimeRef.current.closeTab(id);
+    };
+    root.addEventListener("mousedown", preventNativeMiddleClose, true);
+    root.addEventListener("auxclick", guardedMiddleClose, true);
+
     root.addEventListener("dragstart", beginPanelDrag, true);
     root.addEventListener("dragenter", acceptCrossRootDrag, true);
     root.addEventListener("dragover", acceptCrossRootDrag, true);
@@ -159,6 +187,8 @@ export function WorkbenchSurfaceView({
       root.removeEventListener("dragenter", acceptCrossRootDrag, true);
       root.removeEventListener("dragover", acceptCrossRootDrag, true);
       root.removeEventListener("drop", dropCrossRootTab, true);
+      root.removeEventListener("mousedown", preventNativeMiddleClose, true);
+      root.removeEventListener("auxclick", guardedMiddleClose, true);
     };
   }, [surface]);
 
