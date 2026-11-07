@@ -642,3 +642,81 @@ test("real authorized workspace export excludes foreign owners and snapshots per
     retryContent: "PRIVATE_A_ONLY",
   });
 });
+
+
+test("real IndexedDB v5 quarantines every unattributed legacy record atomically without assigning its owner", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const a = "gh:github.com:1001";
+    storage.bindStoragePrincipal(a);
+    const legacyId = "acme/private@main";
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open("darkfactory-workbench", 5);
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(open.error);
+    });
+    const rawWorkspace = {
+      version: 2, id: legacyId, updatedAt: 1, ref: "main",
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      baseSha: "a".repeat(40), treeSha: "b".repeat(40), tree: [],
+    };
+    const rawOverlay = {
+      key: legacyId + ":README.md", workspaceId: legacyId, path: "README.md",
+      status: "modified", content: "LEGACY_PRIVATE_SECRET", updatedAt: 1,
+    };
+    const written = database.transaction(["workspaces", "overlays"], "readwrite");
+    written.objectStore("workspaces").put(rawWorkspace);
+    written.objectStore("overlays").put(rawOverlay);
+    await new Promise<void>((resolve, reject) => {
+      written.oncomplete = () => resolve();
+      written.onabort = () => reject(written.error);
+    });
+    database.close();
+    const first = await storage.quarantineUnattributedLegacyRecords();
+    const second = await storage.quarantineUnattributedLegacyRecords();
+    const deniedOwned = await storage.loadWorkspace(legacyId, a).then(
+      () => false, () => true,
+    );
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open("darkfactory-workbench", 5);
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(open.error);
+    });
+    const tx = db.transaction(["legacyBackups", "workspaces", "overlays", "migrationState"], "readonly");
+    const get = (name: string, key: string) => new Promise<unknown>((resolve, reject) => {
+      const req = tx.objectStore(name).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    const [workspaceBackup, overlayBackup, originalWorkspace, originalOverlay, state] = await Promise.all([
+      get("legacyBackups", "workspaces:" + legacyId),
+      get("legacyBackups", "overlays:" + legacyId + ":README.md"),
+      get("workspaces", legacyId),
+      get("overlays", legacyId + ":README.md"),
+      get("migrationState", "legacy-unattributed-v2"),
+    ]);
+    db.close();
+    const backup = overlayBackup as { raw?: { content?: string } } | undefined;
+    const preserved = originalOverlay as { content?: string } | undefined;
+    const migration = state as { stage?: string } | undefined;
+    return {
+      first, second, deniedOwned,
+      backup: backup?.raw?.content,
+      preserved: preserved?.content,
+      workspaceRetained: !!originalWorkspace,
+      workspaceBackedUp: !!workspaceBackup,
+      quarantineStage: migration?.stage,
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    first: { preservedRecords: 2, existingBackups: 0 },
+    second: { preservedRecords: 0, existingBackups: 2 },
+    deniedOwned: true,
+    backup: "LEGACY_PRIVATE_SECRET", preserved: "LEGACY_PRIVATE_SECRET",
+    workspaceRetained: true, workspaceBackedUp: true,
+    quarantineStage: "quarantined-not-attributed",
+  });
+});
