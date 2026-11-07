@@ -37,7 +37,6 @@ export function CodeView({path:requestedPath}:{path?:string}){
  }).catch(e=>{setError(String(e));setLoading(false)});return()=>{active=false}},[path,cache]);
  const save=useCallback(async()=>{const d=useUI.getState().documents[path];if(!d?.dirty)return;
  try{const updated=await files.save(path,d.content,d.revision);mark(path,updated.revision);notify(`Saved ${path}`)}catch(e){notify(String(e),'error')}},[path,mark]);
- useEffect(()=>{const fn=(e:Event)=>{if((e as CustomEvent<string>).detail===path)void save()};window.addEventListener('wrkbench:savefile',fn);return()=>window.removeEventListener('wrkbench:savefile',fn)},[save,path]);
  return <div className="view vertical"><div className="view-toolbar"><span className="pathline">atlas-studio / {path}</span>{doc?.dirty&&<span className="unsaved">● Unsaved</span>}<div className="spacer"/><ToolbarButton title="Save this file (Ctrl/⌘ S)" icon="save" disabled={!doc?.dirty} onClick={()=>void save()}>Save</ToolbarButton></div>
  {loading?<div className="view-state">Loading file…</div>:error?<div className="view-state error">{error}</div>:<div className="editor-host"><Editor path={path} value={doc?.content??''} language={language(path)} theme={theme==='dark'?'vs-dark':'vs'} options={{minimap:{enabled:false},fontFamily:'JetBrains Mono, SFMono-Regular, Consolas, monospace',fontSize:13,lineHeight:21,scrollBeyondLastLine:false,smoothScrolling:true,padding:{top:14,bottom:12},automaticLayout:true,tabSize:2,wordWrap:'off',renderLineHighlight:'line',stickyScroll:{enabled:false}}} onChange={v=>edit(path,v??'')}/></div>}
  </div>;
@@ -45,13 +44,13 @@ export function CodeView({path:requestedPath}:{path?:string}){
 export function ExplorerView({onOpen}:{onOpen:(path:string)=>void}){
  const [list,setList]=useState<WorkspaceFile[]>([]),[filter,setFilter]=useState(''),[collapsed,setCollapsed]=useState<Set<string>>(new Set()),[busy,setBusy]=useState(false),[selected,setSelected]=useState('');
  const refresh=useCallback(()=>{setBusy(true);void files.list().then(f=>setList(f.sort((a,b)=>a.path.localeCompare(b.path)))).catch(e=>notify(String(e),'error')).finally(()=>setBusy(false))},[]);
- useEffect(()=>{refresh();const handler=()=>refresh();window.addEventListener('wrkbench:fileschanged',handler);return()=>window.removeEventListener('wrkbench:fileschanged',handler)},[refresh]);
+ useEffect(()=>{refresh();return files.subscribe(()=>refresh())},[refresh]);
  const newFile=async()=>{const path=prompt('New file path (relative to workspace)', 'src/new-file.ts');if(!path)return;
  if(!/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./\- ]+$/.test(path)){notify('Invalid file path','error');return}
  if(await files.get(path)){notify('File already exists','error');return}try{await files.save(path,'',0);refresh();onOpen(path)}catch(e){notify(String(e),'error')}};
  const rename=async(path:string)=>{const next=prompt('Rename file',path);if(!next||next===path)return;
- try{await files.rename(path,next);useUI.getState().moveDocument(path,next);window.dispatchEvent(new CustomEvent('wrkbench:filerename',{detail:{from:path,to:next}}));refresh();notify(`Renamed to ${next}`)}catch(e){notify(String(e),'error')}};
- const remove=async(path:string)=>{if(!confirm(`Delete ${path}? This cannot be undone.`))return;await files.remove(path);useUI.getState().removeDocument(path);window.dispatchEvent(new CustomEvent('wrkbench:filedelete',{detail:path}));refresh();notify(`${path} deleted`)};
+ try{await files.rename(path,next);notify(`Renamed to ${next}`)}catch(e){notify(String(e),'error')}};
+ const remove=async(path:string)=>{if(!confirm(`Delete ${path}? This cannot be undone.`))return;await files.remove(path);notify(`${path} deleted`)};
  const folders=new Set<string>();list.forEach(f=>{const parts=f.path.split('/');for(let i=1;i<parts.length;i++)folders.add(parts.slice(0,i).join('/'))});
  const rows=[...Array.from(folders).map(path=>({path,isFolder:true})),...list.map(file=>({path:file.path,isFolder:false}))].sort((a,b)=>a.path.localeCompare(b.path));
  return <div className="view vertical"><div className="view-toolbar"><span className="section-label">FILES</span><div className="spacer"/><ToolbarButton title="New local file" icon="plus" onClick={()=>void newFile()}/><ToolbarButton title="Refresh file tree" icon="refresh" onClick={refresh}/></div>
