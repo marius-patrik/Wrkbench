@@ -751,3 +751,65 @@ test("real IndexedDB v5 quarantines every unattributed legacy record atomically 
     firstBackupUnchanged: true, laterOriginalUnchanged: true,
   });
 });
+
+
+test("real owned-workspace import rejects foreign principals, invalid paths and overwrites atomically", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const a = "gh:github.com:1001";
+    const b = "gh:github.com:2002";
+    const session = crypto.randomUUID();
+    const workspaceUuid = crypto.randomUUID();
+    const id = `ghcode-owned-v2:${encodeURIComponent(a)}:${session}`;
+    const workspace = {
+      version: 2, id, ref: "main", updatedAt: 1,
+      baseSha: "a".repeat(40), treeSha: "b".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: a, workspace: { id: workspaceUuid, principalKey: a },
+        session: { id: session, principalKey: a, workspaceId: workspaceUuid,
+          repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main" },
+      },
+    };
+    const file = {
+      key: id + ":README.md", workspaceId: id, path: "README.md",
+      status: "modified", content: "RESTORED_A_SECRET", updatedAt: 5,
+    };
+    const backup = {
+      workspace, overlays: [file],
+      staged: [{ ...file, stagedAt: 5 }],
+      committedFiles: [], commits: [],
+    };
+    storage.bindStoragePrincipal(a);
+    await storage.saveWorkspace(workspace);
+    const rejectedPath = await storage.importOwnedWorkspaceSnapshot({
+      ...backup, overlays: [{ ...file, path: "../private", key: id + ":../private" }],
+    }).then(() => false, () => true);
+    const stillEmpty = (await storage.loadOverlays(id)).length === 0;
+    storage.bindStoragePrincipal(b);
+    const rejectedOwner = await storage.importOwnedWorkspaceSnapshot(backup)
+      .then(() => false, () => true);
+    storage.bindStoragePrincipal(a);
+    await storage.importOwnedWorkspaceSnapshot(backup);
+    const exported = await storage.exportOwnedWorkspaceSnapshot(id);
+    const rejectedOverwrite = await storage.importOwnedWorkspaceSnapshot(backup)
+      .then(() => false, () => true);
+    const overlays = await storage.loadOverlays(id);
+    const staged = await storage.loadStaged(id);
+    return {
+      rejectedPath, stillEmpty, rejectedOwner, rejectedOverwrite,
+      overlays: overlays.map((item: {content?: string}) => item.content),
+      staged: staged.map((item: {content?: string}) => item.content),
+      persistedSnapshot: exported.overlays[0]?.content,
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    rejectedPath: true, stillEmpty: true,
+    rejectedOwner: true, rejectedOverwrite: true,
+    overlays: ["RESTORED_A_SECRET"], staged: ["RESTORED_A_SECRET"],
+    persistedSnapshot: "RESTORED_A_SECRET",
+  });
+});
