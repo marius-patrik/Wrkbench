@@ -623,7 +623,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       assertCurrent(lease);
       await refreshOverlays();
     },
-    [assertCurrent, capture, overlays, refreshOverlays, staged, workspace],
+    [assertCurrent, capture, overlays, refreshOverlays, workspace],
   );
 
   const writeFile = useCallback(
@@ -865,7 +865,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       assertCurrent(lease);
       setStaged(nextStaged);
     },
-    [assertCurrent, capture, overlays, refreshOverlays, workspace],
+    [assertCurrent, capture, overlays, refreshOverlays, staged, workspace],
   );
 
   const commitStaged = useCallback(
