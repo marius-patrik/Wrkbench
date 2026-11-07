@@ -5,6 +5,16 @@
 **Phase B source tree:** pinned in `migrate/manifest.json > sourceSnapshots.rscode.snapshotTreeSHA` (updated on every source edit)  
 **Scope:** `migrate/rscode/` (not production `src/`), plus the existing read-only migration acceptance workflow and evidence.
 
+## Latest source-only acceptance — 2026-11-07
+
+**RSC-ROOT stress gate: PASS, all 30 full Chromium suites** at integration head `40b0b457661322516ff9e2cc7b07dcee3b8a5284`. Each of three independent [source verification jobs](https://github.com/marius-patrik/Wrkbench/actions/runs/42417053136) completed ten full repetitions using the migrated `browserService.test.ts` (no reduced repetitions or disabled tests). Source RSCode, Windows path, historical graph and GHCode tests passed; the overall source verification workflow was red only because an **unrelated standalone Canvas UI drag assertion timed out**, to be resolved separately.
+
+**Native installation: PASS on four real platforms at the same integration head**, [run 42417053111](https://github.com/marius-patrik/Wrkbench/actions/runs/42417053111). Linux x64, Windows x64, macOS ARM64 and macOS x64 passed extracted payload, bundled Bun 1.4.4, real installed server Chromium stream, viewport resize, navigation/restart, filesystem, Git and native PTY tests.
+
+**Decision:** Phase B's **inert RSCode source semantic-reconciliation gate has passed**, tied to immutable migrated RSCode tree `cfc51143936d34f2bf4b323449030f05651ef6e4`. It is **not** evidence that the unchanged production root service or a unified three-way Wrkbench shell is ready to release. A later change to `migrate/rscode` invalidates this exact source gate until rerun.
+
+The prior stress failures documented below remain part of the forensic record, not the current Phase B result.
+
 ## Disposition: no ancestry-only acceptance
 
 The original RSCode source base and all relevant PR heads are already in the historical DAG, but **the selected implementation is the migrated source tree**. Source-local code and executable behavioral assertions determine acceptance. Historical commits alone are not sufficient.
@@ -34,7 +44,7 @@ The original RSCode source base and all relevant PR heads are already in the his
 
 **Corrections implemented after failures:** try full bundled Chromium new-headless channel instead of headless shell; bound screenshot operations with an alternate real PNG capture (fail closed); add a Playwright-owned 12-second launch timeout rather than abandoning a live child with `Promise.race`; preserve other profile owners' singleton files; test the extracted server/CDP interface and startup cancellation. Bun 1.4.4 initially exposed macOS `.framework` symlink escapes when staged with `cp`; the build now rebases only links provably internal to the provisioned browser cache.
 
-**Release decision:** Phase B is **IMPLEMENTED / ACCEPTANCE BLOCKED** until the current exact-head native matrix and all 30 stress cycles pass. A stale or cancelled job is not a passing job. PR #39 must remain draft.
+**Release decision:** Phase B RSCode source gate is **ACCEPTED** at the exact source fingerprint and checked integration head above. PR #39 remains **draft** because Canvas browser-smoke, GHCode lifecycle and the unified shell remain separate gates.
 
 ## Independent verification
 
@@ -61,7 +71,7 @@ GitHub workflows:
 - [Migration source verification](../../.github/workflows/migration-source-verification.yml): source tests, 30 browser stress suites, root history and source integrity.
 - [Migrated RSCode native acceptance](../../.github/workflows/migration-native-distribution.yml): four host architectures and extracted bundle acceptance, including installed server stream, shutdown and restart.
 
-**Important:** Passing the previous pre-Phase-B head is **not** acceptance of the above changes. Mark Phase B verified only when all source, stress and four-platform native jobs succeed at a single exact HEAD. If Chromium stress fails, keep it red and report the observed failure; do not silently reduce repetitions, change timeouts to suppress failures, or remove the test.
+**Evidence:** The post-fix 30 stress repetitions and four-platform native matrix succeeded at the same integration head `40b0b457`, and source fingerprint `cfc51143` remains pinned in the manifest. The composite migration workflow was red for a standalone Canvas UI resize timeout, not for RSCode.
 
 ## Remaining separate blockers
 
