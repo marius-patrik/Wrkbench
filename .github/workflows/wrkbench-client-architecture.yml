@@ -1,11 +1,11 @@
 name: Wrkbench client architecture
 on:
-  push:
-    branches:
-      - agent/wrkbench-client-architecture
   pull_request:
     branches:
       - pmarius/wrkbench-pages-react19
+concurrency:
+  group: wrkbench-client-architecture-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -30,6 +30,11 @@ jobs:
         run: bun run build
       - name: Require entrypoint
         run: test -s next/dist/index.html
+      - name: Preserve compiled client for independent browser inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: wrkbench-client-dist
+          path: next/dist/
       - name: Install Chromium for normal HTTP-origin acceptance
         working-directory: next
         run: bunx playwright install --with-deps chromium
