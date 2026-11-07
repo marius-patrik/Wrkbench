@@ -8,6 +8,9 @@ import {
   type GetTabContextMenuItemsParams,
   type ReactContextMenuItemConfig,
 } from "dockview-react";
+import { useWorkspace } from "@/workspace/context";
+import { documentService } from "@/workspace/document-service";
+import { encodeDocumentResourceId } from "@/workspace/identity";
 import { LauncherButton } from "./launcher";
 import type { WorkbenchDropTarget, WorkbenchSurface, WorkbenchTab } from "./model";
 import { WorkbenchPanel } from "./registry";
@@ -64,6 +67,9 @@ export function WorkbenchSurfaceView({
   onActiveTabChange: (surface: WorkbenchSurface, tab: WorkbenchTab | null) => void;
 }) {
   const runtime = useWorkbenchRuntime();
+  const workspace = useWorkspace();
+  const workspaceRef = useRef(workspace);
+  workspaceRef.current = workspace;
   const runtimeRef = useRef(runtime);
   runtimeRef.current = runtime;
   const [panelCount, setPanelCount] = useState(0);
@@ -404,6 +410,58 @@ export function WorkbenchSurfaceView({
             }
             api.onDidActivePanelChange?.((event: any) => {
               onActiveTabChange(surface, paramsOf(event?.panel));
+            });
+            // Dockview's removal event is AFTER removal and cannot cancel
+            // native/API group-close operations. Never mistake this callback
+            // for an authoritative pre-close guard. If an unguarded operation
+            // removed an unacknowledged document, reconstruct its exact tab
+            // in the same surface; DocumentService retains its dirty model
+            // and its separately committed recovery journal.
+            //
+            // Normal guarded closes only reach here when clean, and both
+            // in-surface and cross-surface drag moves are exempt.
+            api.onDidRemovePanel?.((event: any) => {
+              const removed = paramsOf(event?.panel);
+              const path = removed && typeof removed.state?.path === "string"
+                ? removed.state.path : null;
+              const context = workspaceRef.current;
+              if (!removed || (removed.type !== "editor" && removed.type !== "document") ||
+                  !path || !context.workspace || activeCrossSurfaceDrag?.id === removed.id)
+                return;
+
+              let resourceId: string;
+              try {
+                resourceId = encodeDocumentResourceId(context.workspace, path);
+              } catch {
+                return;
+              }
+              const snapshot = documentService.snapshot(resourceId);
+              if (!snapshot || (!snapshot.dirty && !snapshot.saving && !snapshot.error)) return;
+              const originalPrincipal = context.principal.key;
+              queueMicrotask(() => {
+                // A completed panel transfer or a new principal must not be
+                // confused with an unsafe editor destruction.
+                if (activeCrossSurfaceDrag?.id === removed.id || api.getPanel?.(removed.id)) return;
+                const latest = workspaceRef.current;
+                if (!latest.workspace || latest.principal.key !== originalPrincipal) return;
+                try {
+                  if (encodeDocumentResourceId(latest.workspace, path) !== resourceId) return;
+                  if (!documentService.snapshot(resourceId)) return;
+                  api.addPanel({
+                    id: removed.id,
+                    component: "workbench",
+                    tabComponent: "workbenchTab",
+                    title: removed.title,
+                    params: removed,
+                    renderer: "always",
+                  });
+                  window.alert("Document changes are not durably acknowledged. Retry the save before closing this panel.");
+                } catch (error) {
+                  // Do not fabricate successful restoration. The original
+                  // dirty DocumentService entry and durable IDB journal remain.
+                  console.error("Unable to restore an unsafely removed editor panel", error);
+                }
+              });
             });
             api.onDidLayoutChange?.(() => {
               const count = api.panels?.length ?? 0;
