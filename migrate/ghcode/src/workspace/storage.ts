@@ -1626,6 +1626,118 @@ export async function quarantineUnattributedLegacyRecords(): Promise<LegacyQuara
   }
 }
 
+
+/**
+ * Safely restore a backup into an EXISTING, verified workspace with empty
+ * local state. This is not legacy ownership attribution or a foreign-workspace
+ * import: repository/session/ref/base hashes must match exactly. Every state
+ * record is verified before one atomic transaction writes anything.
+ */
+export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExport): Promise<void> {
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  if (!owner || !input || !isOwnedWorkspace(input.workspace, owner))
+    throw new Error("Import requires the original verified workspace owner.");
+  const id = input.workspace.id;
+  requireOwned(id);
+  if (!Array.isArray(input.overlays) || !Array.isArray(input.staged) ||
+      !Array.isArray(input.committedFiles) || !Array.isArray(input.commits))
+    throw new Error("Imported state collections are malformed.");
+  if ([input.overlays, input.staged, input.committedFiles, input.commits]
+      .reduce((count, group) => count + group.length, 0) > 10_000)
+    throw new Error("Imported local state exceeds the safe record count.");
+  if (JSON.stringify(input).length > 32_000_000)
+    throw new Error("Imported local state exceeds the safe size limit.");
+
+  const validateFiles = (files: Array<{ workspaceId: string; key: string; path: string }>) => {
+    const paths = new Set<string>();
+    for (const file of files) {
+      if (!file || typeof file !== "object") throw new Error("Invalid imported file record.");
+      requireCanonicalFileKey(file);
+      if (file.workspaceId !== id || paths.has(file.path))
+        throw new Error("Duplicate or foreign imported file resource.");
+      paths.add(file.path);
+    }
+  };
+  validateFiles(input.overlays);
+  validateFiles(input.staged);
+  validateFiles(input.committedFiles);
+  for (const file of [...input.overlays, ...input.staged]) {
+    if (!["modified", "added", "deleted", "renamed"].includes(file.status) ||
+        (file.content !== undefined && typeof file.content !== "string") ||
+        !Number.isSafeInteger(file.updatedAt) || file.updatedAt < 0)
+      throw new Error("Malformed imported working-file content or revision.");
+  }
+  for (const file of input.committedFiles) {
+    if (typeof file.deleted !== "boolean" ||
+        (file.content !== undefined && typeof file.content !== "string"))
+      throw new Error("Malformed imported committed file.");
+  }
+  const commitIds = new Set<string>();
+  for (const commit of input.commits) {
+    if (!commit || commit.workspaceId !== id ||
+        typeof commit.id !== "string" || !commit.id.startsWith(id + ":local:") ||
+        commitIds.has(commit.id) || !Array.isArray(commit.files) ||
+        typeof commit.message !== "string" ||
+        !Number.isSafeInteger(commit.createdAt) || commit.createdAt < 0)
+      throw new Error("Malformed imported local commit.");
+    commitIds.add(commit.id);
+    validateFiles(commit.files);
+  }
+
+  const db = await openDatabase();
+  try {
+    if (owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Import authority changed before transaction.");
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(["workspaces", "overlays", "staged", "committed", "commits"], "readwrite");
+      trackWrite(tx);
+      const proof = tx.objectStore("workspaces").get(id);
+      const overlays = tx.objectStore("overlays").getAll(ownedKeyRange(id));
+      const staged = tx.objectStore("staged").getAll(ownedKeyRange(id));
+      const committed = tx.objectStore("committed").getAll(ownedKeyRange(id));
+      const commits = tx.objectStore("commits").getAll(ownedKeyRange(id));
+      let pending = 5;
+      let reason: Error | null = null;
+      const abort = (error: unknown) => {
+        reason = error instanceof Error ? error : new Error(String(error));
+        try { tx.abort(); } catch { reject(reason); }
+      };
+      tx.oncomplete = () => {
+        if (reason) return reject(reason);
+        if (owner !== activePrincipal || generation !== principalGeneration)
+          return reject(new Error("Import authority revoked before acknowledgment."));
+        resolve();
+      };
+      tx.onabort = () => reject(reason ?? tx.error ?? new Error("Authorized workspace import aborted."));
+      tx.onerror = () => reject(reason ?? tx.error ?? new Error("Authorized workspace import failed."));
+
+      const apply = () => {
+        if (--pending !== 0) return;
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration ||
+              !samePersistedWorkspace(proof.result as WorkspaceSnapshot | undefined, input.workspace) ||
+              (proof.result as WorkspaceSnapshot).baseSha !== input.workspace.baseSha ||
+              (proof.result as WorkspaceSnapshot).treeSha !== input.workspace.treeSha)
+            throw new Error("Import workspace ownership or base source revision mismatch.");
+          if ([overlays, staged, committed, commits].some((request) => request.result.length > 0))
+            throw new Error("Import would overwrite existing local work; export it first.");
+          for (const file of input.overlays) tx.objectStore("overlays").add(file);
+          for (const file of input.staged) tx.objectStore("staged").add(file);
+          for (const file of input.committedFiles) tx.objectStore("committed").add(file);
+          for (const commit of input.commits) tx.objectStore("commits").add(commit);
+        } catch (error) { abort(error); }
+      };
+      for (const request of [proof, overlays, staged, committed, commits]) {
+        request.onsuccess = apply;
+        request.onerror = () => abort(request.error ?? new Error("Import conflict query failed."));
+      }
+    });
+  } finally {
+    db.close();
+  }
+}
+
 export function loadRecentWorkspaces(owner: PrincipalKey): WorkspaceSnapshot[] {
   if (!activePrincipal || owner !== activePrincipal) return [];
   try {
