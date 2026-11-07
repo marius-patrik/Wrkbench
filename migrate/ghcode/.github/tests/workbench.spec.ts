@@ -524,6 +524,70 @@ test("GHC-00 pending Monaco draft survives a real Dockview cross-surface move an
   expect(preserved).toBe(true);
 });
 
+test("GHC-00 pending private edits block repository switch until a committed save", async ({ page }) => {
+  await installGithubMock(page);
+  await seedAuthenticatedSession(page);
+  await openPrivateRepository(page);
+  await tab(page, "primary", "Explorer").click();
+  await surface(page, "primary").getByTitle("README.md").click();
+  await expect(tab(page, "main", "README.md")).toBeVisible();
+
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.put;
+    (window as Window & { restoreSwitchOverlayStore?: () => void }).restoreSwitchOverlayStore =
+      () => { IDBObjectStore.prototype.put = original; };
+    IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === "overlays")
+        throw new DOMException("Simulated disk quota before workspace switch", "QuotaExceededError");
+      return original.apply(this, args as Parameters<IDBObjectStore["put"]>);
+    };
+  });
+  await editActiveMonaco(page, "# SWITCH_PRIVATE_SENTINEL\n");
+  await expect(surface(page, "main").getByRole("alert").filter({
+    hasText: "Document save not acknowledged",
+  })).toBeVisible();
+
+  await page.locator(".workspace-repository-button").click();
+  await page.getByRole("textbox", { name: "Repository" }).fill(PUBLIC_REPOSITORY);
+  await page.getByRole("button", { name: "Open", exact: true }).click();
+  await expect(page.locator(".workspace-dialog-error"))
+    .toContainText("Document changes are not durably acknowledged");
+  await expect(page.locator(".workspace-repository-button")).toContainText(MOCK_REPOSITORY);
+
+  await page.evaluate(() => {
+    (window as Window & { restoreSwitchOverlayStore?: () => void }).restoreSwitchOverlayStore?.();
+  });
+  await surface(page, "main").getByRole("button", { name: "Retry save" }).click();
+  await expect(surface(page, "main").locator(".resource-generated-notice[role=alert]")).toHaveCount(0);
+  await page.getByRole("button", { name: "Open", exact: true }).click();
+  await expect(page.locator(".workspace-repository-button")).toContainText(PUBLIC_REPOSITORY);
+
+  // Switching the visible repository must never delete the prior principal's
+  // acknowledged working tree; it remains isolated under the original session.
+  const preserved = await page.evaluate(async () => {
+    const request = indexedDB.open("darkfactory-workbench");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const tx = db.transaction(["workspaces", "overlays"], "readonly");
+      const workspaces = tx.objectStore("workspaces").getAll();
+      const overlays = tx.objectStore("overlays").getAll();
+      return await new Promise<boolean>((resolve, reject) => {
+        tx.oncomplete = () => resolve(overlays.result.some((item) =>
+          item.path === "README.md" && item.content === "# SWITCH_PRIVATE_SENTINEL\n" &&
+          workspaces.result.some((workspace) =>
+            workspace.id === item.workspaceId &&
+            workspace.repository?.fullName === MOCK_REPOSITORY &&
+            workspace.ownership?.principalKey === "gh:github.com:1001")));
+        tx.onerror = () => reject(tx.error);
+      });
+    } finally { db.close(); }
+  });
+  expect(preserved).toBe(true);
+});
+
 test("GitHub entity surfaces and omnibar navigate files, symbols, entities, commands, and refs", async ({ page }) => {
   await installGithubMock(page);
   await seedAuthenticatedSession(page);
