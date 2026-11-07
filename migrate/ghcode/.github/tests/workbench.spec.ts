@@ -615,7 +615,8 @@ test("owned backup round-trips private durable drafts and completed push journal
     }
   });
 
-  await page.getByRole("button", { name: /Open Repository/ }).first().click();
+  await page.locator(".workspace-repository-button").click();
+  await expect(page.getByRole("dialog", { name: "Open GitHub repository" })).toBeVisible();
   const downloadPending = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export owned local backup" }).click();
   const download = await downloadPending;
@@ -651,11 +652,13 @@ test("owned backup round-trips private durable drafts and completed push journal
       db.close();
     }
   }, recoveryIds);
+  const reloaded = page.waitForEvent("load");
   await page.getByLabel("Owned local workspace backup file").setInputFiles({
     name: "owned-workspace-backup.json",
     mimeType: "application/json",
     buffer: Buffer.from(JSON.stringify(payload), "utf8"),
   });
+  await reloaded;
   await expect(page.getByTitle("Sign out")).toBeVisible();
   const recovered = await page.evaluate(async ({ draftId, pushId }) => {
     const request = indexedDB.open("darkfactory-workbench");
