@@ -19,7 +19,7 @@
       "originalSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
       "reconciliationSourceSHA": "0e797adca5315e859d61e216d8a763f2920c39fc",
       "additionalSourceSHA": "6ed334bcad6e89a1837c299937c4c50207904541",
-      "snapshotTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+      "snapshotTreeSHA": "a9e654796a0dda5060876e1ed3a3f7a389d0baaf",
       "expectedOwner": "DarkFactory-web unified local provider",
       "acceptedChanges": [
         "RSC-03 exact-origin loopback security code and tests from existing verified integration tree",
@@ -39,7 +39,10 @@
         "2026-11-07: Windows direct PTY now uses ComSpec/cmd.exe ConPTY with Bun 1.4.4, extracted native tests exercise terminal before browser; test evidence pending.",
         "Windows real native ConPTY smoke found that CMD leaves an undefined %VARIABLE% token unexpanded; test harness corrected to assign non-empty variable before echo. Re-execute full OS acceptance.",
         "2026-11-07 real Windows Bun 1.4.4 native acceptance at a71c9db (run 42385866357) passed alongside Linux/macOS. Windows ConPTY and Chromium probe pass; previous Python shutdown still used forced TerminateProcess.",
-        "New W04: Windows native server adds SIGBREAK handler and Python host test uses dedicated process group plus CTRL_BREAK_EVENT for graceful shutdown with logs. Real Windows runner verification pending."
+        "New W04: Windows native server adds SIGBREAK handler and Python host test uses dedicated process group plus CTRL_BREAK_EVENT for graceful shutdown with logs. Real Windows runner verification pending.",
+        "Phase B RSC-ROOT: initial Chromium profile launch no longer deletes singleton process locks from another live process; SIGSEGV-specific bounded retry retained and unit-tested.",
+        "Phase B RSC-05: portable archives now contain installed server WebSocket Chromium frame/resize/navigation probe; four-platform extracted acceptance fails closed if any required capability is BLOCKED.",
+        "Phase B RSC-ROOT: read-only PR-only three-replica x ten iteration Chromium process/frame/dialog stress, preserving the original #40 test breadth. Exact-head CI pending."
       ],
       "knownUnresolved": [
         "Active root (not inert migrated RSCode) Chromium blank-page/dialog stress remains intermittently failing; PR #40 root runtime correction is preserved but unmerged into production.",
@@ -106,6 +109,16 @@
             "active root browser stress remains independent P0"
           ]
         }
+      },
+      "phaseB": {
+        "sourceTreeSHA": "a9e654796a0dda5060876e1ed3a3f7a389d0baaf",
+        "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+        "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
+        "status": "PENDING_EXACT_HEAD_NATIVE_AND_30_CYCLE_STRESS_CI",
+        "boundedNativeRecovery": "initial-profile-lock-preserving; retry only after observed SIGSEGV",
+        "nativeAcceptance": "extracted bundled Bun, real server WebSocket Chromium stream + resize + navigation, required checks all PASS",
+        "stress": "3 separate hosted Ubuntu runs x 10 browserService suites; PR-only and read-only",
+        "rootRuntime": "UNCHANGED; NO_PRODUCTION_MERGE"
       }
     },
     "ghcode": {
