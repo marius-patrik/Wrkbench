@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "149b852963bb58fa9e4ba89d59780cb068f06fc2",
+      "snapshotTreeSHA": "562235d99eec7d14875c0882fa4883c93f8ebdb2",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -139,7 +139,8 @@
         "W05: IndexedDB structural upgrade v3 -> v4 adds principal-owned, immutable-resource-bound draft recovery journal. Every transaction validates persisted repository/session/ref/source identity, with epoch fencing, monotonic checkpoint CAS and exact compare-to-discard. Journal writes commit before overlay CAS and do not automatically replay recovered drafts.",
         "W05: EditorTab hydrates same-account committed draft checkpoints only after authorized workspace file read, shows explicit recovery review and Retry save, and avoids Monaco no-change autosave; Bun lifecycle and actual Chromium IDB regression tests added.",
         "W05: compareAndApplyOverlays validates full persisted owner and exact expected revisions for a multi-file overlay mutation in ONE IndexedDB readwrite transaction. React create/edit/delete now use CAS and rename source/deletion+destination appear atomically or not at all.",
-        "W05: exportOwnedWorkspaceSnapshot reads workspaces, overlay, staged, committed and local commits in ONE read-only IDB transaction, with persisted principal/repository/session/ref proof and generation fencing; workspace ZIP now exports that snapshot instead of stale React state."
+        "W05: exportOwnedWorkspaceSnapshot reads workspaces, overlay, staged, committed and local commits in ONE read-only IDB transaction, with persisted principal/repository/session/ref proof and generation fencing; workspace ZIP now exports that snapshot instead of stale React state.",
+        "W05: Version 5 structural upgrade creates legacyBackups and migrationState. Explicit quarantineUnattributedLegacyRecords copies all unaffiliated or invalid parent records across eight stores into immutable keyed raw local backups atomically, never overwrites changed originals, leaves source records intact, never auto-attributes legacy data to logged-in account, never exposes raw bytes via exported APIs."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -151,7 +152,8 @@
         "Legacy ambiguous-data non-destructive migration, secure import/export, quota recovery under real capacity pressure and comprehensive cross-tab release acceptance remain incomplete.",
         "GraphQL beforeOid conditional mutation implemented in W03, but realistic conflict, permission and network-recovery acceptance are pending exact-head CI and live provider test.",
         "Historical .darkfactory submodule gitlink and .gitmodules omitted from source snapshot (retained in original Git DAG).",
-        "W05 crash-durable draft journal is implemented but not independently accepted until exact-head source CI and Chromium browser reload tests pass; last keystrokes without committed draft transaction remain unrecoverable by design."
+        "W05 crash-durable draft journal is implemented but not independently accepted until exact-head source CI and Chromium browser reload tests pass; last keystrokes without committed draft transaction remain unrecoverable by design.",
+        "Legacy v2 quarantine now preserves raw original bytes locally but manual attribution/recovery UI intentionally unavailable until verifiable ownership proof; no cross-account download/import of ambiguous bytes."
       ],
       "license": "GPL-3.0",
       "testCommands": [
@@ -199,18 +201,19 @@
         "lastFullyTestedSourceHead": "8a2d5067fb3715398f8d0713e85f4ab46e04472a"
       },
       "w05": {
-        "checkpointHead": "5a477b6d371b852bf4f8edc3d67306965ba6b1ca",
-        "sourceTreeSHA": "149b852963bb58fa9e4ba89d59780cb068f06fc2",
-        "databaseStructuralVersion": 4,
+        "checkpointHead": "f99dcb2f6f6e395bfd4d70a525e216b4dd104f29",
+        "sourceTreeSHA": "562235d99eec7d14875c0882fa4883c93f8ebdb2",
+        "databaseStructuralVersion": 5,
         "draftJournal": "principal-scoped IDB store; authoritative workspace CAS remains existing overlay",
         "addedTests": [
           ".github/unit/document-service.test.ts (4)",
           "real IndexedDB draft reload, account switch, immutable ref denial, stale cleanup in .github/tests/push-journal.spec.ts",
           ".github/tests/identity-isolation.spec.ts updated for DB structural version 4 (5 direct connections)",
           ".github/tests/push-journal.spec.ts: atomic multi-file rename and stale revision conflict in real Chromium IndexedDB",
-          ".github/tests/push-journal.spec.ts: authorized export isolation, persisted snapshot contents, forged workspace denial"
+          ".github/tests/push-journal.spec.ts: authorized export isolation, persisted snapshot contents, forged workspace denial",
+          "real Chromium IndexedDB v5 migration raw backup, idempotence, original record retention, cross-account load fail-closed"
         ],
-        "state": "PENDING_EXACT_HEAD_REAL_BROWSER_CI",
+        "state": "PENDING_EXACT_HEAD_CI_MIGRATION_V5_ATOMIC",
         "remaining": [
           "non-destructive legacy all-resource migration/quarantine",
           "cross-record CAS",
