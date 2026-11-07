@@ -2116,12 +2116,28 @@ export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExp
               (proof.result as WorkspaceSnapshot).baseSha !== input.workspace.baseSha ||
               (proof.result as WorkspaceSnapshot).treeSha !== input.workspace.treeSha)
             throw new Error("Import workspace ownership or base source revision mismatch.");
-          if ([existingBlobs, overlays, staged, committed, commits, existingPushes].some(
+          if ([overlays, staged, committed, commits, existingPushes].some(
                 (request) => request.result.length > 0) ||
               (existingDrafts.result as DocumentDraftRecord[]).some(
                 (item) => item.workspaceId === id))
             throw new Error("Import would overwrite existing local work or recovery state; export it first.");
-          for (const blob of blobs) tx.objectStore("blobs").add(blob);
+          // Immutable Git blobs are content-addressed caches, not unsaved local
+          // edits. They may already exist after the repository tree was opened.
+          // Reuse identical bytes, but never replace divergent or foreign data.
+          const cached = existingBlobs.result as BlobRecord[];
+          for (const current of cached) {
+            if (current.workspaceId !== id || current.key !== id + ":" + current.sha)
+              throw new Error("Corrupt or cross-workspace blob cache during import.");
+          }
+          for (const blob of blobs) {
+            const found = cached.find((current) => current.key === blob.key);
+            if (found) {
+              if (found.sha !== blob.sha || found.content !== blob.content)
+                throw new Error("Immutable blob checksum conflict during import.");
+            } else {
+              tx.objectStore("blobs").add(blob);
+            }
+          }
           for (const file of input.overlays) tx.objectStore("overlays").add(file);
           for (const file of input.staged) tx.objectStore("staged").add(file);
           for (const file of input.committedFiles) tx.objectStore("committed").add(file);
