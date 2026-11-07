@@ -19,7 +19,7 @@
       "originalSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
       "reconciliationSourceSHA": "0e797adca5315e859d61e216d8a763f2920c39fc",
       "additionalSourceSHA": "6ed334bcad6e89a1837c299937c4c50207904541",
-      "snapshotTreeSHA": "cfc51143936d34f2bf4b323449030f05651ef6e4",
+      "snapshotTreeSHA": "ee7de8f6ad7500237a57db6ca97144b81bfa6722",
       "expectedOwner": "DarkFactory-web unified local provider",
       "acceptedChanges": [
         "RSC-03 exact-origin loopback security code and tests from existing verified integration tree",
@@ -49,7 +49,8 @@
         "Phase B: managed Playwright install now prefers full Chromium new-headless channel over occasionally stalled headless-shell profile startup; explicit custom/system executable paths still supported; strict thirty-cycle acceptance pending.",
         "Phase B W04 reliability: Bun 1.4.4 (already validated on Windows in prior native runs) selected as a candidate for all four native runtimes and source stress to assess Bun 1.3.11/CDP pipe hangs; original 1.3.11 Windows issue informed upgrade; exact-head 30-cycle Chromium stress and native acceptance required.",
         "Phase B Bun 1.4.4 native Mac portable archive: rebase only internal staged Chromium .framework symlinks copied as absolute source-cache links by fs.cp; preserve fail-closed external-link rejection; native four-OS rerun needed.",
-        "Phase B: Playwright-owned Chromium persistent-context startup timeout 12s cancels spawned process rather than leaving orphan on uncontrolled Promise race; no retry on profile contention/timeout."
+        "Phase B: Playwright-owned Chromium persistent-context startup timeout 12s cancels spawned process rather than leaving orphan on uncontrolled Promise race; no retry on profile contention/timeout.",
+        "Phase B native installed probe now navigates to a different HTML document after restart instead of falsely requiring an extra frame when the stored URL already matches. Four-platform exact-head rerun required."
       ],
       "knownUnresolved": [
         "Active root (not inert migrated RSCode) Chromium blank-page/dialog stress remains intermittently failing; PR #40 root runtime correction is preserved but unmerged into production.",
@@ -118,10 +119,10 @@
         }
       },
       "phaseB": {
-        "sourceTreeSHA": "cfc51143936d34f2bf4b323449030f05651ef6e4",
+        "sourceTreeSHA": "ee7de8f6ad7500237a57db6ca97144b81bfa6722",
         "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
         "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
-        "status": "ACCEPTED_INERT_SOURCE_30_CHROMIUM_STRESS_AND_FOUR_NATIVE_OS",
+        "status": "RSCODE_RUNTIME_STRESS_ACCEPTED_NATIVE_RESTART_PROBE_CHANGED_RECHECK_REQUIRED",
         "boundedNativeRecovery": "initial-profile-lock-preserving; retry only after observed SIGSEGV",
         "nativeAcceptance": "extracted bundled Bun, real server WebSocket Chromium stream + resize + navigation, required checks all PASS",
         "stress": "3 separate hosted Ubuntu runs x 10 browserService suites; PR-only and read-only",
@@ -149,7 +150,8 @@
           "rootVerify": "PASS",
           "rootRuntime": "PASS",
           "compositeMigrationSourceWorkflow": "FAIL only standalone Canvas drag smoke test",
-          "scope": "migrate/rscode only, no root or unified release"
+          "scope": "migrate/rscode only, no root or unified release",
+          "followup": "At 7eb7b044, Linux native failure was a false failure in the installed acceptance probe: the restart request navigated to the already persisted URL and expected a second frame although ensurePageUrl deliberately returned without navigation; the probe now navigates to a distinct restart URL. Latest exact-head native matrix pending."
         }
       }
     },
@@ -158,7 +160,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "5118cd8b94eb1d9b06e82d8fbcf0b6ed3663c0d2",
+      "snapshotTreeSHA": "ef250bbd5ff604e66f0df62e6b6536ada4a6b115",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -199,7 +201,8 @@
         "W05 real Chromium split-editor acceptance: both editor panes share one authoritative retry action; test clicks one of two rendered controls and verifies both errors clear before group closure. Native Close Group dirty guard verified during intermediate run; complete exact-head suite pending.",
         "W05.1: principal-locked owned backup export/import includes committed private draft and push-reconciliation journals in same authorized transaction (previous backup omitted both); real Chromium UI round-trip added. Verify exact-head CI.",
         "W05.2: principal-authorized JSON backup restores content-addressed blobs as well as commits/overlays/staging/acknowledged drafts/remote push journal, all in one IDB transaction; real Chromium export/download/import test extended; exact-head CI pending.",
-        "W05.2.1: authorized import accepts identical preexisting immutable content-addressed Git blob caches, blocks forged/different bytes and still forbids overwriting local edits or recovery. Browser acceptance pending."
+        "W05.2.1: authorized import accepts identical preexisting immutable content-addressed Git blob caches, blocks forged/different bytes and still forbids overwriting local edits or recovery. Browser acceptance pending.",
+        "Phase C1: saved local commit IDs now immutable via IDB add; Git push journal matches ordered unique createdAt+ID commit ancestry, and no pending-push commits may be removed/cleared. Unit and real Chromium IDB regression tests added; exact-head acceptance pending."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -282,6 +285,19 @@
           "authorized import/export",
           "root Chromium stability"
         ]
+      },
+      "phaseC1": {
+        "sourceTreeSHA": "ef250bbd5ff604e66f0df62e6b6536ada4a6b115",
+        "evidence": "docs/migrations/PHASE_C_GHCODE_PUSH_INTEGRITY.md",
+        "status": "IMPLEMENTED_PENDING_EXACT_HEAD_GHCODE_IDB_BROWSER_AND_UNIT_ACCEPTANCE",
+        "immutableCommits": "IDB.add prevents in-place local commit mutation",
+        "orderedPushAncestry": "createdAt+id canonical ordering checked in storage and React before network calls",
+        "destructiveRecovery": "removeLocalCommit and clearLocalGitState protect unresolved push journal in same IDB transaction",
+        "activeTests": [
+          ".github/unit/storage-unit.test.ts",
+          "real IndexedDB push-journal.spec.ts"
+        ],
+        "legacyPolicy": "unattributed v2 localStorage and IDB remain unchanged and quarantined; no cross-account automatic attribution"
       }
     },
     "canvas": {
@@ -357,9 +373,12 @@
         "sourceTreeSHA": "b1fc8fe4da335e36eae560482392f3a9c5096c32",
         "appSubtreeSHA": "106584111f42b5c1d3f33822dce5f215b9c870ce",
         "case": "real Chromium pointer capture, drag +56px after ArrowRight resize, persisted aria-valuenow >=325",
-        "status": "PENDING_EXACT_HEAD_BROWSER_SMOKE",
+        "status": "PASS_EXACT_HEAD_STANDALONE_CHROMIUM_SMOKE",
         "priorFailureRun": 42417053136,
-        "priorFailure": "Canvas standalone smoke_canvas.mjs line 218 intermittent pointer drag timeout; all RSCode stress jobs succeeded"
+        "priorFailure": "Canvas standalone smoke_canvas.mjs line 218 intermittent pointer drag timeout; all RSCode stress jobs succeeded",
+        "passedAtHeadSHA": "7eb7b044179ba4cc017ddf5e5c4ecd65e582f648",
+        "sourceWorkflowRun": 42422575709,
+        "note": "Canvas Chromium UI smoke and injected provider browser harness passed; C01 persistence adapter remains intentionally inactive and the unified root integration unverified."
       }
     }
   },
