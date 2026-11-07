@@ -162,6 +162,42 @@ test(
 );
 
 
+test("initial browser capture tries view mode before unsafe stalled compositor surface", async () => {
+  const service = new BrowserFrameService("/tmp/rscode-viewport-fixture", () => undefined);
+  const called: Array<{ fromSurface: boolean; captureBeyondViewport: boolean }> = [];
+  const png = Buffer.alloc(24);
+  Buffer.from("89504e470d0a1a0a", "hex").copy(png, 0);
+  png.write("IHDR", 12, 4, "ascii");
+  png.writeUInt32BE(427, 16);
+  png.writeUInt32BE(311, 20);
+  const frames: BrowserFrameMessage[] = [];
+  const live = {
+    viewport: { width: 427, height: 311, deviceScaleFactor: 1 },
+    page: { url: () => "about:blank" },
+    cdp: {
+      send: async (_method: string, options: { fromSurface: boolean; captureBeyondViewport: boolean }) => {
+        called.push({ fromSurface: options.fromSurface, captureBeyondViewport: options.captureBeyondViewport });
+        if (!options.fromSurface) throw new Error("first view capture unavailable");
+        return { data: png.toString("base64") };
+      },
+    },
+    subscribers: new Map([[1, { send: (message: BrowserFrameMessage) => { frames.push(message); } }]]),
+    currentUrl: null as string | null,
+    lastFrame: null as BrowserFrameMessage | null,
+  };
+  const internal = service as unknown as { captureInitialFrame: (live: unknown) => Promise<void> };
+  await internal.captureInitialFrame(live);
+  expect(called).toEqual([
+    { fromSurface: false, captureBeyondViewport: false },
+    { fromSurface: true, captureBeyondViewport: true },
+  ]);
+  expect(frames).toHaveLength(1);
+  expect(frames[0]?.width).toBe(427);
+  expect(frames[0]?.height).toBe(311);
+  expect(live.lastFrame?.image.startsWith("data:image/png;base64,")).toBe(true);
+  await service.close();
+});
+
 test("successful navigation forces a new screenshot when CDP screencast has no frame", async () => {
   const service = new BrowserFrameService("/tmp/rscode-cdp-navigation-fixture", () => undefined);
   const target = "https://example.test/phase-b";
