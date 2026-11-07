@@ -465,6 +465,135 @@ export async function loadWorkspace(id: string, owner: PrincipalKey) {
   return isOwnedWorkspace(snapshot, owner) ? snapshot : undefined;
 }
 
+/**
+ * Branch-local state fork. Unlike saveWorkspace() followed by individual
+ * saveOverlay/saveStaged/saveCommittedFile/saveLocalCommit calls, this copies
+ * the entire authorized source workspace in ONE IndexedDB transaction.
+ *
+ * The remote ref may have been created immediately before this operation;
+ * on failure no partially cloned local destination becomes visible.
+ * Pending push journals are deliberately not cloned to a different ref.
+ */
+export async function forkOwnedWorkspaceState(
+  source: WorkspaceSnapshot,
+  target: WorkspaceSnapshot,
+): Promise<void> {
+  requireOwned(source.id);
+  requireOwned(target.id);
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  if (!owner || !isOwnedWorkspace(source, owner) || !isOwnedWorkspace(target, owner) ||
+      source.id === target.id ||
+      source.repository.id !== target.repository.id ||
+      source.repository.fullName !== target.repository.fullName ||
+      source.ownership?.session.repositoryKey !== target.ownership?.session.repositoryKey ||
+      source.ref === target.ref ||
+      source.baseSha !== target.baseSha || source.treeSha !== target.treeSha)
+    throw new Error("Branch fork requires two distinct verified refs of the same immutable repository and base.");
+
+  const db = await openDatabase();
+  try {
+    if (owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Branch fork authority revoked before transaction.");
+    await new Promise<void>((resolve, reject) => {
+      const stores = ["workspaces", "blobs", "overlays", "staged",
+        "committed", "commits", "pushOperations"] as const;
+      const tx = db.transaction([...stores], "readwrite");
+      trackWrite(tx);
+      let reason: Error | null = null;
+      const abort = (error: unknown) => {
+        reason = error instanceof Error ? error : new Error(String(error));
+        try { tx.abort(); } catch { reject(reason); }
+      };
+      tx.oncomplete = () => {
+        if (reason) return reject(reason);
+        if (owner !== activePrincipal || generation !== principalGeneration)
+          return reject(new Error("Branch fork authority revoked before commit acknowledgment."));
+        resolve();
+      };
+      tx.onabort = () => reject(reason ?? tx.error ?? new Error("Branch fork transaction aborted."));
+      tx.onerror = () => reject(reason ?? tx.error ?? new Error("Branch fork transaction failed."));
+
+      const workspaces = tx.objectStore("workspaces");
+      const original = workspaces.get(source.id);
+      const destination = workspaces.get(target.id);
+      const groups = (["blobs", "overlays", "staged",
+        "committed", "commits", "pushOperations"] as const).map((name) => ({
+        name, request: tx.objectStore(name).getAll(ownedKeyRange(source.id)),
+      }));
+      let pending = groups.length + 2;
+      const assemble = () => {
+        if (--pending !== 0) return;
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration ||
+              !samePersistedWorkspace(original.result as WorkspaceSnapshot | undefined, source) ||
+              (original.result as WorkspaceSnapshot).updatedAt !== source.updatedAt ||
+              (original.result as WorkspaceSnapshot).baseSha !== source.baseSha ||
+              (original.result as WorkspaceSnapshot).treeSha !== source.treeSha)
+            throw new Error("Branch fork source identity or base changed; reopen and retry.");
+          if (destination.result !== undefined)
+            throw new Error("Branch fork would overwrite an existing local workspace.");
+          const lookup = new Map(groups.map((group) => [group.name, group.request.result as unknown[]]));
+          const pendingPush = lookup.get("pushOperations") as PushOperation[];
+          if (pendingPush.length)
+            throw new Error("Resolve pending source-branch push operations before creating a new branch.");
+          let count = 0;
+          for (const records of lookup.values()) count += records.length;
+          if (count > 10_000)
+            throw new Error("Branch fork exceeds the safe local record count.");
+          const fileClone = <T extends { key: string; workspaceId: string; path: string }>(file: T): T => {
+            requireCanonicalFileKey(file);
+            if (file.workspaceId !== source.id)
+              throw new Error("Source file does not belong to verified branch.");
+            return {
+              ...file, key: target.id + ":" + file.path, workspaceId: target.id,
+            };
+          };
+          const blobs = lookup.get("blobs") as BlobRecord[];
+          const overlays = lookup.get("overlays") as WorkingFile[];
+          const staged = lookup.get("staged") as StagedFile[];
+          const committed = lookup.get("committed") as CommittedFile[];
+          const commits = lookup.get("commits") as LocalCommit[];
+          // Validate every source record before writing any target record.
+          for (const blob of blobs) {
+            if (blob.workspaceId !== source.id || blob.key !== source.id + ":" + blob.sha ||
+                !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(blob.sha) ||
+                typeof blob.content !== "string")
+              throw new Error("Branch fork found a malformed or foreign-owned blob.");
+          }
+          for (const file of [...overlays, ...staged, ...committed]) fileClone(file);
+          for (const commit of commits) {
+            if (commit.workspaceId !== source.id ||
+                !commit.id.startsWith(source.id + ":local:") ||
+                !Array.isArray(commit.files) || typeof commit.message !== "string")
+              throw new Error("Branch fork found a malformed local commit.");
+            for (const file of commit.files) fileClone(file);
+          }
+          workspaces.add(target);
+          for (const blob of blobs) tx.objectStore("blobs").add({
+            ...blob, workspaceId: target.id, key: target.id + ":" + blob.sha,
+          } satisfies BlobRecord);
+          for (const file of overlays) tx.objectStore("overlays").add(fileClone(file));
+          for (const file of staged) tx.objectStore("staged").add(fileClone(file));
+          for (const file of committed) tx.objectStore("committed").add(fileClone(file));
+          for (const commit of commits) tx.objectStore("commits").add({
+            ...commit,
+            id: target.id + ":local:" + commit.createdAt + ":" + crypto.randomUUID(),
+            workspaceId: target.id,
+            files: commit.files.map(fileClone),
+          } satisfies LocalCommit);
+        } catch (error) { abort(error); }
+      };
+      for (const request of [original, destination, ...groups.map((group) => group.request)]) {
+        request.onsuccess = assemble;
+        request.onerror = () => abort(request.error ?? new Error("Branch fork source read failed."));
+      }
+    });
+  } finally {
+    db.close();
+  }
+}
+
 export async function saveBlob(workspaceId: string, sha: string, content: string) {
   requireOwned(workspaceId);
   if (!/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(sha))

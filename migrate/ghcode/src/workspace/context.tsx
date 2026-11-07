@@ -60,6 +60,7 @@ import {
   compareAndDiscardLocalPaths,
   advancePushOperation,
   finalizeConfirmedPush,
+  forkOwnedWorkspaceState,
   loadPendingPushOperation,
   exportOwnedWorkspaceSnapshot,
   clearStaged,
@@ -73,10 +74,6 @@ import {
   loadWorkspace,
   rememberWorkspace,
   saveBlob,
-  saveCommittedFile,
-  saveLocalCommit,
-  saveOverlay,
-  saveStaged,
   saveWorkspace,
 } from "./storage";
 import {
@@ -912,6 +909,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const lease = capture();
+        // A newly created remote ref must never inherit bytes that are still
+        // waiting for an acknowledged durable document checkpoint.
+        documentService.assertSafeToNavigate();
         await createGithubBranchRef(workspace.repository.fullName, name, workspace.baseSha, token);
         assertCurrent(lease);
         const ownership = createOwnedWorkspaceIdentity(
@@ -931,43 +931,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           ref: name,
           updatedAt: Date.now(),
         };
-        await saveWorkspace(nextWorkspace);
+        // All local working, staging, committed, commit and blob records fork
+        // atomically under verified source/target authority. Failed writes
+        // leave no half-cloned destination workspace in IndexedDB.
+        await forkOwnedWorkspaceState(workspace, nextWorkspace);
         assertCurrent(lease);
-
-        for (const file of overlays) {
-          await saveOverlay({
-            ...file,
-            key: overlayKey(nextId, file.path),
-            workspaceId: nextId,
-          });
-        }
-        for (const file of staged) {
-          await saveStaged({
-            ...file,
-            key: overlayKey(nextId, file.path),
-            workspaceId: nextId,
-          });
-        }
-        for (const file of committedFiles) {
-          await saveCommittedFile({
-            ...file,
-            key: overlayKey(nextId, file.path),
-            workspaceId: nextId,
-          });
-        }
-        for (const localCommit of commits) {
-          const id = `${nextId}:local:${localCommit.createdAt}:${crypto.randomUUID()}`;
-          await saveLocalCommit({
-            ...localCommit,
-            id,
-            workspaceId: nextId,
-            files: localCommit.files.map((file) => ({
-              ...file,
-              key: overlayKey(nextId, file.path),
-              workspaceId: nextId,
-            })),
-          });
-        }
 
         assertCurrent(lease);
         setWorkspace(nextWorkspace);
@@ -984,12 +952,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [
       assertCurrent,
       capture,
-      committedFiles,
-      commits,
       loadLocalState,
-      overlays,
       principal,
-      staged,
       token,
       workspace,
     ],

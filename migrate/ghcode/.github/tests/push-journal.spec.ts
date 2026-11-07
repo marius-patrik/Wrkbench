@@ -163,6 +163,112 @@ test("discarding renamed or staged work is one principal-authorized CAS transact
   });
 });
 
+test("branch fork copies owned local state atomically and rejects partial or foreign revisions", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const a = "gh:github.com:1001";
+    const b = "gh:github.com:2002";
+    const sourceSession = crypto.randomUUID();
+    const branchSession = crypto.randomUUID();
+    const sourceId = `ghcode-owned-v2:${encodeURIComponent(a)}:${sourceSession}`;
+    const targetId = `ghcode-owned-v2:${encodeURIComponent(a)}:${branchSession}`;
+    const source = {
+      version: 2, id: sourceId, ref: "main", updatedAt: 1,
+      baseSha: "1".repeat(40), treeSha: "2".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: a, workspace: { id: crypto.randomUUID(), principalKey: a },
+        session: { id: sourceSession, workspaceId: "PLACEHOLDER",
+          principalKey: a, repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main" },
+      },
+    };
+    source.ownership.session.workspaceId = source.ownership.workspace.id;
+    const target = {
+      ...source, id: targetId, ref: "feature", updatedAt: 2,
+      ownership: {
+        principalKey: a, workspace: { id: crypto.randomUUID(), principalKey: a },
+        session: { id: branchSession, workspaceId: "PLACEHOLDER",
+          principalKey: a, repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/feature" },
+      },
+    };
+    target.ownership.session.workspaceId = target.ownership.workspace.id;
+    const overlay = {
+      key: sourceId + ":README.md", workspaceId: sourceId, path: "README.md",
+      status: "modified", content: "BRANCH_PRIVATE_BYTES", updatedAt: 1,
+    };
+    const staged = { ...overlay, stagedAt: 2 };
+    const committed = {
+      key: sourceId + ":archived.txt", workspaceId: sourceId, path: "archived.txt",
+      content: "COMMITTED_A", deleted: false, updatedAt: 1,
+    };
+    const localCommit = {
+      id: sourceId + ":local:1:one", workspaceId: sourceId,
+      message: "original", createdAt: 1, files: [overlay],
+    };
+    storage.bindStoragePrincipal(a);
+    await storage.saveWorkspace(source);
+    await storage.saveBlob(sourceId, "3".repeat(40), "BLOB_A");
+    await storage.saveOverlay(overlay);
+    await storage.saveStaged(staged);
+    await storage.saveCommittedFile(committed);
+    await storage.saveLocalCommit(localCommit);
+
+    const originalAdd = IDBObjectStore.prototype.add;
+    IDBObjectStore.prototype.add = function (...args) {
+      if (this.name === "staged")
+        throw new DOMException("Injected staged clone abort", "AbortError");
+      return originalAdd.apply(this, args as Parameters<IDBObjectStore["add"]>);
+    };
+    let aborted = false;
+    try { await storage.forkOwnedWorkspaceState(source, target); }
+    catch { aborted = true; }
+    finally { IDBObjectStore.prototype.add = originalAdd; }
+
+    const afterAbort = await storage.loadWorkspace(targetId, a);
+    const sourceIntact = (await storage.loadOverlays(sourceId))[0]?.content;
+    await storage.forkOwnedWorkspaceState(source, target);
+
+    const branchWorkspace = await storage.loadWorkspace(targetId, a);
+    const copiedOverlay = (await storage.loadOverlays(targetId))[0];
+    const copiedStaged = (await storage.loadStaged(targetId))[0];
+    const copiedCommitted = (await storage.loadCommittedFiles(targetId))[0];
+    const copiedCommit = (await storage.loadLocalCommits(targetId))[0];
+    const copiedBlob = await storage.loadBlob(targetId, "3".repeat(40));
+    let duplicateRejected = false;
+    try { await storage.forkOwnedWorkspaceState(source, target); }
+    catch { duplicateRejected = true; }
+
+    storage.bindStoragePrincipal(b);
+    let foreignRejected = false;
+    try { await storage.forkOwnedWorkspaceState(source, target); }
+    catch { foreignRejected = true; }
+    storage.bindStoragePrincipal(a);
+
+    return {
+      aborted, targetAbsentOnFailure: !afterAbort,
+      sourceIntact, branchReady: branchWorkspace?.id === targetId,
+      copiedOverlay: copiedOverlay?.content,
+      copiedStaged: copiedStaged?.content,
+      copiedCommitted: copiedCommitted?.content,
+      copiedCommit: copiedCommit?.files[0]?.workspaceId === targetId &&
+        copiedCommit?.id.startsWith(targetId + ":local:"),
+      copiedBlob, duplicateRejected, foreignRejected,
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    aborted: true, targetAbsentOnFailure: true,
+    sourceIntact: "BRANCH_PRIVATE_BYTES", branchReady: true,
+    copiedOverlay: "BRANCH_PRIVATE_BYTES",
+    copiedStaged: "BRANCH_PRIVATE_BYTES",
+    copiedCommitted: "COMMITTED_A",
+    copiedCommit: true, copiedBlob: "BLOB_A",
+    duplicateRejected: true, foreignRejected: true,
+  });
+});
+
 test("prepared push survives browser reload and confirmed push finalizes atomically", async ({ page }) => {
   const seeded = await page.evaluate(async (url) => {
     const storage = await import(url);
