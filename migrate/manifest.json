@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "148817be657ce2297426b83322546d2d68b18751",
+      "snapshotTreeSHA": "239e5ffa5b6b00dbb0b382ae198b4ea3e9545c86",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -141,7 +141,8 @@
         "W05: compareAndApplyOverlays validates full persisted owner and exact expected revisions for a multi-file overlay mutation in ONE IndexedDB readwrite transaction. React create/edit/delete now use CAS and rename source/deletion+destination appear atomically or not at all.",
         "W05: exportOwnedWorkspaceSnapshot reads workspaces, overlay, staged, committed and local commits in ONE read-only IDB transaction, with persisted principal/repository/session/ref proof and generation fencing; workspace ZIP now exports that snapshot instead of stale React state.",
         "W05: Version 5 structural upgrade creates legacyBackups and migrationState. Explicit quarantineUnattributedLegacyRecords copies all unaffiliated or invalid parent records across eight stores into immutable keyed raw local backups atomically, never overwrites changed originals, leaves source records intact, never auto-attributes legacy data to logged-in account, never exposes raw bytes via exported APIs.",
-        "W05: RepositoryDialog exposes explicit Preserve legacy browser data action; runs transactional v5 quarantine, returns count-only status, never grants access/visibility to anonymous legacy private records or relabels them."
+        "W05: RepositoryDialog exposes explicit Preserve legacy browser data action; runs transactional v5 quarantine, returns count-only status, never grants access/visibility to anonymous legacy private records or relabels them.",
+        "W05: importOwnedWorkspaceSnapshot validates principal, repository/session/ref/source SHA, path/key/CAS state and size before one all-store IndexedDB transaction; import refuses to overwrite any existing local work; RepositoryDialog has explicit JSON export/import for the selected verified workspace with error feedback."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -150,11 +151,11 @@
         "Full GHC-02 resource-level versioned v3 schema, immutable resource identity and revision CAS across all stores remain incomplete; current v3 upgrade adds only push journal.",
         "Historical GHC-02 PR #34 unsafe ownership/export/migration code remains rejected and excluded.",
         "GHC-03 browser integration, Dockview group/move lifecycle and conflict recovery are not independently accepted; additional native paths require guarding.",
-        "Legacy ambiguous-data non-destructive migration, secure import/export, quota recovery under real capacity pressure and comprehensive cross-tab release acceptance remain incomplete.",
         "GraphQL beforeOid conditional mutation implemented in W03, but realistic conflict, permission and network-recovery acceptance are pending exact-head CI and live provider test.",
         "Historical .darkfactory submodule gitlink and .gitmodules omitted from source snapshot (retained in original Git DAG).",
         "W05 crash-durable draft journal is implemented but not independently accepted until exact-head source CI and Chromium browser reload tests pass; last keystrokes without committed draft transaction remain unrecoverable by design.",
-        "Legacy v2 quarantine now preserves raw original bytes locally but manual attribution/recovery UI intentionally unavailable until verifiable ownership proof; no cross-account download/import of ambiguous bytes."
+        "Legacy v2 quarantine now preserves raw original bytes locally but manual attribution/recovery UI intentionally unavailable until verifiable ownership proof; no cross-account download/import of ambiguous bytes.",
+        "Owned JSON backup import/export implemented but still provisional pending end-to-end browser acceptance and review; ambiguous historical legacy backups intentionally cannot be imported into arbitrary accounts."
       ],
       "license": "GPL-3.0",
       "testCommands": [
@@ -202,8 +203,8 @@
         "lastFullyTestedSourceHead": "8a2d5067fb3715398f8d0713e85f4ab46e04472a"
       },
       "w05": {
-        "checkpointHead": "1c12517010c4fbfbf4dd74832ca794c8b6676e54",
-        "sourceTreeSHA": "148817be657ce2297426b83322546d2d68b18751",
+        "checkpointHead": "1ed73d3ea87f689362e5f61c489154f334a3aec5",
+        "sourceTreeSHA": "239e5ffa5b6b00dbb0b382ae198b4ea3e9545c86",
         "databaseStructuralVersion": 5,
         "draftJournal": "principal-scoped IDB store; authoritative workspace CAS remains existing overlay",
         "addedTests": [
@@ -213,9 +214,10 @@
           ".github/tests/push-journal.spec.ts: atomic multi-file rename and stale revision conflict in real Chromium IndexedDB",
           ".github/tests/push-journal.spec.ts: authorized export isolation, persisted snapshot contents, forged workspace denial",
           "real Chromium IndexedDB v5 migration raw backup, idempotence, original record retention, cross-account load fail-closed",
-          ".github/tests/identity-isolation.spec.ts: user-invoked actual six-store legacy backup, private UI containment, originals retained"
+          ".github/tests/identity-isolation.spec.ts: user-invoked actual six-store legacy backup, private UI containment, originals retained",
+          ".github/tests/push-journal.spec.ts: safe import into verified empty workspace; foreign principal, invalid path and overwrites rejected"
         ],
-        "state": "W05_REAL_CAS_SECURE_EXPORT_AND_LEGACY_QUARANTINE_IMPLEMENTED_CI_PENDING",
+        "state": "W05_SOURCE_CODE_IMPL_PENDING_EXACT_HEAD_CI",
         "remaining": [
           "non-destructive legacy all-resource migration/quarantine",
           "cross-record CAS",
