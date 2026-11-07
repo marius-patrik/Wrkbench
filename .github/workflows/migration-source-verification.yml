@@ -63,6 +63,8 @@ jobs:
   # Run the *migrated* service, not the inactive root service. PR-only/read-only.
   rscode-chromium-stress:
     name: RSC-ROOT migrated Chromium stress replica ${{ matrix.replica }}
+    env:
+      RSCODE_BROWSER_STRESS_TRACE: "1"
     strategy:
       fail-fast: false
       matrix:
