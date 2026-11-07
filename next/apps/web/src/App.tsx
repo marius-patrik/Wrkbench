@@ -106,7 +106,24 @@ export function App(){const theme=useUI(s=>s.theme),toggle=useUI(s=>s.themeToggl
  useEffect(()=>{void files.seed(seedFiles).catch(e=>notify(`Local storage unavailable: ${String(e)}`,'error'))},[]);
  const selectWorkbench=useCallback((id:WorkbenchId)=>{switchWorkbench(id);navigate('/workbench/'+id)},[switchWorkbench,navigate]);
  useEffect(()=>{const match=location.match(/^\/workbench\/(development|research|audio|video|operations|agents|trading)$/);if(match&&match[1]!==wb)switchWorkbench(match[1] as WorkbenchId)},[location,wb,switchWorkbench]);
- useEffect(()=>{const onRename=(e:Event)=>{const {from,to}=(e as CustomEvent<{from:string;to:string}>).detail;for(const panel of apiRef.current?.panels??[]){const params=panel.api.getParameters() as {path?:string;kind?:ViewKind};if(params.path===from){panel.api.updateParameters({...params,path:to});panel.api.setTitle(to.split('/').at(-1)??to)}}};const onDelete=(e:Event)=>{const path=(e as CustomEvent<string>).detail;for(const panel of [...(apiRef.current?.panels??[])]){const params=panel.api.getParameters() as {path?:string};if(params.path===path)panel.api.close()}};window.addEventListener('wrkbench:filerename',onRename);window.addEventListener('wrkbench:filedelete',onDelete);return()=>{window.removeEventListener('wrkbench:filerename',onRename);window.removeEventListener('wrkbench:filedelete',onDelete)}},[]);
+ useEffect(()=>files.subscribe(change=>{
+  if(change.type==='renamed'){
+   useUI.getState().moveDocument(change.from,change.to);
+   for(const panel of apiRef.current?.panels??[]){
+    const params=panel.api.getParameters() as {path?:string;kind?:ViewKind};
+    if(params.path===change.from){
+     panel.api.updateParameters({...params,path:change.to});
+     panel.api.setTitle(change.to.split('/').at(-1)??change.to);
+    }
+   }
+  }else if(change.type==='deleted'){
+   useUI.getState().removeDocument(change.path);
+   for(const panel of [...(apiRef.current?.panels??[])]){
+    const params=panel.api.getParameters() as {path?:string};
+    if(params.path===change.path)panel.api.close();
+   }
+  }
+ }),[]);
  const transferTab=useCallback((panelId:string,target:WorkbenchId)=>{const api=apiRef.current;const panel=api?.getPanel(panelId);if(!api||!panel||target===wb)return;
    const record:Transfer={id:panel.id,title:panel.title??panel.id,params:panel.api.getParameters() as Record<string,unknown>,source:wb,target};
    const pending=(safeJSON(localStorage.getItem(TRANSFER_KEY))??[]) as Transfer[];localStorage.setItem(TRANSFER_KEY,JSON.stringify([...pending.filter(p=>p.id!==panel.id),record]));
