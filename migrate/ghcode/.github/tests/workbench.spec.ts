@@ -345,6 +345,10 @@ test("Monaco save failures guard Dockview close and account transition until ack
   page.once("dialog", (dialog) => dialog.dismiss());
   await tab(page, "main", "README.md").getByTitle("Close").click();
   await expect(tab(page, "main", "README.md")).toBeVisible();
+  // A native middle-click must not bypass the DocumentService dirty guard.
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await tab(page, "main", "README.md").click({ button: "middle", force: true });
+  await expect(tab(page, "main", "README.md")).toBeVisible();
   await page.getByTitle("Sign out").click();
   await expect(page.getByTitle("Sign out")).toBeVisible();
 
@@ -353,7 +357,8 @@ test("Monaco save failures guard Dockview close and account transition until ack
   });
   await surface(page, "main").getByRole("button", { name: "Retry save" }).click();
   await expect(surface(page, "main").locator(".resource-generated-notice[role=\"alert\"]")).toHaveCount(0);
-  await tab(page, "main", "README.md").getByTitle("Close").click();
+  // The same native middle-click must close once durable writes are acknowledged.
+  await tab(page, "main", "README.md").click({ button: "middle", force: true });
   await expect(tab(page, "main", "README.md")).toHaveCount(0);
   await page.reload();
 
