@@ -80,7 +80,8 @@ export function defineFeature(definition: FeatureContribution) {
   return { definition, activate };
 }
 type PluginContribution = ReturnType<typeof defineFeature>;
-export async function createClientHost(plugins: ReadonlyArray<PluginContribution>) {
+export interface ClientHostOptions { disabledFeatures?: ReadonlySet<string> }
+export async function createClientHost(plugins: ReadonlyArray<PluginContribution>, options: ClientHostOptions = {}) {
   const root = new Context();
   await root.plugin(FeatureCatalog);
   await root.plugin(ToolService);
@@ -101,7 +102,9 @@ export async function createClientHost(plugins: ReadonlyArray<PluginContribution
     active.delete(id);
   };
   try {
-    for (const plugin of plugins) await enable(plugin.definition.id);
+    for (const plugin of plugins) {
+      if (plugin.definition.id === 'plugins' || !options.disabledFeatures?.has(plugin.definition.id)) await enable(plugin.definition.id);
+    }
   } catch (error) {
     await root.fiber.dispose();
     throw error;

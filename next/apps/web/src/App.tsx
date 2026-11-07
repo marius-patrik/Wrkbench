@@ -8,6 +8,18 @@ import {Icon} from '../../../packages/client/src/icons.tsx';
 import {useUI,RUNTIMES,resolvedContext} from '../../../packages/client/src/state.ts';
 import {files,seedFiles,tools,invocationContext,notify,registerClientTools,bindToolRegistry} from '../../../packages/client/src/services.ts';
 import {useLocation} from 'wouter';
+const PLUGIN_PREFS_KEY='wrkbench-disabled-plugin-ids-v1';
+function disabledFeatureIds():Set<string>{
+ try{const value=JSON.parse(localStorage.getItem(PLUGIN_PREFS_KEY)??'[]');
+  return new Set(Array.isArray(value)?value.filter((id:unknown)=>typeof id==='string'&&id!=='plugins'):[])}
+ catch{return new Set()}
+}
+function setDisabledFeaturePreference(id:string,disabled:boolean){
+ const ids=disabledFeatureIds();
+ if(disabled)ids.add(id);else ids.delete(id);
+ try{localStorage.setItem(PLUGIN_PREFS_KEY,JSON.stringify([...ids]))}
+ catch(error){console.warn('Plugin preferences could not be saved',error)}
+}
 const BOOTSTRAP_KEY='wrkbench-real-dockview-v3-';
 const TRANSFER_KEY='wrkbench-real-pending-transfers-v3';
 type Transfer={id:string;title:string;params:Record<string,unknown>;target:WorkbenchId;source:WorkbenchId};
@@ -90,7 +102,7 @@ export function App(){const theme=useUI(s=>s.theme),toggle=useUI(s=>s.themeToggl
  const [location,navigate]=useLocation();
  const [catalog,setCatalog]=useState<FeatureDefinition[]>([]),[ready,setReady]=useState(false),[menu,setMenu]=useState<'none'|'workbench'|'add'|'context'|'display'>('none'),[palette,setPalette]=useState(false),[filter,setFilter]=useState('');
  const apiRef=useRef<DockviewApi|null>(null);const hostRef=useRef<Awaited<ReturnType<typeof createClientHost>>|null>(null);
- useEffect(()=>{let mounted=true;let host:Awaited<ReturnType<typeof createClientHost>>|undefined;let unsubscribe:(()=>void)|undefined;void createClientHost(plugins).then(h=>{host=h;if(!mounted){void h.dispose();return}hostRef.current=h;bindToolRegistry(h.toolRegistry);unsubscribe=h.catalog.subscribe(()=>setCatalog(h.catalog.list()));setCatalog(h.catalog.list());setReady(true)}).catch(e=>{console.error(e);notify(`Cordis startup failed: ${String(e)}`,'error')});return()=>{mounted=false;unsubscribe?.();bindToolRegistry(null);if(host)void host.dispose();hostRef.current=null}},[]);
+ useEffect(()=>{let mounted=true;let host:Awaited<ReturnType<typeof createClientHost>>|undefined;let unsubscribe:(()=>void)|undefined;void createClientHost(plugins,{disabledFeatures:disabledFeatureIds()}).then(h=>{host=h;if(!mounted){void h.dispose();return}hostRef.current=h;bindToolRegistry(h.toolRegistry);unsubscribe=h.catalog.subscribe(()=>setCatalog(h.catalog.list()));setCatalog(h.catalog.list());setReady(true)}).catch(e=>{console.error(e);notify(`Cordis startup failed: ${String(e)}`,'error')});return()=>{mounted=false;unsubscribe?.();bindToolRegistry(null);if(host)void host.dispose();hostRef.current=null}},[]);
  useEffect(()=>{void files.seed(seedFiles).catch(e=>notify(`Local storage unavailable: ${String(e)}`,'error'))},[]);
  const selectWorkbench=useCallback((id:WorkbenchId)=>{switchWorkbench(id);navigate('/workbench/'+id)},[switchWorkbench,navigate]);
  useEffect(()=>{const match=location.match(/^\/workbench\/(development|research|audio|video|operations|agents|trading)$/);if(match&&match[1]!==wb)switchWorkbench(match[1] as WorkbenchId)},[location,wb,switchWorkbench]);
@@ -110,8 +122,8 @@ export function App(){const theme=useUI(s=>s.theme),toggle=useUI(s=>s.themeToggl
  const popout=useCallback(()=>{const api=apiRef.current;if(api?.activeGroup)void api.addPopoutGroup(api.activeGroup,{popoutUrl:'./popout.html'}).then(success=>{if(!success)notify('Browser popout was blocked or unavailable','error')}).catch(e=>notify(String(e),'error'))},[]);
  const save=useCallback(async()=>{const s=useUI.getState(),id=s.activeViewId,api=apiRef.current,p=id?api?.getPanel(id):null;const path=(p?.api.getParameters() as {path?:string}|undefined)?.path??'src/App.tsx';const doc=s.documents[path];if(!doc?.dirty){notify('No unsaved changes');return}try{const result=await files.save(path,doc.content,doc.revision);useUI.getState().markSaved(path,result.revision);notify(`Saved ${path}`)}catch(e){notify(String(e),'error')}},[]);
  useEffect(()=>{if(!ready)return;const host=hostRef.current;if(!host)return;const detach=host.viewActions.attach(openView);const unregister=registerClientTools({open:openView,split,float,save});return()=>{unregister();detach()}},[ready,openView,split,float,save]);
- const disableFeature=useCallback((id:string)=>{if(id==='plugins'){notify('Extensions is required for plugin recovery','error');return}void hostRef.current?.disable(id as ViewKind).catch(e=>notify(String(e),'error'))},[]);
- const enableFeature=useCallback((id:string)=>{void hostRef.current?.enable(id as ViewKind).catch(e=>notify(String(e),'error'))},[]);
+ const disableFeature=useCallback((id:string)=>{if(id==='plugins'){notify('Extensions is required for plugin recovery','error');return}void hostRef.current?.disable(id as ViewKind).then(()=>setDisabledFeaturePreference(id,true)).catch(e=>notify(String(e),'error'))},[]);
+ const enableFeature=useCallback((id:string)=>{void hostRef.current?.enable(id as ViewKind).then(()=>setDisabledFeaturePreference(id,false)).catch(e=>notify(String(e),'error'))},[]);
  const getFeature=useCallback((kind:ViewKind)=>hostRef.current?.catalog.get(kind),[]);
  useEffect(()=>{const onKey=(e:KeyboardEvent)=>{const accel=e.metaKey||e.ctrlKey;if(accel&&e.key.toLowerCase()==='k'){e.preventDefault();setPalette(true)}else if(accel&&e.key.toLowerCase()==='s'){e.preventDefault();void save()}else if(accel&&e.key.toLowerCase()==='\\'){e.preventDefault();split()}else if(e.key==='Escape'){setPalette(false);setMenu('none')}};document.addEventListener('keydown',onKey);return()=>document.removeEventListener('keydown',onKey)},[save,split]);
  useEffect(()=>{const onBefore=(e:BeforeUnloadEvent)=>{if(Object.values(useUI.getState().documents).some(d=>d.dirty)){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',onBefore);return()=>window.removeEventListener('beforeunload',onBefore)},[]);
