@@ -55,6 +55,7 @@ import {
   bindStoragePrincipal,
   beginPushOperation,
   compareAndSetOverlay,
+  compareAndApplyOverlays,
   compareAndApplyStaged,
   advancePushOperation,
   finalizeConfirmedPush,
@@ -611,14 +612,18 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!workspace) throw new Error("No workspace is open.");
       const lease = capture();
       assertCurrent(lease);
-      if (expected !== undefined)
-        await compareAndSetOverlay(workspace.id, path, expected, file);
-      else if (file) await saveOverlay(file);
-      else await removeOverlay(workspace.id, path);
+      // Every ordinary working-tree edit now proves its caller-observed
+      // durable predecessor. A stale React closure may not overwrite another
+      // tab's document without an explicit conflict and reload.
+      await compareAndSetOverlay(
+        workspace.id, path, expected !== undefined
+          ? expected : overlays.find((entry) => entry.path === path) ?? null,
+        file,
+      );
       assertCurrent(lease);
       await refreshOverlays();
     },
-    [assertCurrent, capture, refreshOverlays, workspace],
+    [assertCurrent, capture, overlays, refreshOverlays, workspace],
   );
 
   const writeFile = useCallback(
@@ -674,7 +679,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!workspace) throw new Error("No workspace is open.");
       const existing = overlays.find((entry) => entry.path === path);
       if (!baselineExists(path) && existing?.status === "added") {
-        await commitOverlay(null, path);
+        await commitOverlay(null, path, existing ?? null);
         return;
       }
       const remoteEntry = workspace.tree.find(
@@ -690,6 +695,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           updatedAt: Date.now(),
         },
         path,
+        existing ?? null,
       );
     },
     [baselineExists, commitOverlay, overlays, workspace],
@@ -712,38 +718,34 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         (entry) => entry.path === path && entry.type === "blob",
       );
 
-      if (sourceWasAdded) {
-        await removeOverlay(workspace.id, path);
-        await saveOverlay({
-          key: overlayKey(workspace.id, target),
-          workspaceId: workspace.id,
-          path: target,
-          status: "added",
-          content,
-          updatedAt: Date.now(),
-        });
-        await refreshOverlays();
-        return;
-      }
-
-      await saveOverlay({
+      const source = overlays.find((item) => item.path === path) ?? null;
+      const destination = overlays.find((item) => item.path === target) ?? null;
+      const now = Date.now();
+      const nextTarget: WorkingFile = {
         key: overlayKey(workspace.id, target),
         workspaceId: workspace.id,
         path: target,
-        status: "renamed",
+        status: sourceWasAdded ? "added" : "renamed",
         content,
-        baseSha: remoteEntry?.sha,
-        renamedFrom: path,
-        updatedAt: Date.now(),
-      });
-      await saveOverlay({
-        key: overlayKey(workspace.id, path),
-        workspaceId: workspace.id,
-        path,
-        status: "deleted",
-        baseSha: remoteEntry?.sha,
-        updatedAt: Date.now(),
-      });
+        ...(sourceWasAdded ? {} : {
+          baseSha: remoteEntry?.sha,
+          renamedFrom: path,
+        }),
+        updatedAt: now,
+      };
+      // A rename must change both paths in one IDB commit. The old two-write
+      // sequence could leave a missing source and no destination after crash.
+      await compareAndApplyOverlays(workspace.id, [
+        { path, expected: source, next: sourceWasAdded ? null : {
+          key: overlayKey(workspace.id, path),
+          workspaceId: workspace.id,
+          path,
+          status: "deleted",
+          baseSha: remoteEntry?.sha,
+          updatedAt: now,
+        } },
+        { path: target, expected: destination, next: nextTarget },
+      ]);
       await refreshOverlays();
     },
     [baselineExists, overlays, readFile, refreshOverlays, workspace],
