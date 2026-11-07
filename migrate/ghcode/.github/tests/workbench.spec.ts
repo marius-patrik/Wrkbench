@@ -553,12 +553,16 @@ test("GHC-00 pending private edits block repository switch until a committed sav
   await expect(page.locator(".workspace-dialog-error"))
     .toContainText("Document changes are not durably acknowledged");
   await expect(page.locator(".workspace-repository-button")).toContainText(MOCK_REPOSITORY);
+  await page.getByRole("dialog", { name: "Open GitHub repository" })
+    .getByRole("button", { name: "Close" }).click();
 
   await page.evaluate(() => {
     (window as Window & { restoreSwitchOverlayStore?: () => void }).restoreSwitchOverlayStore?.();
   });
   await surface(page, "main").getByRole("button", { name: "Retry save" }).click();
   await expect(surface(page, "main").locator(".resource-generated-notice[role=alert]")).toHaveCount(0);
+  await page.locator(".workspace-repository-button").click();
+  await page.getByRole("textbox", { name: "Repository" }).fill(PUBLIC_REPOSITORY);
   await page.getByRole("button", { name: "Open", exact: true }).click();
   await expect(page.locator(".workspace-repository-button")).toContainText(PUBLIC_REPOSITORY);
 
