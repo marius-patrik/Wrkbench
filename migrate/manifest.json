@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "a95e2222412567622cff3dda74dd3fcbc7cbc373",
+      "snapshotTreeSHA": "edbec79ed2247e267a02aeff4d00e3cc3c38dcd2",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -137,7 +137,8 @@
         "W03 continued: atomic stage/unstage changes use one full-staged-snapshot CAS, including multi-file rename pairs. Chromium acceptance expanded for same-principal forgery, key poisoning, staged writers, and incomplete push recovery.",
         "W03 continued: explicit source-control pending-push reconciliation exposes journal phase, expected/last observed/intended SHAs, local commit count, inspect/export/safe retry actions; no force or automatic merge.",
         "W05: IndexedDB structural upgrade v3 -> v4 adds principal-owned, immutable-resource-bound draft recovery journal. Every transaction validates persisted repository/session/ref/source identity, with epoch fencing, monotonic checkpoint CAS and exact compare-to-discard. Journal writes commit before overlay CAS and do not automatically replay recovered drafts.",
-        "W05: EditorTab hydrates same-account committed draft checkpoints only after authorized workspace file read, shows explicit recovery review and Retry save, and avoids Monaco no-change autosave; Bun lifecycle and actual Chromium IDB regression tests added."
+        "W05: EditorTab hydrates same-account committed draft checkpoints only after authorized workspace file read, shows explicit recovery review and Retry save, and avoids Monaco no-change autosave; Bun lifecycle and actual Chromium IDB regression tests added.",
+        "W05: compareAndApplyOverlays validates full persisted owner and exact expected revisions for a multi-file overlay mutation in ONE IndexedDB readwrite transaction. React create/edit/delete now use CAS and rename source/deletion+destination appear atomically or not at all."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -157,7 +158,7 @@
         "bun run check",
         "bun run acceptance"
       ],
-      "testResults": "W05_DURABLE_DRAFT_JOURNAL_IMPLEMENTED_CI_PENDING",
+      "testResults": "W05_DRAFT_RECOVERY_AND_ATOMIC_RENAME_IMPLEMENTED_PENDING_EXACT_HEAD_CI",
       "acceptanceState": "PROVISIONAL_SOURCE_ONLY",
       "originalSourceRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
@@ -197,14 +198,15 @@
         "lastFullyTestedSourceHead": "8a2d5067fb3715398f8d0713e85f4ab46e04472a"
       },
       "w05": {
-        "checkpointHead": "0edaeeb6d116dc01868c4bce44a7c5962bd8d086",
-        "sourceTreeSHA": "a95e2222412567622cff3dda74dd3fcbc7cbc373",
+        "checkpointHead": "acf23b87014354236abbf7d0b5f316e7ab8e136d",
+        "sourceTreeSHA": "edbec79ed2247e267a02aeff4d00e3cc3c38dcd2",
         "databaseStructuralVersion": 4,
         "draftJournal": "principal-scoped IDB store; authoritative workspace CAS remains existing overlay",
         "addedTests": [
           ".github/unit/document-service.test.ts (4)",
           "real IndexedDB draft reload, account switch, immutable ref denial, stale cleanup in .github/tests/push-journal.spec.ts",
-          ".github/tests/identity-isolation.spec.ts updated for DB structural version 4 (5 direct connections)"
+          ".github/tests/identity-isolation.spec.ts updated for DB structural version 4 (5 direct connections)",
+          ".github/tests/push-journal.spec.ts: atomic multi-file rename and stale revision conflict in real Chromium IndexedDB"
         ],
         "state": "PENDING_EXACT_HEAD_REAL_BROWSER_CI",
         "remaining": [
