@@ -460,6 +460,70 @@ test("Monaco save failures guard Dockview close and account transition until ack
   expect(durable).toBe(true);
 });
 
+test("GHC-00 pending Monaco draft survives a real Dockview cross-surface move and retry", async ({ page }) => {
+  await installGithubMock(page);
+  await seedAuthenticatedSession(page);
+  await openPrivateRepository(page);
+  await tab(page, "primary", "Explorer").click();
+  await surface(page, "primary").getByTitle("README.md").click();
+  await expect(tab(page, "main", "README.md")).toBeVisible();
+
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.put;
+    (window as Window & { restoreMoveOverlayStore?: () => void }).restoreMoveOverlayStore =
+      () => { IDBObjectStore.prototype.put = original; };
+    IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === "overlays")
+        throw new DOMException("Simulated write failure before Dockview transfer", "QuotaExceededError");
+      return original.apply(this, args as Parameters<IDBObjectStore["put"]>);
+    };
+  });
+  const content = "# PENDING_MOVE_SENTINEL\\n";
+  await editActiveMonaco(page, content);
+  await expect(surface(page, "main").getByRole("alert").filter({
+    hasText: "Document save not acknowledged",
+  })).toBeVisible();
+
+  // The user may move a dirty pane; its live model must travel with the pane.
+  // A transfer is not a close and must not silently ack the failed write.
+  await dragTab(page, "main", "README.md", "panel");
+  await expect(surface(page, "panel").getByRole("alert").filter({
+    hasText: "Document save not acknowledged",
+  })).toBeVisible();
+  await expect(surface(page, "panel").locator(".monaco-editor .view-line").filter({
+    hasText: "PENDING_MOVE_SENTINEL",
+  })).toBeVisible();
+
+  await page.evaluate(() => {
+    (window as Window & { restoreMoveOverlayStore?: () => void }).restoreMoveOverlayStore?.();
+  });
+  await surface(page, "panel").getByRole("button", { name: "Retry save" }).click();
+  await expect(surface(page, "panel").locator(".resource-generated-notice[role=alert]")).toHaveCount(0);
+  await dragTab(page, "panel", "README.md", "main");
+  await page.reload();
+
+  const preserved = await page.evaluate(async () => {
+    const request = indexedDB.open("darkfactory-workbench");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const tx = db.transaction(["workspaces", "overlays"], "readonly");
+      const workspaces = tx.objectStore("workspaces").getAll();
+      const overlays = tx.objectStore("overlays").getAll();
+      return await new Promise<boolean>((resolve, reject) => {
+        tx.oncomplete = () => resolve(overlays.result.some((item) =>
+          item.path === "README.md" && item.content === "# PENDING_MOVE_SENTINEL\\n" &&
+          workspaces.result.some((workspace) => workspace.id === item.workspaceId &&
+            workspace.ownership?.principalKey === "gh:github.com:1001")));
+        tx.onerror = () => reject(tx.error);
+      });
+    } finally { db.close(); }
+  });
+  expect(preserved).toBe(true);
+});
+
 test("GitHub entity surfaces and omnibar navigate files, symbols, entities, commands, and refs", async ({ page }) => {
   await installGithubMock(page);
   await seedAuthenticatedSession(page);
