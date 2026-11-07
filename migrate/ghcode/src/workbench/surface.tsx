@@ -421,7 +421,10 @@ export function WorkbenchSurfaceView({
             // Normal guarded closes only reach here when clean, and both
             // in-surface and cross-surface drag moves are exempt.
             api.onDidRemovePanel?.((event: any) => {
-              const removed = paramsOf(event?.panel);
+              // Dockview's public onDidRemovePanel callback supplies the
+              // removed IDockviewPanel directly (not { panel }); retain the
+              // wrapped shape for older compatible versions.
+              const removed = paramsOf(event?.panel ?? event);
               const path = removed && typeof removed.state?.path === "string"
                 ? removed.state.path : null;
               const context = workspaceRef.current;
