@@ -402,6 +402,14 @@ export class BrowserFrameService {
       throw new Error("browser profile is outside the browser profiles directory");
     }
     const executablePath = this.requireExecutablePath();
+    // The managed Playwright installation includes full Chromium as well as
+    // chromium-headless-shell. Repeated new-profile headless-shell launches
+    // intermittently stall before CDP handshake on Linux CI; use Chromium's
+    // maintained new-headless channel for bundled installations (the same
+    // channel already needed for Windows installed acceptance).
+    // Preserve explicit custom/system executable paths for local operators.
+    const useBundledChromium = !process.env.CHROMIUM_EXECUTABLE_PATH &&
+      safePlaywrightChromiumPath() === executablePath;
     await mkdir(profilesRoot, { recursive: true });
     await mkdir(profile, { recursive: true });
     const realRoot = await realpath(profilesRoot);
@@ -418,7 +426,7 @@ export class BrowserFrameService {
     // local process may still own this profile. Cleanup is permitted only
     // after this launch itself reports a native SIGSEGV (see bounded retry).
     const launch = () => chromium.launchPersistentContext(userDataDir, {
-      executablePath,
+      ...(useBundledChromium ? { channel: "chromium" } : { executablePath }),
       headless: true,
       viewport: { width: DEFAULT_VIEWPORT.width, height: DEFAULT_VIEWPORT.height },
       deviceScaleFactor: DEFAULT_VIEWPORT.deviceScaleFactor,
