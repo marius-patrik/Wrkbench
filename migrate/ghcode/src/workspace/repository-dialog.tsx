@@ -7,10 +7,13 @@ import {
   type GithubAuthResult,
 } from "@/github/auth";
 import { useWorkspace } from "./context";
+import { quarantineUnattributedLegacyRecords } from "./storage";
 
 export function RepositoryDialog() {
   const workspace = useWorkspace();
   const [input, setInput] = useState("");
+  const [quarantineStatus, setQuarantineStatus] = useState<string | null>(null);
+  const [quarantineBusy, setQuarantineBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [authResult, setAuthResult] = useState<GithubAuthResult>(() => getGithubAuthResult());
   const authConfig = getGithubAuthConfiguration();
@@ -19,6 +22,7 @@ export function RepositoryDialog() {
     if (!workspace.dialogOpen) {
       setInput("");
       setLocalError(null);
+      setQuarantineStatus(null);
       return;
     }
     setAuthResult(getGithubAuthResult());
@@ -48,6 +52,23 @@ export function RepositoryDialog() {
       setAuthResult(getGithubAuthResult());
     } catch (reason) {
       setLocalError(reason instanceof Error ? reason.message : String(reason));
+    }
+  };
+
+  const preserveLegacy = async () => {
+    if (quarantineBusy) return;
+    setQuarantineBusy(true);
+    setQuarantineStatus(null);
+    setLocalError(null);
+    try {
+      const result = await quarantineUnattributedLegacyRecords();
+      setQuarantineStatus(
+        `Preserved ${result.preservedRecords} unattributed records locally; ${result.existingBackups} previous backups unchanged. Originals were not removed or assigned to this account.`,
+      );
+    } catch (reason) {
+      setLocalError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setQuarantineBusy(false);
     }
   };
 
@@ -94,9 +115,18 @@ export function RepositoryDialog() {
           <div className="workspace-dialog-error">{localError || workspace.error}</div>
         )}
         <div className="workspace-auth-status status-warning" role="status">
-          Historical v2 workspaces, cached files and layouts are preserved but cannot be restored
-          automatically. Only newly account-scoped sessions can be opened until explicit migration.
+          Historical unattributed v2 workspaces cannot be assigned to the currently signed-in
+          account. The original browser data remains intact. Preserve an additional local
+          transactional copy before any future manual recovery.
         </div>
+        <button
+          type="button"
+          disabled={quarantineBusy}
+          onClick={() => void preserveLegacy()}
+        >
+          {quarantineBusy ? "Preserving legacy data…" : "Preserve legacy browser data"}
+        </button>
+        {quarantineStatus && <div className="workspace-auth-status" role="status">{quarantineStatus}</div>}
         {(workspace.authPhase === "failed" || workspace.authPhase === "invalidated") && (
           <button type="button" onClick={workspace.signOut}>
             Continue anonymously
