@@ -126,4 +126,113 @@ describe("GHC-03 durable document lifecycle", () => {
     expect(service.hasAnyUnacknowledgedChanges()).toBe(false);
   });
 
+  test("checkpoint survives a simulated browser crash and is never applied without review", async () => {
+    const checkpoints = new Map<string, { content: string; revision: number }>();
+    const journal = {
+      read: async (id: string) => checkpoints.get(id) ?? null,
+      write: async (id: string, content: string, revision: number) => {
+        checkpoints.set(id, { content, revision });
+      },
+      discard: async (id: string, content: string, revision: number) => {
+        const current = checkpoints.get(id);
+        if (!current || current.content !== content || current.revision !== revision) return false;
+        checkpoints.delete(id);
+        return true;
+      },
+    };
+    const writing = deferred();
+    const checkpointed = deferred();
+    const original = new DocumentService({
+      ...journal,
+      write: async (id, content, revision) => {
+        await journal.write(id, content, revision);
+        checkpointed.resolve();
+      },
+    });
+    original.bindPrincipal(principal);
+    original.acquire(resource, principal, "baseline", () => writing.promise);
+    const pending = original.edit(resource, "important private draft");
+    await checkpointed.promise;
+    expect(checkpoints.get(resource)?.content).toBe("important private draft");
+    expect(original.snapshot(resource)?.dirty).toBe(true);
+
+    // A new service instance has no in-memory Editor state. It only trusts a
+    // previously committed, principal-authorized IndexedDB checkpoint.
+    const reloaded = new DocumentService(journal);
+    reloaded.bindPrincipal("gh:github.com:2002");
+    await expect(reloaded.recover(resource, "gh:github.com:2002", "baseline"))
+      .rejects.toThrow(/original verified principal/);
+    reloaded.bindPrincipal(principal);
+    const recovered = await reloaded.recover(resource, principal, "baseline");
+    expect(recovered).toEqual({ content: "important private draft", revision: 1 });
+    const written: string[] = [];
+    const snapshot = reloaded.acquire(resource, principal, "baseline", async (content) => {
+      written.push(content);
+    }, recovered);
+    expect(snapshot.content).toBe("important private draft");
+    expect(snapshot.dirty).toBe(true);
+    expect(snapshot.error).toContain("Review");
+    expect(written).toEqual([]); // recovery must never auto-push
+    await reloaded.flush(resource); // explicit user-directed retry
+    expect(written).toEqual(["important private draft"]);
+    expect(reloaded.snapshot(resource)?.dirty).toBe(false);
+    expect(checkpoints.has(resource)).toBe(false);
+    original.bindPrincipal("gh:github.com:2002");
+    writing.resolve();
+    await expect(pending).rejects.toThrow(/revoked/);
+  });
+
+  test("matching already-acknowledged drafts are removed without replaying stale bytes", async () => {
+    const old = { content: "already committed", revision: 8 };
+    let removed = false;
+    const service = new DocumentService({
+      read: async () => old,
+      write: async () => {},
+      discard: async (_id, content, revision) => {
+        removed = content === old.content && revision === old.revision;
+        return removed;
+      },
+    });
+    service.bindPrincipal(principal);
+    expect(await service.recover(resource, principal, old.content)).toBeNull();
+    expect(removed).toBe(true);
+    const value = service.acquire(resource, principal, old.content, async () => {
+      throw new Error("stale replay must not occur");
+    });
+    expect(value.dirty).toBe(false);
+  });
+
+  test("aborted draft checkpoint rejects the edit before the working-tree writer", async () => {
+    let wroteWorkingTree = false;
+    const service = new DocumentService({
+      read: async () => null,
+      write: async () => { throw new Error("QuotaExceededError: draft IDB aborted"); },
+      discard: async () => true,
+    });
+    service.bindPrincipal(principal);
+    service.acquire(resource, principal, "base", async () => { wroteWorkingTree = true; });
+    await expect(service.edit(resource, "unsaved")).rejects.toThrow(/QuotaExceeded/);
+    expect(wroteWorkingTree).toBe(false);
+    expect(service.snapshot(resource)?.dirty).toBe(true);
+    expect(service.snapshot(resource)?.error).toContain("QuotaExceeded");
+  });
+
+  test("A to B to A epoch invalidates an in-flight draft recovery read", async () => {
+    let release!: (value: { content: string; revision: number }) => void;
+    const delayed = new Promise<{ content: string; revision: number }>((resolve) => {
+      release = resolve;
+    });
+    const service = new DocumentService({
+      read: () => delayed,
+      write: async () => {},
+      discard: async () => true,
+    });
+    service.bindPrincipal(principal);
+    const pending = service.recover(resource, principal, "original");
+    service.bindPrincipal("gh:github.com:2002");
+    service.bindPrincipal(principal);
+    release({ content: "private", revision: 1 });
+    await expect(pending).rejects.toThrow(/authority changed/);
+  });
+
 });

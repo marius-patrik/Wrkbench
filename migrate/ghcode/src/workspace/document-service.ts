@@ -1,4 +1,5 @@
 import { parseDocumentResourceId } from "./identity";
+import { checkpointDocumentDraft, discardDocumentDraft, loadDocumentDraft } from "./storage";
 import type { editor as MonacoEditor } from "monaco-editor";
 
 export type DocumentSnapshot = {
@@ -9,6 +10,13 @@ export type DocumentSnapshot = {
   saving: boolean;
   dirty: boolean;
   error: string | null;
+};
+
+export type DocumentDraftCheckpoint = { content: string; revision: number };
+export type DocumentDraftJournal = {
+  read: (id: string) => Promise<DocumentDraftCheckpoint | null>;
+  write: (id: string, content: string, revision: number) => Promise<unknown>;
+  discard: (id: string, content: string, revision: number) => Promise<boolean>;
 };
 
 type Entry = {
@@ -36,6 +44,8 @@ type Entry = {
  */
 export class DocumentService {
   private principal: string | null = null;
+  private authorityEpoch = 0;
+  constructor(private readonly journal?: DocumentDraftJournal) {}
   private readonly entries = new Map<string, Entry>();
   // Forced account invalidation cannot synchronously commit an IndexedDB write.
   // Retain unacknowledged bytes in a principal-sealed in-memory recovery lane.
@@ -44,6 +54,7 @@ export class DocumentService {
 
   bindPrincipal(principal: string): void {
     if (this.principal === principal) return;
+    this.authorityEpoch++;
     for (const entry of this.entries.values()) {
       entry.revoked = true;
       entry.generation += 1;
@@ -72,6 +83,34 @@ export class DocumentService {
     }
   }
 
+
+  /**
+   * Load the last committed journal checkpoint only after a validated identity
+   * transition. Never expose it to a different principal or a stale A→B→A
+   * closure. The caller must display it for explicit review, not auto-push it.
+   */
+  async recover(id: string, principal: string, current: string): Promise<DocumentDraftCheckpoint | null> {
+    const identity = parseDocumentResourceId(id);
+    if (!identity || identity.principalKey !== principal || this.principal !== principal)
+      throw new Error("Document draft recovery requires the original verified principal.");
+    const epoch = this.authorityEpoch;
+    const record = await this.journal?.read(id) ?? null;
+    if (this.principal !== principal || epoch !== this.authorityEpoch)
+      throw new Error("Document authority changed during draft recovery.");
+    if (!record) return null;
+    if (!Number.isSafeInteger(record.revision) || record.revision < 1 || typeof record.content !== "string")
+      throw new Error("Recovered draft checkpoint is corrupt.");
+    // The working overlay already contains these bytes, e.g. after a crash
+    // between acknowledged overlay CAS and journal cleanup.
+    if (record.content === current) {
+      await this.journal?.discard(id, record.content, record.revision);
+      if (this.principal !== principal || epoch !== this.authorityEpoch)
+        throw new Error("Document authority changed while clearing acknowledged recovery.");
+      return null;
+    }
+    return record;
+  }
+
   /** Warn on unload even when the user switched away from a private account. */
   hasSuspendedChanges(): boolean {
     return this.suspended.size > 0;
@@ -86,6 +125,7 @@ export class DocumentService {
     principal: string,
     initial: string,
     writer: (value: string) => Promise<void>,
+    recovered: DocumentDraftCheckpoint | null = null,
   ): DocumentSnapshot {
     const identity = parseDocumentResourceId(id);
     if (!this.principal || this.principal !== principal || !identity ||
@@ -95,8 +135,11 @@ export class DocumentService {
     let entry = this.entries.get(id);
     if (!entry) {
       entry = {
-        id, principal, content: initial, revision: 0, acknowledgedRevision: 0,
-        saving: false, error: null, leases: 0, revoked: false, writer,
+        id, principal, content: recovered?.content ?? initial,
+        revision: recovered?.revision ?? 0, acknowledgedRevision: 0,
+        saving: false,
+        error: recovered ? "Recovered a durable local draft. Review it, then select Retry save to apply it." : null,
+        leases: 0, revoked: false, writer,
         inFlight: null, generation: 0, listeners: new Set(), model: null,
       };
       this.entries.set(id, entry);
@@ -198,12 +241,24 @@ export class DocumentService {
           throw new Error("Document authority revoked before save.");
         const revision = entry.revision;
         const content = entry.content;
+        // A completed draft checkpoint is an explicitly recoverable boundary.
+        // If this fails (quota, abort, principal revocation), do not call the
+        // working-tree writer and never report the edit as acknowledged.
+        await this.journal?.write(entry.id, content, revision);
+        if (entry.revoked || entry.principal !== this.principal ||
+            generation !== entry.generation)
+          throw new Error("Document authority revoked after draft checkpoint.");
         await entry.writer(content);
         if (entry.revoked || entry.principal !== this.principal ||
             generation !== entry.generation)
           throw new Error("Document authority revoked after save.");
         entry.acknowledgedRevision = revision;
         this.notify(entry);
+        // A committed overlay is authoritative. Failure to clear a stale
+        // recovery checkpoint cannot revoke an already acknowledged save;
+        // recover() removes it safely if the contents match on next open.
+        try { await this.journal?.discard(entry.id, content, revision); }
+        catch { /* Retain recoverable draft if cleanup is interrupted. */ }
       }
       entry.error = null;
     } catch (error) {
@@ -233,4 +288,8 @@ export class DocumentService {
   }
 }
 
-export const documentService = new DocumentService();
+export const documentService = new DocumentService({
+  read: loadDocumentDraft,
+  write: checkpointDocumentDraft,
+  discard: discardDocumentDraft,
+});

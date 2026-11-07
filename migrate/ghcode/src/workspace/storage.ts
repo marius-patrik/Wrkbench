@@ -5,10 +5,10 @@ import type {
   WorkspaceSnapshot,
   WorkingFile,
 } from "./model";
-import { isOwnedWorkspace, parseOwnedWorkspaceId, validDocumentPath, type PrincipalKey } from "./identity";
+import { encodeDocumentResourceId, isOwnedWorkspace, parseDocumentResourceId, parseOwnedWorkspaceId, validDocumentPath, type PrincipalKey } from "./identity";
 
 const DATABASE = "darkfactory-workbench";
-const VERSION = 3;
+const VERSION = 4;
 // The original workbench-recent-workspaces-v1 is unattributed legacy and stays untouched.
 const OWNED_RECENT_PREFIX = "ghcode-recent-owned-v1:";
 
@@ -90,7 +90,7 @@ type BlobRecord = {
   content: string;
   updatedAt: number;
 };
-type StoreName = "workspaces" | "blobs" | "overlays" | "staged" | "committed" | "commits" | "pushOperations";
+type StoreName = "workspaces" | "blobs" | "overlays" | "staged" | "committed" | "commits" | "pushOperations" | "drafts";
 
 /** String-key prefix query never materializes another workspace's private records. */
 function ownedKeyRange(workspaceId: string): IDBKeyRange {
@@ -125,6 +125,9 @@ function openDatabase() {
       }
       if (!database.objectStoreNames.contains("pushOperations")) {
         database.createObjectStore("pushOperations", { keyPath: "id" });
+      }
+      if (!database.objectStoreNames.contains("drafts")) {
+        database.createObjectStore("drafts", { keyPath: "id" });
       }
     };
     request.onsuccess = () => {
@@ -286,6 +289,137 @@ async function allForWorkspace<T extends { workspaceId: string }>(
         (name !== "commits" && (!record.path || !validDocumentPath(record.path) ||
           key !== workspaceId + ":" + record.path)))
       throw new Error("Corrupt resource identifier in authorized workspace.");
+    return true;
+  });
+}
+
+
+/**
+ * Recovery journal for a single canonical document resource.
+ *
+ * This is NOT a competing working-tree writer. It stores only last-durably-
+ * acknowledged draft checkpoints before the existing overlay CAS writer runs.
+ * If a browser terminates during editing, only completed draft transactions
+ * can be recovered. Authentication and immutable session/ref/source identity
+ * are re-proven against the persisted workspace on EVERY operation.
+ */
+export type DocumentDraftRecord = {
+  id: string;
+  workspaceId: string;
+  principalKey: PrincipalKey;
+  content: string;
+  revision: number;
+  updatedAt: number;
+};
+
+async function transactAuthorizedDraft<T>(
+  id: string,
+  mode: IDBTransactionMode,
+  mutate: (store: IDBObjectStore, current: DocumentDraftRecord | undefined) => T,
+): Promise<T> {
+  const identity = parseDocumentResourceId(id);
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  if (!identity || !owner || identity.principalKey !== owner)
+    throw new Error("Document draft is not owned by the verified principal.");
+  requireOwned(identity.workspaceId);
+  const db = await openDatabase();
+  try {
+    if (owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Draft authorization changed before transaction.");
+    return await new Promise<T>((resolve, reject) => {
+      const tx = db.transaction(["workspaces", "drafts"], mode);
+      if (mode === "readwrite") trackWrite(tx);
+      const drafts = tx.objectStore("drafts");
+      let output!: T;
+      let ready = false;
+      let reason: Error | null = null;
+      const abort = (error: unknown) => {
+        reason = error instanceof Error ? error : new Error(String(error));
+        try { tx.abort(); } catch { reject(reason); }
+      };
+      tx.oncomplete = () => {
+        if (reason) return reject(reason);
+        if (!ready || owner !== activePrincipal || generation !== principalGeneration)
+          return reject(new Error("Draft transaction was not acknowledged for this principal."));
+        resolve(output);
+      };
+      tx.onabort = () => reject(reason ?? tx.error ?? new Error("Draft transaction aborted."));
+      tx.onerror = () => reject(reason ?? tx.error ?? new Error("Draft transaction failed."));
+      const workspace = tx.objectStore("workspaces").get(identity.workspaceId);
+      workspace.onsuccess = () => {
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration ||
+              !isOwnedWorkspace(workspace.result as WorkspaceSnapshot | undefined, owner))
+            throw new Error("No persisted principal/session ownership for draft.");
+          // The parsed document's immutable repo, session, ref, SHA and path
+          // must match the verified workspace, not just its user-shaped ID.
+          if (encodeDocumentResourceId(workspace.result as WorkspaceSnapshot, identity.path) !== id)
+            throw new Error("Draft resource revision or repository identity changed.");
+          const reading = drafts.get(id);
+          reading.onsuccess = () => {
+            try {
+              const current = reading.result as DocumentDraftRecord | undefined;
+              if (current && (current.id !== id ||
+                  current.workspaceId !== identity.workspaceId ||
+                  current.principalKey !== owner ||
+                  !Number.isSafeInteger(current.revision) || current.revision < 1 ||
+                  typeof current.content !== "string"))
+                throw new Error("Corrupt or cross-principal draft checkpoint.");
+              output = mutate(drafts, current);
+              ready = true;
+            } catch (error) { abort(error); }
+          };
+          reading.onerror = () => abort(reading.error ?? new Error("Draft read failed."));
+        } catch (error) { abort(error); }
+      };
+      workspace.onerror = () => abort(workspace.error ?? new Error("Draft ownership lookup failed."));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+/** Return only a fully committed draft from the currently authorized session. */
+export function loadDocumentDraft(id: string): Promise<DocumentDraftRecord | null> {
+  return transactAuthorizedDraft(id, "readonly", (_store, current) => current ?? null);
+}
+
+/** Acknowledges draft durability only after its IDB transaction commits. */
+export function checkpointDocumentDraft(
+  id: string,
+  content: string,
+  revision: number,
+): Promise<DocumentDraftRecord> {
+  if (typeof content !== "string" || !Number.isSafeInteger(revision) || revision < 1)
+    return Promise.reject(new Error("Invalid document draft revision or content."));
+  const identity = parseDocumentResourceId(id);
+  if (!identity) return Promise.reject(new Error("Invalid document draft identity."));
+  return transactAuthorizedDraft(id, "readwrite", (store, current) => {
+    if (current && (current.revision > revision ||
+        (current.revision === revision && current.content !== content)))
+      throw new Error("Document draft conflict: newer checkpoint already exists.");
+    const next: DocumentDraftRecord = {
+      id, workspaceId: identity.workspaceId, principalKey: identity.principalKey,
+      content, revision, updatedAt: Date.now(),
+    };
+    store.put(next);
+    return next;
+  });
+}
+
+/** Never remove a newer checkpoint when a concurrent edit/save completes. */
+export function discardDocumentDraft(
+  id: string,
+  content: string,
+  revision: number,
+): Promise<boolean> {
+  if (!Number.isSafeInteger(revision) || revision < 1)
+    return Promise.reject(new Error("Invalid acknowledged draft revision."));
+  return transactAuthorizedDraft(id, "readwrite", (store, current) => {
+    if (!current || current.revision !== revision || current.content !== content)
+      return false;
+    store.delete(id);
     return true;
   });
 }

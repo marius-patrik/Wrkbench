@@ -32,7 +32,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test("real IndexedDB v3 denies cross-principal reads, blobs and push preparation", async ({ page }) => {
+test("real IndexedDB v4 denies cross-principal reads, blobs and push preparation", async ({ page }) => {
   const result = await page.evaluate(async (url) => {
     const storage = await import(url);
     const a = "gh:github.com:1001";
@@ -306,7 +306,7 @@ test("real storage rejects forged same-principal workspace IDs with no persisted
       catch { rejection[key] = true; }
     }
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("darkfactory-workbench", 3);
+      const request = indexedDB.open("darkfactory-workbench", 4);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -464,5 +464,69 @@ test("real staged snapshot CAS serializes competing writers and atomically stage
     accepted: 1, rejected: 1,
     staleRemovalDenied: true, invalidBatchDenied: true, otherPrincipalDenied: true,
     finalPaths: ["README.md", "old.md", "renamed.md"],
+  });
+});
+
+
+test("real IndexedDB durable private draft survives reload, rejects account and ref forgery, and CAS-clears", async ({ page }) => {
+  const original = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const principal = "gh:github.com:1001";
+    const sessionId = crypto.randomUUID();
+    const workspaceUuid = crypto.randomUUID();
+    const id = `ghcode-owned-v2:${encodeURIComponent(principal)}:${sessionId}`;
+    const workspace = {
+      version: 2, id, ref: "main", updatedAt: 1,
+      baseSha: "1".repeat(40), treeSha: "2".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: principal, workspace: { id: workspaceUuid, principalKey: principal },
+        session: { id: sessionId, workspaceId: workspaceUuid, principalKey: principal,
+          repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main" },
+      },
+    };
+    const parts = [principal, id, sessionId, "gh:github.com:repo:42",
+      "refs/heads/main", workspace.baseSha, "README.md"];
+    const documentId = `ghcode-document-v1:${parts.map(encodeURIComponent).join(":")}`;
+    storage.bindStoragePrincipal(principal);
+    await storage.saveWorkspace(workspace);
+    const saved = await storage.checkpointDocumentDraft(documentId, "secret crash draft", 1);
+    const dbVersion = await new Promise<number>((resolve, reject) => {
+      const req = indexedDB.open("darkfactory-workbench");
+      req.onsuccess = () => { resolve(req.result.version); req.result.close(); };
+      req.onerror = () => reject(req.error);
+    });
+    return { documentId, principal, dbVersion, record: saved };
+  }, sourceUrl);
+  expect(original.dbVersion).toBe(4);
+  expect(original.record.content).toBe("secret crash draft");
+
+  // Destroy all JS module state while retaining the real browser database.
+  await page.reload();
+  const result = await page.evaluate(async ({ url, documentId, principal }) => {
+    const storage = await import(url);
+    storage.bindStoragePrincipal("gh:github.com:2002");
+    const crossPrincipalDenied = await storage.loadDocumentDraft(documentId)
+      .then(() => false, () => true);
+    storage.bindStoragePrincipal(principal);
+    const restored = await storage.loadDocumentDraft(documentId);
+    const forgedRef = documentId.replace(encodeURIComponent("refs/heads/main"), encodeURIComponent("refs/heads/other"));
+    const forgedRefDenied = await storage.checkpointDocumentDraft(forgedRef, "forgery", 2)
+      .then(() => false, () => true);
+    await storage.checkpointDocumentDraft(documentId, "newer secret draft", 2);
+    const staleClear = await storage.discardDocumentDraft(documentId, "secret crash draft", 1);
+    const stillStored = await storage.loadDocumentDraft(documentId);
+    const clearNewest = await storage.discardDocumentDraft(documentId, "newer secret draft", 2);
+    const afterClear = await storage.loadDocumentDraft(documentId);
+    return { crossPrincipalDenied, restoredContent: restored?.content, restoredRevision: restored?.revision,
+      forgedRefDenied, staleClear, stillStoredContent: stillStored?.content, clearNewest, empty: afterClear === null };
+  }, { url: sourceUrl, documentId: original.documentId, principal: original.principal });
+  expect(result).toEqual({
+    crossPrincipalDenied: true, restoredContent: "secret crash draft", restoredRevision: 1,
+    forgedRefDenied: true, staleClear: false, stillStoredContent: "newer secret draft",
+    clearNewest: true, empty: true,
   });
 });

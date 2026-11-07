@@ -131,11 +131,14 @@ export function EditorTab({
     setLoadedPath("");
     setError(null);
     void readRef.current(path)
-      .then((content) => {
+      .then(async (content) => {
+        if (disposed) return;
+        const recovery = await documentService.recover(documentId, workspace.principal.key, content);
         if (disposed) return;
         const session = documentService.acquire(
           documentId, workspace.principal.key, content,
           async (next) => writeRef.current(path, next),
+          recovery,
         );
         acquired = true;
         unsubscribe = documentService.subscribe(documentId, (snapshot) => {
@@ -250,6 +253,9 @@ export function EditorTab({
           const content = next ?? "";
           setValue(content);
           if (repositoryFile) {
+            // Monaco fires onChange while restoring an existing model. An
+            // unchanged restored recovery checkpoint must NOT auto-push.
+            if (documentService.snapshot(documentId)?.content === content) return;
             void documentService.edit(documentId, content).catch((reason) => {
               setError(reason instanceof Error ? reason.message : String(reason));
             });

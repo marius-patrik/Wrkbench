@@ -338,7 +338,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       transition(anonymous, "invalidated");
       setError(
         documentService.hasSuspendedChanges()
-          ? "Account changed in another tab. Unsaved private drafts are held only in this tab. Reauthenticate the original account to recover them; closing the browser will discard them."
+          ? "Account changed in another tab. Drafts are sealed to their original principal. Reauthenticate to recover the last committed checkpoint; keystrokes not yet checkpointed may be lost when this browser closes."
           : "Account changed in another tab. Sign in again to access private repositories.",
       );
     };
