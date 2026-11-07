@@ -407,7 +407,9 @@ export class BrowserFrameService {
     if (!isWithinDirectory(realRoot, await realpath(userDataDir))) {
       throw new Error("Chromium user-data directory resolves outside browser profiles");
     }
-    await clearChromiumSingletonFiles(userDataDir);
+    // Never unlink Chromium's singleton files on the initial attempt: another
+    // local process may still own this profile. Cleanup is permitted only
+    // after this launch itself reports a native SIGSEGV (see bounded retry).
     const launch = () => chromium.launchPersistentContext(userDataDir, {
       executablePath,
       headless: true,
