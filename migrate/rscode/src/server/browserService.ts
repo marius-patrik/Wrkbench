@@ -150,7 +150,9 @@ export class BrowserFrameService {
   ) {}
 
   async stream(session: BrowserSession, subscriber: BrowserStreamSubscriber): Promise<BrowserStreamHandle> {
+    traceChromiumPhase("stream: before profile allocation");
     const live = await this.liveBrowserFor(session);
+    traceChromiumPhase("stream: profile ready");
     live.session = session;
     if (live.idleTimer) clearTimeout(live.idleTimer);
     live.idleTimer = null;
@@ -190,15 +192,20 @@ export class BrowserFrameService {
     };
 
     try {
+      traceChromiumPhase("stream: before screencast");
       await this.startScreencast(live);
+      traceChromiumPhase("stream: screencast ready");
       await this.ensurePageUrl(live, session.url);
+      traceChromiumPhase("stream: navigation ready");
       // about:blank does not always repaint after screencast activation.
       // Make an explicit initial capture so a new pane never waits forever for CDP frames.
       if (!live.lastFrame || live.lastFrame.url !== browserStoredUrl(live.page.url())) {
         await this.captureInitialFrame(live);
       }
+      traceChromiumPhase("stream: before initial state");
       await this.sendToSubscriber(subscriber, await this.stateForLive(live));
       if (live.lastFrame) await this.sendToSubscriber(subscriber, live.lastFrame);
+      traceChromiumPhase("stream: ready");
       return handle;
     } catch (error) {
       handle.close();
@@ -426,10 +433,14 @@ export class BrowserFrameService {
         "--no-first-run",
       ],
     });
+    traceChromiumPhase("launch: before Chromium process");
     const context = await retryChromiumNativeCrash(launch, () => clearChromiumSingletonFiles(userDataDir));
+    traceChromiumPhase("launch: Chromium process ready");
     try {
       const page = context.pages()[0] ?? (await context.newPage());
+      traceChromiumPhase("launch: page ready");
       await page.setViewportSize({ width: DEFAULT_VIEWPORT.width, height: DEFAULT_VIEWPORT.height });
+      traceChromiumPhase("launch: viewport ready");
       // A newly created about:blank tab may not have a painted compositor surface.
       // Establish a real blank document while preserving its native about:blank URL.
       if (page.url() === "about:blank") {
@@ -437,7 +448,9 @@ export class BrowserFrameService {
           waitUntil: "domcontentloaded",
         });
       }
+      traceChromiumPhase("launch: before CDP session");
       const cdp = await context.newCDPSession(page);
+      traceChromiumPhase("launch: CDP session ready");
       const live: LiveBrowser = {
         context,
         page,
@@ -539,10 +552,14 @@ export class BrowserFrameService {
         this.runBackground(this.handleScreencastFrame(live, event as ScreencastEvent), "screencast frame");
       };
       try {
+        traceChromiumPhase("screencast: before Page.enable");
         await live.cdp.send("Page.enable");
+        traceChromiumPhase("screencast: Page.enable complete");
         if (this.closing) throw new Error("browser service is shutting down");
         live.cdp.on("Page.screencastFrame", onFrame);
+        traceChromiumPhase("screencast: before Page.startScreencast");
         await live.cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1 });
+        traceChromiumPhase("screencast: Page.startScreencast complete");
         if (this.closing) throw new Error("browser service is shutting down");
         live.screencastStarted = true;
       } catch (error) {
@@ -560,12 +577,14 @@ export class BrowserFrameService {
   }
 
   private async captureInitialFrame(live: LiveBrowser): Promise<void> {
+    traceChromiumPhase("capture: before Page.captureScreenshot");
     const result = (await live.cdp.send("Page.captureScreenshot", {
       format: "png",
       captureBeyondViewport: true,
       fromSurface: true,
       clip: { x: 0, y: 0, width: live.viewport.width, height: live.viewport.height, scale: 1 },
     })) as { data: string };
+    traceChromiumPhase("capture: screenshot received");
     const dimensions = pngDimensions(result.data);
     if (!dimensions) throw new Error("Chromium initial screenshot did not produce a valid PNG");
     const frame: BrowserFrameMessage = {
@@ -613,6 +632,7 @@ export class BrowserFrameService {
   }
 
   private async ensurePageUrl(live: LiveBrowser, url: string): Promise<void> {
+    traceChromiumPhase("navigation: before normalization");
     const targetUrl = browserRuntimeUrl(url);
     // CDP screencast timestamps can lag the actual page URL. Do not navigate a second
     // time merely because the cached screencast URL is stale during user interaction.
@@ -622,7 +642,9 @@ export class BrowserFrameService {
     }
     live.loading = true;
     await this.broadcastState(live);
+    traceChromiumPhase("navigation: before page.goto");
     await live.page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 12_000 });
+    traceChromiumPhase("navigation: page.goto complete");
     live.currentUrl = live.page.url();
     live.loading = false;
     await this.updateTitle(live);
@@ -840,6 +862,14 @@ export class BrowserFrameService {
       throw new Error("Chromium executable not found. Install Playwright Chromium or set CHROMIUM_EXECUTABLE_PATH.");
     }
     return this.executablePath;
+  }
+}
+
+function traceChromiumPhase(phase: string): void {
+  // Opt-in, non-sensitive phase markers for the isolated CI stress harness.
+  // Never print the profile path, page URL, tokens or downloaded contents.
+  if (process.env.RSCODE_BROWSER_STRESS_TRACE === "1") {
+    console.error(`[rscode-chromium-phase] ${phase} @ ${Date.now()}`);
   }
 }
 
