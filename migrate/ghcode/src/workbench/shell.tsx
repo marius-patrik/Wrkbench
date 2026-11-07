@@ -290,6 +290,12 @@ export function WorkbenchShell() {
     ) => {
       const definition = tabDefinition(type);
       const resource = typeof state?.path === "string" ? state.path : undefined;
+      // File tabs are repository-session resources, not globally reusable
+      // paths. A README.md from private A must never be reactivated in repo B.
+      const resourceWorkspaceId = resource ? workspace.workspace?.id : undefined;
+      const scopedState = resource
+        ? { ...state, resourceWorkspaceId: resourceWorkspaceId ?? null }
+        : state;
       if (definition.singleton || resource) {
         for (const surface of SURFACES) {
           const api = apis.current.get(surface);
@@ -297,8 +303,9 @@ export function WorkbenchShell() {
             const existing = paramsOf(panel);
             if (
               existing &&
-              ((definition.singleton && existing.type === type) ||
-                (resource && existing.type === type && existing.resource === resource))
+              ((definition.singleton && existing.type === type && !resource) ||
+                (resource && existing.type === type && existing.resource === resource &&
+                  existing.state.resourceWorkspaceId === resourceWorkspaceId))
             ) {
               if (surface !== "main") setSurfaceVisible(surface, true);
               panel.api?.setActive?.();
@@ -311,7 +318,7 @@ export function WorkbenchShell() {
       const api = apis.current.get(surface);
       if (!api) return;
       const title = resource ? resource.split("/").at(-1) || definition.title : undefined;
-      const tab = createWorkbenchTab(type, { state, resource, title });
+      const tab = createWorkbenchTab(type, { state: scopedState, resource, title });
       if (surface !== "main") setSurfaceVisible(surface, true);
       const panel = api.addPanel({
         id: tab.id,
@@ -324,7 +331,7 @@ export function WorkbenchShell() {
       panel.api?.setActive?.();
       persist();
     },
-    [persist, setSurfaceVisible],
+    [persist, setSurfaceVisible, workspace.workspace?.id],
   );
 
   const transferTab = useCallback(
