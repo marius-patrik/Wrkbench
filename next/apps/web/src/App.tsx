@@ -2,6 +2,7 @@ import {Suspense,createContext,useCallback,useContext,useEffect,useRef,useState,
 import {DockviewReact,themeDark,themeLight,type DockviewReadyEvent,type DockviewApi,type IDockviewPanelProps} from 'dockview-react';
 import type {FeatureDefinition,ViewKind,WorkbenchId,RuntimeId} from '../../../packages/core/src/index.ts';
 import {WORKBENCHES,uniqueId} from '../../../packages/core/src/index.ts';
+import {TabTransferQueue,type TabTransfer} from '../../../packages/core/src/transfers.ts';
 import {createClientHost, type FeatureContribution} from '../../../packages/sdk/src/index.ts';
 import {plugins} from './plugins.ts';
 import {Icon} from '../../../packages/client/src/icons.tsx';
@@ -21,8 +22,7 @@ function setDisabledFeaturePreference(id:string,disabled:boolean){
  catch(error){console.warn('Plugin preferences could not be saved',error)}
 }
 const BOOTSTRAP_KEY='wrkbench-real-dockview-v3-';
-const TRANSFER_KEY='wrkbench-real-pending-transfers-v3';
-type Transfer={id:string;title:string;params:Record<string,unknown>;target:WorkbenchId;source:WorkbenchId};
+const transferQueue=new TabTransferQueue(localStorage);
 function safeJSON(value:string|null){try{return value?JSON.parse(value):null}catch{return null}}
 // Dockview remains the sole mutable layout owner. This tracks bounded serialized
 // checkpoints for undo/redo without storing a competing group/panel graph.
@@ -70,11 +70,18 @@ function DockWorkspace({workbench,apiRef,onMoveTab}:{workbench:WorkbenchId;apiRe
  const onReady=useCallback((event:DockviewReadyEvent)=>{const api=event.api;apiRef.current=api;
    const snap=safeJSON(localStorage.getItem(BOOTSTRAP_KEY+workbench));
    try{if(snap)api.fromJSON(snap,{reuseExistingPanels:false});else preset(api,workbench);}catch(e){console.error(e);setError('Saved layout could not be loaded. The default layout was restored.');api.clear();preset(api,workbench)}
-   const transfers=(safeJSON(localStorage.getItem(TRANSFER_KEY))??[]) as Transfer[];
-   for(const transfer of transfers.filter(t=>t.source===workbench&&t.target!==workbench)){const duplicate=api.getPanel(transfer.id);if(duplicate)api.removePanel(duplicate,{removeEmptyGroup:false})}
-   const arrivals=transfers.filter(t=>t.target===workbench);
-   for(const transfer of arrivals){if(!api.getPanel(transfer.id))api.addPanel({id:transfer.id,component:'feature',title:transfer.title,params:transfer.params, ...(api.activePanel?{position:{referencePanel:api.activePanel.id,direction:'within'}}:{})})}
-   if(arrivals.length){localStorage.setItem(BOOTSTRAP_KEY+workbench,JSON.stringify(api.toJSON()));localStorage.setItem(TRANSFER_KEY,JSON.stringify(transfers.filter(t=>t.target!==workbench)))}
+   try {
+     for(const transfer of transferQueue.departures(workbench)){
+       const duplicate=api.getPanel(transfer.id);
+       if(duplicate)api.removePanel(duplicate,{removeEmptyGroup:false});
+     }
+     for(const transfer of transferQueue.arrivals(workbench)){
+       if(!api.getPanel(transfer.id))api.addPanel({id:transfer.id,component:'feature',title:transfer.title,params:transfer.params,...(api.activePanel?{position:{referencePanel:api.activePanel.id,direction:'within'}}:{})});
+       // Commit the destination layout before clearing the durable transfer journal.
+       localStorage.setItem(BOOTSTRAP_KEY+workbench,JSON.stringify(api.toJSON()));
+       transferQueue.acknowledge(transfer.id,workbench);
+     }
+   }catch(error){console.error('Tab recovery',error);setError('Tab transfer recovery was interrupted. The pending record is preserved: '+String(error));}
    recordLayout(workbench,JSON.stringify(api.toJSON()));
    const a=api.onDidLayoutChange(()=>{try{const snapshot=JSON.stringify(api.toJSON());recordLayout(workbench,snapshot);localStorage.setItem(BOOTSTRAP_KEY+workbench,snapshot)}catch(e){console.warn('Layout persistence unavailable',e)}});
    const b=api.onDidActivePanelChange(e=>useUI.getState().setActiveView(e.panel?.id??null));
@@ -124,10 +131,19 @@ export function App(){const theme=useUI(s=>s.theme),toggle=useUI(s=>s.themeToggl
    }
   }
  }),[]);
- const transferTab=useCallback((panelId:string,target:WorkbenchId)=>{const api=apiRef.current;const panel=api?.getPanel(panelId);if(!api||!panel||target===wb)return;
-   const record:Transfer={id:panel.id,title:panel.title??panel.id,params:panel.api.getParameters() as Record<string,unknown>,source:wb,target};
-   const pending=(safeJSON(localStorage.getItem(TRANSFER_KEY))??[]) as Transfer[];localStorage.setItem(TRANSFER_KEY,JSON.stringify([...pending.filter(p=>p.id!==panel.id),record]));
-   api.removePanel(panel,{removeEmptyGroup:false});localStorage.setItem(BOOTSTRAP_KEY+wb,JSON.stringify(api.toJSON()));selectWorkbench(target);
+ const transferTab=useCallback((panelId:string,target:WorkbenchId)=>{
+   const api=apiRef.current,panel=api?.getPanel(panelId);
+   if(!api||!panel||target===wb)return;
+   const record:TabTransfer={id:panel.id,title:panel.title??panel.id,params:panel.api.getParameters() as Record<string,unknown>,source:wb,target,createdAt:Date.now()};
+   try{
+     // Journaling first: recoverability must precede removal from Dockview.
+     transferQueue.stage(record);
+     api.removePanel(panel,{removeEmptyGroup:false});
+     localStorage.setItem(BOOTSTRAP_KEY+wb,JSON.stringify(api.toJSON()));
+     selectWorkbench(target);
+   }catch(error){
+     notify('Tab transfer interrupted; its recovery record was preserved: '+String(error),'error');
+   }
  },[wb,selectWorkbench]);
  const openView=useCallback((kind:ViewKind)=>{const api=apiRef.current;if(!api)return;if(!hostRef.current?.catalog.get(kind)){notify(`Plugin disabled: ${kind}`,'error');return}
  const panel=api.addPanel({id:uniqueId(kind),component:'feature',title:hostRef.current.catalog.get(kind)?.title??kind,params:{kind},...(api.activePanel?{position:{referencePanel:api.activePanel.id,direction:'within'}}:{})});panel.api.setActive();setMenu('none');setFilter('')},[]);
@@ -137,7 +153,7 @@ export function App(){const theme=useUI(s=>s.theme),toggle=useUI(s=>s.themeToggl
  const split=useCallback(()=>{const api=apiRef.current;if(!api)return;api.addGroup(api.activeGroup?{referenceGroup:api.activeGroup,direction:'right'}:{direction:'right'});notify('Empty editor group created — drag any tab here')},[]);
  const float=useCallback(()=>{const api=apiRef.current;if(api?.activePanel)api.addFloatingGroup(api.activePanel,{position:{top:70,left:90},width:490,height:340})},[]);
  const popout=useCallback(()=>{const api=apiRef.current;if(api?.activeGroup)void api.addPopoutGroup(api.activeGroup,{popoutUrl:'./popout.html'}).then(success=>{if(!success)notify('Browser popout was blocked or unavailable','error')}).catch(e=>notify(String(e),'error'))},[]);
- const save=useCallback(async()=>{const s=useUI.getState(),id=s.activeViewId,api=apiRef.current,p=id?api?.getPanel(id):null;const path=(p?.api.getParameters() as {path?:string}|undefined)?.path??'src/App.tsx';const doc=s.documents[path];if(!doc?.dirty){notify('No unsaved changes');return}try{const result=await files.save(path,doc.content,doc.revision);useUI.getState().markSaved(path,result.revision);notify(`Saved ${path}`)}catch(e){notify(String(e),'error')}},[]);
+ const save=useCallback(async()=>{const s=useUI.getState(),id=s.activeViewId,api=apiRef.current,p=id?api?.getPanel(id):null;const path=(p?.api.getParameters() as {path?:string}|undefined)?.path??'src/App.tsx';const doc=s.documents[path];if(!doc?.dirty){notify('No unsaved changes');return}try{const result=await files.save(path,doc.content,doc.revision);useUI.getState().markSaved(path,result.revision,doc.content);notify(`Saved ${path}`)}catch(e){notify(String(e),'error')}},[]);
  useEffect(()=>{if(!ready)return;const host=hostRef.current;if(!host)return;const detach=host.viewActions.attach(openView);const unregister=registerClientTools({open:openView,split,float,save});return()=>{unregister();detach()}},[ready,openView,split,float,save]);
  const disableFeature=useCallback((id:string)=>{if(id==='plugins'){notify('Extensions is required for plugin recovery','error');return}void hostRef.current?.disable(id as ViewKind).then(()=>setDisabledFeaturePreference(id,true)).catch(e=>notify(String(e),'error'))},[]);
  const enableFeature=useCallback((id:string)=>{void hostRef.current?.enable(id as ViewKind).then(()=>setDisabledFeaturePreference(id,false)).catch(e=>notify(String(e),'error'))},[]);
