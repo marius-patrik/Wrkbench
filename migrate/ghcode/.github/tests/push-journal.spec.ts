@@ -80,6 +80,52 @@ test("real IndexedDB v5 denies cross-principal reads, blobs and push preparation
   });
 });
 
+test("immutable Git blob SHA cannot be overwritten with different bytes", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const principal = "gh:github.com:1001";
+    const sessionId = crypto.randomUUID();
+    const localWorkspaceId = crypto.randomUUID();
+    const id = `ghcode-owned-v2:${encodeURIComponent(principal)}:${sessionId}`;
+    const workspace = {
+      version: 2, id, ref: "main", updatedAt: 1,
+      baseSha: "1".repeat(40), treeSha: "2".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: principal, workspace: { id: localWorkspaceId, principalKey: principal },
+        session: { id: sessionId, workspaceId: localWorkspaceId, principalKey: principal,
+          repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main" },
+      },
+    };
+    const sha = "a".repeat(40);
+    storage.bindStoragePrincipal(principal);
+    await storage.saveWorkspace(workspace);
+    await storage.saveBlob(id, sha, "original immutable bytes");
+    await storage.saveBlob(id, sha, "original immutable bytes"); // Idempotent.
+    const rejected = await storage.saveBlob(id, sha, "silently corrupted bytes")
+      .then(() => false, () => true);
+    const original = await storage.loadBlob(id, sha);
+    const foreign = "gh:github.com:2002";
+    storage.bindStoragePrincipal(foreign);
+    const foreignRejected = await storage.saveBlob(id, sha, "foreign overwrite")
+      .then(() => false, () => true);
+    storage.bindStoragePrincipal(principal);
+    return {
+      rejected, foreignRejected, original,
+      restored: await storage.loadBlob(id, sha),
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    rejected: true,
+    foreignRejected: true,
+    original: "original immutable bytes",
+    restored: "original immutable bytes",
+  });
+});
+
 test("discarding renamed or staged work is one principal-authorized CAS transaction", async ({ page }) => {
   const result = await page.evaluate(async (url) => {
     const storage = await import(url);
