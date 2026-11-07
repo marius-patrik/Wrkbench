@@ -1,0 +1,1404 @@
+{
+  "schemaVersion": 1,
+  "title": "Phase A — 77 historical source refs and 6 RSCode functional-review refs",
+  "integrationRepository": "marius-patrik/Wrkbench",
+  "auditedHeadSHA": "93b29a669b2bc336d957af3c682b3ad92c8667b6",
+  "branch": "integration/tri-source-migration-baseline",
+  "sourceTrees": {
+    "rscode": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+    "ghcode": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+    "canvas": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77"
+  },
+  "comparisonBases": {
+    "ghcode": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+    "canvas": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+    "rscode": "39341ce5f8459b834c8e20b5227c25980078a87e"
+  },
+  "coverage": {
+    "ghcode": 30,
+    "canvas": 47,
+    "rscode": 6,
+    "originalRefs": 77,
+    "originalUniqueTips": 68
+  },
+  "rules": {
+    "relation": "Comparisons obtained from GitHub compare with original ref as base and selected source as head; ANCESTOR=branch reachable from selected source, DIVERGED=independent unique commits, TIP_DESCENDANT=branch ahead of selected source.",
+    "disposition": "History inclusion never implies current functional behavior. Review unique deltas and test contracts before marking accepted.",
+    "exceptions": "Specific branch-only changed paths and their interpretation are recorded in docs/migrations/PHASE_A_BRANCH_DISPOSITION.md. Original PR #34 is rejected rather than activated; C01 persistence is included but not authoritative."
+  },
+  "entries": [
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/11",
+      "commit": "67b63b4883e2543dba7dbed884f6698273fea538",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/13",
+      "commit": "e3974895863ff08102d31114fc3b87fa2f409a7a",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/15",
+      "commit": "22336690c4422b02cef56c07a81be8f600f4c0db",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/16",
+      "commit": "109097091073d9d300d348c272d1de61d5e6feb5",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/20",
+      "commit": "48f5cf5e5286300f08651eec0db478179514f884",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 1,
+      "disposition": "RETIRED_SOURCE_GOVERNANCE",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/21",
+      "commit": "8b182b9ea04f3c8ed953298566b0afd83cff16b4",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/23",
+      "commit": "10ece37242ef987e3b99ec9d9f9473012237596a",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/29",
+      "commit": "a7d5deec2bac31427f706f4b2beb1f421dc9a80d",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode/fix/ghc-09a-safe-branch-cleanup"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/3",
+      "commit": "e45e9dd9c1729e376a453834c46ff784f6eaed3e",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 3,
+      "disposition": "RETIRED_SOURCE_GOVERNANCE",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/30",
+      "commit": "7b82a9f8ed199747a7959184b3ed208a464e1480",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 17,
+      "disposition": "HISTORICAL_TESTS_COPIED_INERT",
+      "implementationPaths": [
+        "migrate/ghcode/evidence/ghc00-historical-tests"
+      ],
+      "acceptance": "COPIED_NOT_ACTIVE_CI",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode/agent/ghc-00-baseline"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/33",
+      "commit": "6d87f1c00607e42e4078bd8c2ff6aaadf4bd7ded",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "GHC01_IDENTITY_INHERITED",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode/agent/ghc-01-identity-isolation"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/34",
+      "commit": "49d194f75eccd919401d10bf1ef3f0df34ca9a34",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "TIP_DESCENDANT",
+      "branchOnlyCommitCount": 43,
+      "disposition": "REJECTED_UNSAFE_IMPLEMENTATION",
+      "implementationPaths": [
+        "migrate/ghcode/src/workspace/storage.ts",
+        "migrate/ghcode/src/workspace/document-service.ts"
+      ],
+      "acceptance": "REJECTED_WITH_REPLACEMENT_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode/agent/ghc-02-transactional-v3"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/5",
+      "commit": "9253f60f0721ae48365238dc408c268aceac3f32",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 2,
+      "disposition": "RETIRED_SOURCE_GOVERNANCE",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/7",
+      "commit": "86493007d94e8ad1e54da5f963afe15f51cfe215",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 2,
+      "disposition": "RETIRED_SOURCE_GOVERNANCE",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode-pr/9",
+      "commit": "7be2aaa81e91bac854713e547038519c784a6e24",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 1,
+      "disposition": "RETIRED_SOURCE_GOVERNANCE",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode/agent/ghc-00-baseline",
+      "commit": "7b82a9f8ed199747a7959184b3ed208a464e1480",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 17,
+      "disposition": "HISTORICAL_TESTS_COPIED_INERT",
+      "implementationPaths": [
+        "migrate/ghcode/evidence/ghc00-historical-tests"
+      ],
+      "acceptance": "COPIED_NOT_ACTIVE_CI",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode-pr/30"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode/agent/ghc-01-identity-isolation",
+      "commit": "6d87f1c00607e42e4078bd8c2ff6aaadf4bd7ded",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "GHC01_IDENTITY_INHERITED",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode-pr/33"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode/agent/ghc-02-transactional-v3",
+      "commit": "49d194f75eccd919401d10bf1ef3f0df34ca9a34",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "TIP_DESCENDANT",
+      "branchOnlyCommitCount": 43,
+      "disposition": "REJECTED_UNSAFE_IMPLEMENTATION",
+      "implementationPaths": [
+        "migrate/ghcode/src/workspace/storage.ts",
+        "migrate/ghcode/src/workspace/document-service.ts"
+      ],
+      "acceptance": "REJECTED_WITH_REPLACEMENT_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode-pr/34"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode/development",
+      "commit": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "SELECTED_BASE",
+      "branchOnlyCommitCount": 0,
+      "disposition": "SELECTED_SOURCE_BASE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode/fix/ghc-09a-safe-branch-cleanup",
+      "commit": "a7d5deec2bac31427f706f4b2beb1f421dc9a80d",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/remotes/ghcode-pr/29"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/remotes/ghcode/main",
+      "commit": "534e2203425d91783111e5d02d5ec92649fec594",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 2,
+      "disposition": "HISTORICAL_PRODUCTION_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode/evidence/ghc00-historical-tests"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "C_GHCODE",
+      "tipAliases": [
+        "refs/tags/ghcode/v0.1.8"
+      ]
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.0",
+      "commit": "7587582fc2164c7800215afdb24523eb6311e465",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.1",
+      "commit": "f03ab58c014a85faf0d213a124accf38ad16e07f",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.2",
+      "commit": "ebfde874e1f81ae2a4141cf366a005874bf525cf",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.3",
+      "commit": "95703439660cd9dd17822a4a6d3256f97ed16872",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.4",
+      "commit": "e5d92b256c3b1f1d90656f9a5c9d2aeca9812b18",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.5",
+      "commit": "c50d52a3ba6c15eb60f9c1802b1a4f5773320a77",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.6",
+      "commit": "195458b67c8feac470db6b608a7be71b524111b1",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.7",
+      "commit": "12db8b781e28e2a003ea90b94fb1d256a889bed3",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "ghcode",
+      "ref": "refs/tags/ghcode/v0.1.8",
+      "commit": "534e2203425d91783111e5d02d5ec92649fec594",
+      "kind": "TAG",
+      "comparisonBaseSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 2,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/ghcode"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": [
+        "refs/remotes/ghcode/main"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/1",
+      "commit": "3d77d6e21fe6c227209794c9cfd1ee6aa0424d8d",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/10",
+      "commit": "cdc2dde81b568c0b5b257f981a1b72c3ee0674a0",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/11",
+      "commit": "02fee23081919ebbf29cebd6de8a9b4eca9b1ec6",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/12",
+      "commit": "34637e566e366e5ae0391acef1e00f470b180bf5",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/14",
+      "commit": "2b592ca54173e1b05b38aa21babf720f80613ac4",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/15",
+      "commit": "7cf31ffd5944a24f3755e890e62a983f99896433",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/18",
+      "commit": "08a391ef692510d2b9d422ab4c80f0d75ae33d1d",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/19",
+      "commit": "2041c43d1c6466f9ea1c207c4867fc796c79c916",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/2",
+      "commit": "b13d41376fa2e491f68ea0fafb728287360acef4",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/21",
+      "commit": "c5e0e73ec175f78cd670ec136eb2c8462884be6c",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/22",
+      "commit": "b45d4268fa6573bbf1620cb1503d0c82d8318f47",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/24",
+      "commit": "b3d23455448ddf1212070f21a4650d1bdc4a3986",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/25",
+      "commit": "c006e4b723d5d53a1c65eec12b1b15d354cfc08a",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/27",
+      "commit": "4541cc881910d0a0171f9372a07d863537599600",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/28",
+      "commit": "8387ca983d06e9c02d2390a6e49926482dfe142e",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/3",
+      "commit": "e99ec504da00811de1fd8d99979702288d001b11",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/30",
+      "commit": "925d1b998cffb2eb925c7e26d4320ad0613f0d8a",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/32",
+      "commit": "7b13e4e158df5de5e7206bcc5a4fd57bae34efce",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/34",
+      "commit": "d45ece1be1fab4847e66acf41e5b7553b0d76fc9",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 2,
+      "disposition": "UPSTREAM_TEMPLATE_MANAGED_CONFIG",
+      "implementationPaths": [
+        "migrate/canvas/repo.dfconfig"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": [
+        "refs/remotes/template/df-main/v0.292.4"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/36",
+      "commit": "2700f23cdbfc3bfb861e6d6e2be2174c913dfd17",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 6,
+      "disposition": "RETIRED_PYTHON_CANVAS_PROTOTYPE",
+      "implementationPaths": [
+        "migrate/canvas/.github/app/src/repository-context.ts",
+        "migrate/canvas/.github/app/src/runtime-repository.tsx"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/37",
+      "commit": "0009efb3b2012ebda068b7d4fa9f0501d14fb0a0",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "REACT_CANVAS_SOURCE_PREDECESSOR",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/39",
+      "commit": "defe601e39d70ebb882cf6b4f39ebe9da8be3f64",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "REACT_CANVAS_SOURCE_INHERITED",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/41",
+      "commit": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "SELECTED_BASE",
+      "branchOnlyCommitCount": 0,
+      "disposition": "C01_PERSISTENCE_INCLUDED_NOT_ACTIVE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": [
+        "refs/remotes/template/agent/canvas-c01-idb-foundation"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/42",
+      "commit": "5f462ea6e73c570e483149d6846dcc9190c09d51",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 5,
+      "disposition": "UPSTREAM_TEMPLATE_RELEASE_SECURITY",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": [
+        "refs/remotes/template/agent/canvas-release-security-foundation"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/5",
+      "commit": "d1b46dc0e040b661a50057fe7eabccda60258501",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/6",
+      "commit": "34c7218ac216a074ebaeb587535a9e1a3d48d506",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/7",
+      "commit": "879078735c40ac4e70d5cc21e62aac014916b394",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/8",
+      "commit": "3e40e20271bbb428ba4781cf7b77b3d46057089e",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template-pr/9",
+      "commit": "493aabd1c5b470852bfeca2c957a87ddae6101e9",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template/agent/canvas-c01-idb-foundation",
+      "commit": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "SELECTED_BASE",
+      "branchOnlyCommitCount": 0,
+      "disposition": "C01_PERSISTENCE_INCLUDED_NOT_ACTIVE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": [
+        "refs/remotes/template-pr/41"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template/agent/canvas-release-security-foundation",
+      "commit": "5f462ea6e73c570e483149d6846dcc9190c09d51",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 5,
+      "disposition": "UPSTREAM_TEMPLATE_RELEASE_SECURITY",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": [
+        "refs/remotes/template-pr/42"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template/development",
+      "commit": "f647f7adc984db8231ba7ddf9ab19579ab340853",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 1,
+      "disposition": "UPSTREAM_TEMPLATE_RELEASE_SECURITY",
+      "implementationPaths": [
+        ".github/workflows/migration-source-verification.yml"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template/df-main/v0.292.4",
+      "commit": "d45ece1be1fab4847e66acf41e5b7553b0d76fc9",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 2,
+      "disposition": "UPSTREAM_TEMPLATE_MANAGED_CONFIG",
+      "implementationPaths": [
+        "migrate/canvas/repo.dfconfig"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "E_PUBLICATION_SECURITY",
+      "tipAliases": [
+        "refs/remotes/template-pr/34"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template/feat/stateless-repository-canvas",
+      "commit": "8158f703506414a13c03d7c38168b888f8127c08",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "DIVERGED",
+      "branchOnlyCommitCount": 3,
+      "disposition": "RETIRED_PYTHON_CANVAS_PROTOTYPE",
+      "implementationPaths": [
+        "migrate/canvas/.github/app/src/repository-context.ts",
+        "migrate/canvas/.github/app/src/runtime-repository.tsx"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/remotes/template/main",
+      "commit": "63a6e0e0c044deead678a7f7c7a3551450eda8b2",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "INHERITED_SOURCE_LINEAGE_NOT_FINAL_BEHAVIOR_ACCEPTANCE",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "SOURCE_LINEAGE_OR_SOURCE_CODE_COVERED_BEHAVIOR_PENDING",
+      "nextGate": "D_CANVAS",
+      "tipAliases": [
+        "refs/tags/template/v0.1.16"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.1",
+      "commit": "9b3336e2054ffadc6505e4a7b2380a81aad50d06",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.10",
+      "commit": "ebc1fc23bc26ddcbf14a14579b5f12cfaf09c098",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.11",
+      "commit": "9b86206cfc9e7a83dbb3fea1c96a35a170682a27",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.12",
+      "commit": "f8267de05ea91bd033cc495dbb7425d9da959426",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.13",
+      "commit": "a4445374f2f78a0bb6f88f3685f6ba383d1108be",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.14",
+      "commit": "83d7eca30a8ebfe4bc1b7de77c0540fd9f885106",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.15",
+      "commit": "040ebe548b2d18a287cd91b6c5c31e71655ea040",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.16",
+      "commit": "63a6e0e0c044deead678a7f7c7a3551450eda8b2",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": [
+        "refs/remotes/template/main"
+      ]
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.3",
+      "commit": "4c4a9387c0eceda3760e373b569338caba7996f9",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.5",
+      "commit": "5fc9b1663582bcd07c95d5d9fc438003e93131f2",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.7",
+      "commit": "10702bd4519f485c5411911538f6895f23512e1f",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "canvas",
+      "ref": "refs/tags/template/v0.1.9",
+      "commit": "6ba71f0fec3fceb83d5f81e84bbd3f9862a3c3ea",
+      "kind": "TAG",
+      "comparisonBaseSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
+      "relation": "ANCESTOR",
+      "branchOnlyCommitCount": 0,
+      "disposition": "HISTORICAL_RELEASE_SNAPSHOT",
+      "implementationPaths": [
+        "migrate/canvas"
+      ],
+      "acceptance": "HISTORY_ONLY",
+      "nextGate": "NONE",
+      "tipAliases": []
+    },
+    {
+      "source": "rscode",
+      "ref": "rscode/main",
+      "commit": "39341ce5f8459b834c8e20b5227c25980078a87e",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
+      "relation": "SELECTED_BASE",
+      "branchOnlyCommitCount": 0,
+      "disposition": "ORIGINAL_RUNTIME_BASE_RECONCILED",
+      "implementationPaths": [
+        "migrate/rscode"
+      ],
+      "acceptance": "SOURCE_IMPLEMENTED_ACCEPTANCE_PENDING",
+      "nextGate": "B_RSCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "rscode",
+      "ref": "rscode/PR#23/RSC-01",
+      "commit": "ff102b484d56773df214ea033a585ec60530bcfc",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
+      "relation": "TIP_DESCENDANT",
+      "branchOnlyCommitCount": 20,
+      "disposition": "RSC01_SECURITY_SUPERSEDED_BY_RSC03",
+      "implementationPaths": [
+        "migrate/rscode/src/server",
+        "migrate/rscode/src/tests"
+      ],
+      "acceptance": "SOURCE_IMPLEMENTED_ACCEPTANCE_PENDING",
+      "nextGate": "B_RSCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "rscode",
+      "ref": "rscode/PR#25/RSC-03",
+      "commit": "65331558418c108f889910c05e7ed7f746e108e1",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
+      "relation": "TIP_DESCENDANT",
+      "branchOnlyCommitCount": 27,
+      "disposition": "RSC03_SECURITY_ADAPTED",
+      "implementationPaths": [
+        "migrate/rscode/src/server",
+        "migrate/rscode/src/tests"
+      ],
+      "acceptance": "SOURCE_IMPLEMENTED_ACCEPTANCE_PENDING",
+      "nextGate": "B_RSCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "rscode",
+      "ref": "rscode/RSC-04/integration",
+      "commit": "2d26ffd8f0bdee64a2940b08b658ea68ba5f9842",
+      "kind": "BRANCH",
+      "comparisonBaseSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
+      "relation": "TIP_DESCENDANT",
+      "branchOnlyCommitCount": 799,
+      "disposition": "RSC04_CHROMIUM_SINGLE_FLIGHT_ADAPTED",
+      "implementationPaths": [
+        "migrate/rscode/src/server/browserService.ts",
+        "migrate/rscode/src/tests/browserService.test.ts"
+      ],
+      "acceptance": "SOURCE_IMPLEMENTED_ACCEPTANCE_PENDING",
+      "nextGate": "B_RSCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "rscode",
+      "ref": "rscode/PR#28/RSC-05",
+      "commit": "6ed334bcad6e89a1837c299937c4c50207904541",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
+      "relation": "TIP_DESCENDANT",
+      "branchOnlyCommitCount": 18,
+      "disposition": "RSC05_NATIVE_DISTRIBUTION_ADAPTED",
+      "implementationPaths": [
+        "migrate/rscode/scripts/distribution",
+        ".github/workflows/migration-native-distribution.yml"
+      ],
+      "acceptance": "SOURCE_IMPLEMENTED_ACCEPTANCE_PENDING",
+      "nextGate": "B_RSCODE",
+      "tipAliases": []
+    },
+    {
+      "source": "rscode",
+      "ref": "rscode/PR#40/RSC-ROOT",
+      "commit": "e278e964e765756c30285ab98ee1cf27fcbee961",
+      "kind": "PULL_REQUEST",
+      "comparisonBaseSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
+      "relation": "TIP_DESCENDANT",
+      "branchOnlyCommitCount": 10,
+      "disposition": "RSC_ROOT_SIGSEGV_RETRY_ADAPTED_STRESS_PENDING",
+      "implementationPaths": [
+        "migrate/rscode/src/server/browserService.ts",
+        "migrate/rscode/src/tests/browserService.test.ts"
+      ],
+      "acceptance": "SOURCE_IMPLEMENTED_ACCEPTANCE_PENDING",
+      "nextGate": "B_RSCODE",
+      "tipAliases": []
+    }
+  ]
+}
