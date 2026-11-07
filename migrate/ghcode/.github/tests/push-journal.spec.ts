@@ -1101,6 +1101,10 @@ test("real IndexedDB makes local commit IDs immutable and push journals order-se
       .then(() => false, () => true);
     const accepted = await storage.beginPushOperation(workspace, [earlierId, laterId]);
     const pending = await storage.loadPendingPushOperation(workspace);
+    const removedDuringPush = await storage.removeLocalCommit(earlierId)
+      .then(() => false, () => true);
+    const cleanupDuringPush = await storage.clearLocalGitState(id)
+      .then(() => false, () => true);
     const reorderedRejects = !storage.samePushCommitOrder(stored, [laterId, earlierId]);
     const duplicateRejects = !storage.samePushCommitOrder(stored, [earlierId, earlierId]);
     const trueOrderAccepted = storage.samePushCommitOrder(stored, [earlierId, laterId]);
@@ -1113,7 +1117,7 @@ test("real IndexedDB makes local commit IDs immutable and push journals order-se
     const preserved = await storage.loadLocalCommits(id);
     return {
       tamperRejected, orderRejected, reorderedRejects, duplicateRejects,
-      trueOrderAccepted, foreignOverwrite,
+      trueOrderAccepted, removedDuringPush, cleanupDuringPush, foreignOverwrite,
       durableOrder: preserved.map((item) => item.id),
       durableMessages: preserved.map((item) => item.message),
       journalOrder: pending?.commitIds,
@@ -1126,6 +1130,8 @@ test("real IndexedDB makes local commit IDs immutable and push journals order-se
     reorderedRejects: true,
     duplicateRejects: true,
     trueOrderAccepted: true,
+    removedDuringPush: true,
+    cleanupDuringPush: true,
     foreignOverwrite: true,
     durableMessages: ["earlier", "later"],
     acceptedPhase: "prepared",
