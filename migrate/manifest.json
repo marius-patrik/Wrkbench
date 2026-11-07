@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "a4f2db4ddf22e5919e379a66f2918124d6ca4b82",
+      "snapshotTreeSHA": "17b48c7afebdf387c5561786960def0932831447",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -147,7 +147,8 @@
         "W05 Dockview: native context-menu Close Others and Close Group delegate to atomic pre-removal group guards, including pinned-peer protection, rather than serial individual tab closes. Added implementation; context-menu browser behavior remains to be verified.",
         "W05: Discard local work/renames now performs a combined overlays+staged compare-and-delete transaction with persisted ownership, epoch check, full snapshot CAS and oncomplete acknowledgment. Real browser test exercises injected staged-store abort, stale-tab conflict, cross-principal rejection and successful atomic discard.",
         "W05: Remote branch creation now atomically forks the full existing principal-owned repository working tree, staged changes, committed files, local commit history and immutable blobs through one persisted-authority and version/CAS IDB transaction. Source pending push journals are blocked, never copied to a new ref. Real Chromium test covers transaction abort/no target, byte-preserving copy, duplicate target denial and cross-principal isolation.",
-        "W05 browser integration: GitHub mock now persists newly created remote refs; real Source Control Playwright test creates branch with staged private edits and verifies the verified principal, selected ref, distinct session and cloned overlay/staged bytes via actual IndexedDB."
+        "W05 browser integration: GitHub mock now persists newly created remote refs; real Source Control Playwright test creates branch with staged private edits and verifies the verified principal, selected ref, distinct session and cloned overlay/staged bytes via actual IndexedDB.",
+        "W05 follow-up: a dirty, principal-bound Monaco panel unexpectedly removed by native Dockview group/API callbacks is restored in its original surface after an authorized-identity check; explicit guarded close/group actions remain authoritative. Real Chromium context-menu group-close assertion added; exact-head CI required."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -168,7 +169,7 @@
         "bun run check",
         "bun run acceptance"
       ],
-      "testResults": "W05_DRAFT_RECOVERY_AND_ATOMIC_RENAME_IMPLEMENTED_PENDING_EXACT_HEAD_CI",
+      "testResults": "W05 source: durable drafts, legacy quarantine, owned import/export and branch-fork functionality implemented; native Dockview unguarded removal recovery plus Close Group browser assertion pending exact-head CI.",
       "acceptanceState": "PROVISIONAL_SOURCE_ONLY",
       "originalSourceRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
