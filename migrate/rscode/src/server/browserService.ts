@@ -577,16 +577,43 @@ export class BrowserFrameService {
   }
 
   private async captureInitialFrame(live: LiveBrowser): Promise<void> {
-    traceChromiumPhase("capture: before Page.captureScreenshot");
-    const result = (await live.cdp.send("Page.captureScreenshot", {
-      format: "png",
-      captureBeyondViewport: true,
-      fromSurface: true,
-      clip: { x: 0, y: 0, width: live.viewport.width, height: live.viewport.height, scale: 1 },
-    })) as { data: string };
-    traceChromiumPhase("capture: screenshot received");
-    const dimensions = pngDimensions(result.data);
-    if (!dimensions) throw new Error("Chromium initial screenshot did not produce a valid PNG");
+    const clip = { x: 0, y: 0, width: live.viewport.width, height: live.viewport.height, scale: 1 };
+    // Chromium may indefinitely suspend a surface capture while a profile is
+    // becoming visible, even after Page.startScreencast acknowledged startup.
+    // Capture the *view* first: it does not wait for that compositor surface.
+    // A bounded alternate surface capture preserves full-size PNG output if
+    // this browser build cannot return the view capture. Never fabricate frames.
+    const formats = [
+      { fromSurface: false, captureBeyondViewport: false },
+      { fromSurface: true, captureBeyondViewport: true },
+    ] as const;
+    let result: { data: string } | null = null;
+    let dimensions: { width: number; height: number } | null = null;
+    let lastError: unknown = null;
+    for (const format of formats) {
+      try {
+        traceChromiumPhase(`capture: before fromSurface=${format.fromSurface}`);
+        const reply = await withDeadline(
+          live.cdp.send("Page.captureScreenshot", { format: "png", ...format, clip }),
+          3_000,
+          "Chromium screenshot CDP response timed out",
+        ) as { data: string };
+        const actual = pngDimensions(reply.data);
+        if (!actual || actual.width !== clip.width || actual.height !== clip.height) {
+          throw new Error("Chromium screenshot produced invalid or mismatched PNG dimensions");
+        }
+        result = reply;
+        dimensions = actual;
+        traceChromiumPhase(`capture: screenshot received fromSurface=${format.fromSurface}`);
+        break;
+      } catch (error) {
+        lastError = error;
+        traceChromiumPhase(`capture: alternate capture required fromSurface=${format.fromSurface}`);
+      }
+    }
+    if (!result || !dimensions) {
+      throw new Error(`Chromium screenshot unavailable after bounded alternate capture: ${errorMessage(lastError)}`);
+    }
     const frame: BrowserFrameMessage = {
       type: "frame",
       url: browserStoredUrl(live.page.url()),
@@ -863,6 +890,17 @@ export class BrowserFrameService {
     }
     return this.executablePath;
   }
+}
+
+/** Bound a CDP operation without declaring an unacknowledged result successful. */
+function withDeadline<T>(operation: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    void operation.then(
+      (result) => { clearTimeout(timer); resolve(result); },
+      (error) => { clearTimeout(timer); reject(error); },
+    );
+  });
 }
 
 function traceChromiumPhase(phase: string): void {
