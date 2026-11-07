@@ -1,3 +1,9 @@
+import { useEffect,useRef,useState,type ReactNode } from 'react';
+import { type ViewKind,type FeatureDefinition,uniqueId } from '../../../packages/core/src/index.ts';
+import {useUI,RUNTIMES,resolvedContext} from '../../../packages/client/src/state.ts';
+import {Icon} from '../../../packages/client/src/icons.tsx';
+import {notify,tools,invocationContext} from '../../../packages/client/src/services.ts';
+import {ToolbarButton,ViewToolbar} from '../../../packages/client/src/views/Primitives.tsx';
 import type {FeatureViewProps} from '../../../packages/sdk/src/index.ts';
-import {SettingsView} from '../../../packages/client/src/views/Features.tsx';
+export function SettingsView(){const theme=useUI(s=>s.theme),toggle=useUI(s=>s.themeToggle),context=useUI(s=>s.context),set=useUI(s=>s.setContext);return <div className="view vertical"><ViewToolbar label="Settings"/><div className="settings-grid"><h3>Appearance</h3><div className="setting-row"><div><strong>Color theme</strong><p>Neutral chrome with semantic status and syntax colors</p></div><button className="outline-button" title="Switch color theme" onClick={toggle}><Icon name={theme==='dark'?'moon':'sun'}/>{theme==='dark'?'Dark':'Light'}</button></div><h3>Active context</h3><div className="setting-row"><div><strong>Workspace</strong><p>Used as the default for newly opened views</p></div><input aria-label="Workspace name" value={context.project} onChange={e=>set({project:e.target.value})}/></div><div className="setting-row"><div><strong>Runtime</strong><p>Only browser local has local capabilities</p></div><select title="Default runtime" value={context.runtime} onChange={e=>set({runtime:e.target.value as any})}>{Object.entries(RUNTIMES).map(([v,title])=><option value={v} key={v}>{title}</option>)}</select></div><h3>Storage</h3><div className="setting-row"><div><strong>Browser-local mode</strong><p>Files in IndexedDB; OPFS best-effort cache; settings in localStorage</p></div><span className="chip success-chip">Active</span></div></div></div>}
 export default function FeatureView(props:FeatureViewProps){return <SettingsView />;}

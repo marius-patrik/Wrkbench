@@ -3,7 +3,8 @@ import Editor,{loader} from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import * as Tooltip from '@radix-ui/react-tooltip';
+import {ToolbarButton} from './Primitives.tsx';
+export {ToolbarButton} from './Primitives.tsx';
 import { files, notify } from '../services.ts';
 import { useUI } from '../state.ts';
 import { Icon } from '../icons.tsx';
@@ -26,9 +27,6 @@ type InlineWorkers = Partial<Record<'editor'|'typescript'|'json'|'css'|'html',st
   }
  }
 };
-export function ToolbarButton({title,icon,onClick,disabled=false,children}:{title:string;icon?:string;onClick:()=>void;disabled?:boolean;children?:ReactNode}){
- return <Tooltip.Root><Tooltip.Trigger asChild><button aria-label={title} type="button" className="tiny-action" disabled={disabled} onClick={onClick}>{icon&&<Icon name={icon} size={14}/>} {children}</button></Tooltip.Trigger><Tooltip.Portal><Tooltip.Content className="wrk-tooltip" sideOffset={7}>{title}<Tooltip.Arrow className="wrk-tooltip-arrow"/></Tooltip.Content></Tooltip.Portal></Tooltip.Root>;
-}
 const language=(path:string)=>path.endsWith('.tsx')?'typescript':path.endsWith('.ts')?'typescript':path.endsWith('.json')?'json':path.endsWith('.css')?'css':path.endsWith('.md')?'markdown':'plaintext';
 export function CodeView({path:requestedPath}:{path?:string}){
  const path=requestedPath||useUI(s=>s.filePath);const theme=useUI(s=>s.theme);
