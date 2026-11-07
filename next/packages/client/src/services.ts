@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { type ToolContext, type ViewKind, uniqueId } from '../../../packages/core/src/index.ts';
-import { BrowserFiles } from '../../../packages/storage/src/index.ts';
+import { type ToolContext, type ViewKind, uniqueId } from '../../core/src/index.ts';
+import { BrowserFiles } from '../../storage/src/index.ts';
 import { useUI } from './state.ts';
 export const files=new BrowserFiles();
-let toolRegistry:import('../../../packages/core/src/index.ts').ToolRegistry|null=null;
-export function bindToolRegistry(registry:import('../../../packages/core/src/index.ts').ToolRegistry){toolRegistry=registry;}
-export const tools={list:()=>toolRegistry?.list()??[],invoke:async(id:string,input:unknown,ctx:ToolContext)=>{if(!toolRegistry)throw new Error('Tool service unavailable');return toolRegistry.invoke(id,input,ctx)},register:<T,R>(t:import('../../../packages/core/src/index.ts').ToolDefinition<T,R>)=>{if(!toolRegistry)throw new Error('Tool service unavailable');return toolRegistry.register(t)}};
+let toolRegistry:import('../../core/src/index.ts').ToolRegistry|null=null;
+export function bindToolRegistry(registry:import('../../core/src/index.ts').ToolRegistry|null){toolRegistry=registry;}
+export const tools={list:()=>toolRegistry?.list()??[],invoke:async(id:string,input:unknown,ctx:ToolContext)=>{if(!toolRegistry)throw new Error('Tool service unavailable');return toolRegistry.invoke(id,input,ctx)},register:<T,R>(t:import('../../core/src/index.ts').ToolDefinition<T,R>)=>{if(!toolRegistry)throw new Error('Tool service unavailable');return toolRegistry.register(t)}};
 const output=z.object({message:z.string()});
 export function notify(message:string,mode:'info'|'error'='info') {document.dispatchEvent(new CustomEvent('wrkbench:toast',{detail:{message,mode}}));}
 export function registerClientTools(actions:{open:(kind:ViewKind)=>void;split:()=>void;float:()=>void;save:()=>Promise<void>}){

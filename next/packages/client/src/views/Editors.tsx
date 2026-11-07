@@ -7,8 +7,8 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { files, notify } from '../services.ts';
 import { useUI } from '../state.ts';
 import { Icon } from '../icons.tsx';
-import type { WorkspaceFile } from '../../../../packages/storage/src/index.ts';
-import type { ViewKind } from '../../../../packages/core/src/index.ts';
+import type { WorkspaceFile } from '../../../storage/src/index.ts';
+import type { ViewKind } from '../../../core/src/index.ts';
 loader.config({monaco});
 // Monaco workers are bundled from the real monaco-editor package, never a CDN.
 type InlineWorkers = Partial<Record<'editor'|'typescript'|'json'|'css'|'html',string>>;
@@ -38,7 +38,7 @@ export function CodeView({path:requestedPath}:{path?:string}){
    if(!file){setError('File not found');setLoading(false);return;}if(!useUI.getState().documents[path]?.dirty)cache(path,file.content,file.revision);setLoading(false);
  }).catch(e=>{setError(String(e));setLoading(false)});return()=>{active=false}},[path,cache]);
  const save=useCallback(async()=>{const d=useUI.getState().documents[path];if(!d?.dirty)return;
- try{const updated=await files.save(path,d.content,d.revision);mark(path,updated.revision);notify(`Saved ${path}`)}catch(e){notify(String(e),'error')}},[path,mark]);
+ try{const updated=await files.save(path,d.content,d.revision);mark(path,updated.revision,d.content);notify(`Saved ${path}`)}catch(e){notify(String(e),'error')}},[path,mark]);
  useEffect(()=>{const fn=(e:Event)=>{if((e as CustomEvent<string>).detail===path)void save()};window.addEventListener('wrkbench:savefile',fn);return()=>window.removeEventListener('wrkbench:savefile',fn)},[save,path]);
  return <div className="view vertical"><div className="view-toolbar"><span className="pathline">atlas-studio / {path}</span>{doc?.dirty&&<span className="unsaved">● Unsaved</span>}<div className="spacer"/><ToolbarButton title="Save this file (Ctrl/⌘ S)" icon="save" disabled={!doc?.dirty} onClick={()=>void save()}>Save</ToolbarButton></div>
  {loading?<div className="view-state">Loading file…</div>:error?<div className="view-state error">{error}</div>:<div className="editor-host"><Editor path={path} value={doc?.content??''} language={language(path)} theme={theme==='dark'?'vs-dark':'vs'} options={{minimap:{enabled:false},fontFamily:'JetBrains Mono, SFMono-Regular, Consolas, monospace',fontSize:13,lineHeight:21,scrollBeyondLastLine:false,smoothScrolling:true,padding:{top:14,bottom:12},automaticLayout:true,tabSize:2,wordWrap:'off',renderLineHighlight:'line',stickyScroll:{enabled:false}}} onChange={v=>edit(path,v??'')}/></div>}
@@ -51,9 +51,9 @@ export function ExplorerView({onOpen}:{onOpen:(path:string)=>void}){
  const newFile=async()=>{const path=prompt('New file path (relative to workspace)', 'src/new-file.ts');if(!path)return;
  if(!/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./\- ]+$/.test(path)){notify('Invalid file path','error');return}
  if(await files.get(path)){notify('File already exists','error');return}try{await files.save(path,'',0);refresh();onOpen(path)}catch(e){notify(String(e),'error')}};
- const rename=async(path:string)=>{const next=prompt('Rename file',path);if(!next||next===path)return;
+ const rename=async(path:string)=>{if(useUI.getState().documents[path]?.dirty){notify('Save changes before renaming','error');return;}const next=prompt('Rename file',path);if(!next||next===path)return;
  try{await files.rename(path,next);useUI.getState().moveDocument(path,next);window.dispatchEvent(new CustomEvent('wrkbench:filerename',{detail:{from:path,to:next}}));refresh();notify(`Renamed to ${next}`)}catch(e){notify(String(e),'error')}};
- const remove=async(path:string)=>{if(!confirm(`Delete ${path}? This cannot be undone.`))return;await files.remove(path);useUI.getState().removeDocument(path);window.dispatchEvent(new CustomEvent('wrkbench:filedelete',{detail:path}));refresh();notify(`${path} deleted`)};
+ const remove=async(path:string)=>{if(useUI.getState().documents[path]?.dirty){notify('Save changes before deleting','error');return;}if(!confirm(`Delete ${path}? This cannot be undone.`))return;await files.remove(path);useUI.getState().removeDocument(path);window.dispatchEvent(new CustomEvent('wrkbench:filedelete',{detail:path}));refresh();notify(`${path} deleted`)};
  const folders=new Set<string>();list.forEach(f=>{const parts=f.path.split('/');for(let i=1;i<parts.length;i++)folders.add(parts.slice(0,i).join('/'))});
  const rows=[...Array.from(folders).map(path=>({path,isFolder:true})),...list.map(file=>({path:file.path,isFolder:false}))].sort((a,b)=>a.path.localeCompare(b.path));
  return <div className="view vertical"><div className="view-toolbar"><span className="section-label">FILES</span><div className="spacer"/><ToolbarButton title="New local file" icon="plus" onClick={()=>void newFile()}/><ToolbarButton title="Refresh file tree" icon="refresh" onClick={refresh}/></div>
