@@ -168,7 +168,7 @@ jobs:
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version: 1.3.11
       - run: bun install --frozen-lockfile
       - name: Generate CycloneDX SBOM (lock + available package metadata)
         run: python3 ../../../../migrate/sbom.py bun.lock node_modules > "$GITHUB_WORKSPACE/canvas.cdx.json"
