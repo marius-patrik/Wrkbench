@@ -19,7 +19,7 @@
       "originalSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
       "reconciliationSourceSHA": "0e797adca5315e859d61e216d8a763f2920c39fc",
       "additionalSourceSHA": "6ed334bcad6e89a1837c299937c4c50207904541",
-      "snapshotTreeSHA": "a9e654796a0dda5060876e1ed3a3f7a389d0baaf",
+      "snapshotTreeSHA": "73efb78a9f1a885ca690434e88382f3b5a38f548",
       "expectedOwner": "DarkFactory-web unified local provider",
       "acceptedChanges": [
         "RSC-03 exact-origin loopback security code and tests from existing verified integration tree",
@@ -42,7 +42,9 @@
         "New W04: Windows native server adds SIGBREAK handler and Python host test uses dedicated process group plus CTRL_BREAK_EVENT for graceful shutdown with logs. Real Windows runner verification pending.",
         "Phase B RSC-ROOT: initial Chromium profile launch no longer deletes singleton process locks from another live process; SIGSEGV-specific bounded retry retained and unit-tested.",
         "Phase B RSC-05: portable archives now contain installed server WebSocket Chromium frame/resize/navigation probe; four-platform extracted acceptance fails closed if any required capability is BLOCKED.",
-        "Phase B RSC-ROOT: read-only PR-only three-replica x ten iteration Chromium process/frame/dialog stress, preserving the original #40 test breadth. Exact-head CI pending."
+        "Phase B RSC-ROOT: read-only PR-only three-replica x ten iteration Chromium process/frame/dialog stress, preserving the original #40 test breadth. Exact-head CI pending.",
+        "Phase B: after successful page.goto with active subscribers and no pending dialog, capture an explicit source-backed PNG frame; real Linux installed restart had state without a navigated screenshot.",
+        "Phase B diagnostic: instrument native Chromium tests with opt-in phase trace for first-frame, orphan idle cleanup and file chooser hangs. Stress remains strict 3x10, not greenwashed."
       ],
       "knownUnresolved": [
         "Active root (not inert migrated RSCode) Chromium blank-page/dialog stress remains intermittently failing; PR #40 root runtime correction is preserved but unmerged into production.",
@@ -111,14 +113,18 @@
         }
       },
       "phaseB": {
-        "sourceTreeSHA": "a9e654796a0dda5060876e1ed3a3f7a389d0baaf",
+        "sourceTreeSHA": "73efb78a9f1a885ca690434e88382f3b5a38f548",
         "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
         "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
-        "status": "PENDING_EXACT_HEAD_NATIVE_AND_30_CYCLE_STRESS_CI",
+        "status": "REAL_CHROMIUM_STRESS_AND_NATIVE_RESTART_ACCEPTANCE_FAILED_DIAGNOSTICS_ACTIVE",
         "boundedNativeRecovery": "initial-profile-lock-preserving; retry only after observed SIGSEGV",
         "nativeAcceptance": "extracted bundled Bun, real server WebSocket Chromium stream + resize + navigation, required checks all PASS",
         "stress": "3 separate hosted Ubuntu runs x 10 browserService suites; PR-only and read-only",
-        "rootRuntime": "UNCHANGED; NO_PRODUCTION_MERGE"
+        "rootRuntime": "UNCHANGED; NO_PRODUCTION_MERGE",
+        "failureEvidence": [
+          "GitHub Actions run 42415183496: all three Chromium stress replicas failed with varying 20s timeouts (blank initial frame, orphan idle cleanup, filechooser). No passing 30-cycle claim.",
+          "GitHub Actions run 42415183571: Linux installed browser persisted-session restart delivered state but no navigated frame (fixed with screenshot-on-navigation fallback; retest pending)."
+        ]
       }
     },
     "ghcode": {
