@@ -8,7 +8,7 @@ import type {
 import { encodeDocumentResourceId, isOwnedWorkspace, parseDocumentResourceId, parseOwnedWorkspaceId, validDocumentPath, type PrincipalKey } from "./identity";
 
 const DATABASE = "darkfactory-workbench";
-const VERSION = 4;
+const VERSION = 5;
 // The original workbench-recent-workspaces-v1 is unattributed legacy and stays untouched.
 const OWNED_RECENT_PREFIX = "ghcode-recent-owned-v1:";
 
@@ -90,7 +90,7 @@ type BlobRecord = {
   content: string;
   updatedAt: number;
 };
-type StoreName = "workspaces" | "blobs" | "overlays" | "staged" | "committed" | "commits" | "pushOperations" | "drafts";
+type StoreName = "workspaces" | "blobs" | "overlays" | "staged" | "committed" | "commits" | "pushOperations" | "drafts" | "legacyBackups" | "migrationState";
 
 /** String-key prefix query never materializes another workspace's private records. */
 function ownedKeyRange(workspaceId: string): IDBKeyRange {
@@ -128,6 +128,12 @@ function openDatabase() {
       }
       if (!database.objectStoreNames.contains("drafts")) {
         database.createObjectStore("drafts", { keyPath: "id" });
+      }
+      if (!database.objectStoreNames.contains("legacyBackups")) {
+        database.createObjectStore("legacyBackups", { keyPath: "id" });
+      }
+      if (!database.objectStoreNames.contains("migrationState")) {
+        database.createObjectStore("migrationState", { keyPath: "id" });
       }
     };
     request.onsuccess = () => {
@@ -1447,6 +1453,171 @@ export async function exportOwnedWorkspaceSnapshot(workspaceId: string): Promise
       };
       tx.onabort = () => reject(tx.error ?? new Error("Authorized workspace export transaction aborted."));
       tx.onerror = () => reject(tx.error ?? new Error("Authorized workspace export transaction failed."));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+
+/**
+ * Lossless, opt-in local quarantine for unattributed v2 records.
+ *
+ * This deliberately does NOT import, adopt or expose ambiguous private records
+ * to the currently signed-in principal. The originals remain byte-for-byte
+ * untouched in their original stores. All raw structured-clone backups and the
+ * migration checkpoint commit in one transaction, or none do.
+ *
+ * There is no user-data export API for this quarantine. Recovery requires an
+ * independent proof of original ownership; a repository name is not proof.
+ */
+export type LegacyQuarantineSummary = {
+  preservedRecords: number;
+  existingBackups: number;
+};
+
+type LegacyStoreName = "workspaces" | "blobs" | "overlays" | "staged" | "committed" |
+  "commits" | "pushOperations" | "drafts";
+
+const LEGACY_SOURCE_STORES: LegacyStoreName[] = [
+  "workspaces", "blobs", "overlays", "staged", "committed",
+  "commits", "pushOperations", "drafts",
+];
+
+type LegacyBackup = {
+  id: string;
+  sourceStore: LegacyStoreName;
+  sourceKey: string;
+  raw: unknown;
+  preservedAt: number;
+};
+
+function validLegacyParent(record: unknown): record is WorkspaceSnapshot {
+  if (!record || typeof record !== "object") return false;
+  const snapshot = record as WorkspaceSnapshot;
+  const parsed = typeof snapshot.id === "string" ? parseOwnedWorkspaceId(snapshot.id) : null;
+  return !!parsed && isOwnedWorkspace(snapshot, parsed.principalKey);
+}
+
+function validResourceForParent(
+  name: LegacyStoreName,
+  record: unknown,
+  owned: Map<string, WorkspaceSnapshot>,
+): boolean {
+  if (name === "workspaces") return validLegacyParent(record);
+  if (!record || typeof record !== "object") return false;
+  const item = record as { workspaceId?: unknown; key?: unknown; id?: unknown; path?: unknown; principalKey?: unknown };
+  if (typeof item.workspaceId !== "string") return false;
+  const snapshot = owned.get(item.workspaceId);
+  if (!snapshot) return false;
+  if (name === "commits")
+    return typeof item.id === "string" && item.id.startsWith(item.workspaceId + ":local:");
+  if (name === "pushOperations")
+    return typeof item.id === "string" && item.id.startsWith(item.workspaceId + ":push:") &&
+      item.principalKey === snapshot.ownership?.principalKey;
+  if (name === "drafts") {
+    if (typeof item.id !== "string") return false;
+    const parsed = parseDocumentResourceId(item.id);
+    return !!parsed && parsed.workspaceId === item.workspaceId &&
+      parsed.principalKey === snapshot.ownership?.principalKey &&
+      encodeDocumentResourceId(snapshot, parsed.path) === item.id;
+  }
+  if (name === "blobs")
+    return typeof item.key === "string" && item.key.startsWith(item.workspaceId + ":") &&
+      typeof (record as { sha?: unknown }).sha === "string" &&
+      item.key === item.workspaceId + ":" + (record as { sha: string }).sha;
+  return typeof item.path === "string" && validDocumentPath(item.path) &&
+    item.key === item.workspaceId + ":" + item.path;
+}
+
+/** Back up ambiguous local source records; never infer or grant ownership. */
+export async function quarantineUnattributedLegacyRecords(): Promise<LegacyQuarantineSummary> {
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  if (!owner) throw new Error("A verified storage principal is required for local quarantine.");
+  const db = await openDatabase();
+  try {
+    if (owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Quarantine authority changed before opening transaction.");
+    return await new Promise<LegacyQuarantineSummary>((resolve, reject) => {
+      const tx = db.transaction(
+        [...LEGACY_SOURCE_STORES, "legacyBackups", "migrationState"], "readwrite",
+      );
+      trackWrite(tx);
+      const requests = LEGACY_SOURCE_STORES.map((name) => ({
+        name, request: tx.objectStore(name).getAll(),
+      }));
+      const quarantine = tx.objectStore("legacyBackups");
+      let pending = requests.length;
+      let preservedRecords = 0;
+      let existingBackups = 0;
+      let reason: Error | null = null;
+      const abort = (error: unknown) => {
+        reason = error instanceof Error ? error : new Error(String(error));
+        try { tx.abort(); } catch { reject(reason); }
+      };
+      tx.oncomplete = () => {
+        if (reason) return reject(reason);
+        if (owner !== activePrincipal || generation !== principalGeneration)
+          return reject(new Error("Quarantine was revoked before transaction acknowledgment."));
+        resolve({ preservedRecords, existingBackups });
+      };
+      tx.onabort = () => reject(reason ?? tx.error ?? new Error("Legacy quarantine transaction aborted."));
+      tx.onerror = () => reject(reason ?? tx.error ?? new Error("Legacy quarantine transaction failed."));
+
+      const assemble = () => {
+        if (--pending !== 0) return;
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration)
+            throw new Error("Quarantine authority changed while examining local records.");
+          const rawWorkspaces = requests.find((item) => item.name === "workspaces")?.request.result ?? [];
+          const validOwners = new Map<string, WorkspaceSnapshot>();
+          for (const raw of rawWorkspaces) {
+            if (validLegacyParent(raw)) validOwners.set(raw.id, raw);
+          }
+          const now = Date.now();
+          for (const { name, request } of requests) {
+            for (const raw of request.result as unknown[]) {
+              if (validResourceForParent(name, raw, validOwners)) continue;
+              const item = raw as { id?: unknown; key?: unknown };
+              const sourceKey = name === "workspaces" || name === "commits" ||
+                name === "pushOperations" || name === "drafts" ? item.id : item.key;
+              if (typeof sourceKey !== "string" || !sourceKey)
+                throw new Error("Legacy record has no stable primary key; preserve original and abort.");
+              const id = name + ":" + sourceKey;
+              const previous = quarantine.get(id);
+              previous.onsuccess = () => {
+                try {
+                  const existing = previous.result as LegacyBackup | undefined;
+                  if (existing) {
+                    if (existing.sourceStore !== name || existing.sourceKey !== sourceKey ||
+                        JSON.stringify(existing.raw) !== JSON.stringify(raw))
+                      throw new Error("Legacy source changed since backup; refusing to overwrite original backup.");
+                    existingBackups += 1;
+                  } else {
+                    quarantine.add({
+                      id, sourceStore: name, sourceKey, raw, preservedAt: now,
+                    } satisfies LegacyBackup);
+                    preservedRecords += 1;
+                  }
+                } catch (error) { abort(error); }
+              };
+              previous.onerror = () => abort(previous.error ?? new Error("Backup validation failed."));
+            }
+          }
+          tx.objectStore("migrationState").put({
+            id: "legacy-unattributed-v2",
+            stage: "quarantined-not-attributed",
+            updatedAt: now,
+            // The summary is intentionally metadata-only; no private bytes
+            // or account/repository identifiers are surfaced to UI callers.
+          });
+        } catch (error) { abort(error); }
+      };
+      for (const { request } of requests) {
+        request.onsuccess = assemble;
+        request.onerror = () => abort(request.error ?? new Error("Legacy source scan failed."));
+      }
     });
   } finally {
     db.close();
