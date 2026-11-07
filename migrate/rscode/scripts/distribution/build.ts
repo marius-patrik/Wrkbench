@@ -1,5 +1,5 @@
-import { chmod, cp, lstat, mkdir, readFile, readdir, readlink, rm, stat, writeFile } from "node:fs/promises";
-import { join, resolve, sep } from "node:path";
+import { chmod, cp, lstat, mkdir, readFile, readdir, readlink, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { dirname, join, relative, resolve, sep } from "node:path";
 
 const repositoryRoot = resolve(import.meta.dir, "..", "..");
 const outputRoot = join(repositoryRoot, "out", "native");
@@ -36,6 +36,11 @@ for (const path of ["src", "node_modules"]) {
 await rm(join(stage, "node_modules", ".bin"), { recursive: true, force: true });
 await cp(join(repositoryRoot, "dist", "web"), join(stage, "dist", "web"), { recursive: true });
 await cp(browsersPath, join(stage, "browsers"), { recursive: true });
+// Bun 1.4+ cp may materialize macOS .framework internal relative links as
+// absolute links into the *build checkout's* browser-cache directory.
+// Rebase only links that resolve within that exact trusted provisioned
+// browser tree. Never package host paths or follow arbitrary symlink escapes.
+await rebaseBrowserSymlinks(join(stage, "browsers"), resolve(browsersPath));
 await cp(process.execPath, join(stage, "bin", platform === "win32" ? "bun.exe" : "bun"));
 await rejectNonPortableSymlinks(stage);
 for (const filename of ["launch.ts", "browser-probe.ts", "browser-stream-probe.ts", "terminal-probe.ts"]) {
@@ -72,6 +77,34 @@ async function gitHead(): Promise<string> {
   const output = await new Response(proc.stdout).text();
   if ((await proc.exited) !== 0) throw new Error("Unable to identify Git HEAD");
   return output.trim();
+}
+
+async function rebaseBrowserSymlinks(stageBrowsers: string, sourceBrowsers: string): Promise<void> {
+  async function walk(dir: string): Promise<void> {
+    for (const entry of await readdir(dir)) {
+      const path = join(dir, entry);
+      const info = await lstat(path);
+      if (info.isDirectory()) {
+        await walk(path);
+        continue;
+      }
+      if (!info.isSymbolicLink()) continue;
+      const rawTarget = await readlink(path);
+      const target = resolve(dirname(path), rawTarget);
+      if (target === stage || target.startsWith(stage + sep)) continue;
+      if (target !== sourceBrowsers && !target.startsWith(sourceBrowsers + sep)) {
+        throw new Error(`Untrusted browser distribution symlink outside source: ${path}`);
+      }
+      const copiedTarget = resolve(stageBrowsers, relative(sourceBrowsers, target));
+      if (copiedTarget !== stageBrowsers && !copiedTarget.startsWith(stageBrowsers + sep)) {
+        throw new Error("Browser symlink rebasing escaped staged browser tree");
+      }
+      const portableTarget = relative(dirname(path), copiedTarget);
+      await rm(path);
+      await symlink(portableTarget, path);
+    }
+  }
+  await walk(stageBrowsers);
 }
 
 async function rejectNonPortableSymlinks(dir: string): Promise<void> {
