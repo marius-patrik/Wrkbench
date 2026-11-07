@@ -30,3 +30,16 @@ jobs:
         run: bun run build
       - name: Require entrypoint
         run: test -s next/dist/index.html
+      - name: Install Chromium for normal HTTP-origin acceptance
+        working-directory: next
+        run: bunx playwright install --with-deps chromium
+      - name: Browser acceptance tests
+        working-directory: next
+        run: bun run test:e2e
+      - name: Preserve traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wrkbench-architecture-playwright
+          path: next/test-results/
+          if-no-files-found: ignore
