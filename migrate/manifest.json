@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "7036136d9e33aaf89538ba1231714ac8a7a84115",
+      "snapshotTreeSHA": "91121b054d935cd95533d05b3667e15578298488",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -173,7 +173,7 @@
         "bun run check",
         "bun run acceptance"
       ],
-      "testResults": "W05.1 real browser backup export/import test pending exact-head CI",
+      "testResults": "W05.1 authorized local backup roundtrip browser test selector corrected; pending exact-head acceptance",
       "acceptanceState": "PROVISIONAL_SOURCE_ONLY",
       "originalSourceRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
