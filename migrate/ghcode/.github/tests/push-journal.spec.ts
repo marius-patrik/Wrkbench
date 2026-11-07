@@ -1061,3 +1061,77 @@ test("real owned-workspace import rejects foreign principals, invalid paths and 
     persistedSnapshot: "RESTORED_A_SECRET",
   });
 });
+
+test("real IndexedDB makes local commit IDs immutable and push journals order-sensitive", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const a = "gh:github.com:1001";
+    const sessionId = crypto.randomUUID();
+    const workspaceUuid = crypto.randomUUID();
+    const id = `ghcode-owned-v2:${encodeURIComponent(a)}:${sessionId}`;
+    const workspace = {
+      version: 2, id, ref: "main", updatedAt: 1,
+      baseSha: "1".repeat(40), treeSha: "2".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: a, workspace: { id: workspaceUuid, principalKey: a },
+        session: { id: sessionId, workspaceId: workspaceUuid, principalKey: a,
+          repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main" },
+      },
+    };
+    storage.bindStoragePrincipal(a);
+    await storage.saveWorkspace(workspace);
+    const laterId = id + ":local:2:later";
+    const earlierId = id + ":local:1:earlier";
+    await storage.saveLocalCommit({
+      id: laterId, workspaceId: id, message: "later", createdAt: 2, files: [],
+    });
+    await storage.saveLocalCommit({
+      id: earlierId, workspaceId: id, message: "earlier", createdAt: 1, files: [],
+    });
+    const tamperRejected = await storage.saveLocalCommit({
+      id: laterId, workspaceId: id, message: "hidden mutation",
+      createdAt: 2, files: [],
+    }).then(() => false, () => true);
+    const stored = await storage.loadLocalCommits(id);
+    const orderRejected = await storage.beginPushOperation(workspace, [laterId, earlierId])
+      .then(() => false, () => true);
+    const accepted = await storage.beginPushOperation(workspace, [earlierId, laterId]);
+    const pending = await storage.loadPendingPushOperation(workspace);
+    const reorderedRejects = !storage.samePushCommitOrder(stored, [laterId, earlierId]);
+    const duplicateRejects = !storage.samePushCommitOrder(stored, [earlierId, earlierId]);
+    const trueOrderAccepted = storage.samePushCommitOrder(stored, [earlierId, laterId]);
+    storage.bindStoragePrincipal("gh:github.com:2002");
+    const foreignOverwrite = await storage.saveLocalCommit({
+      id: earlierId, workspaceId: id, message: "B takeover",
+      createdAt: 1, files: [],
+    }).then(() => false, () => true);
+    storage.bindStoragePrincipal(a);
+    const preserved = await storage.loadLocalCommits(id);
+    return {
+      tamperRejected, orderRejected, reorderedRejects, duplicateRejects,
+      trueOrderAccepted, foreignOverwrite,
+      durableOrder: preserved.map((item) => item.id),
+      durableMessages: preserved.map((item) => item.message),
+      journalOrder: pending?.commitIds,
+      acceptedPhase: accepted.phase,
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    tamperRejected: true,
+    orderRejected: true,
+    reorderedRejects: true,
+    duplicateRejects: true,
+    trueOrderAccepted: true,
+    foreignOverwrite: true,
+    durableOrder: [result.durableOrder[0], result.durableOrder[1]],
+    durableMessages: ["earlier", "later"],
+    journalOrder: result.durableOrder,
+    acceptedPhase: "prepared",
+  });
+  expect(result.durableOrder[0]).toContain(":local:1:earlier");
+  expect(result.durableOrder[1]).toContain(":local:2:later");
+});
