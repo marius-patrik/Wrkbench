@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "83cd115834de38887181d5bf258a27bdf8630789",
+      "snapshotTreeSHA": "5118cd8b94eb1d9b06e82d8fbcf0b6ed3663c0d2",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -153,7 +153,8 @@
         "GHCode W05 follow-up: immutable SHA-addressed Git blob cache writes now compare persisted owner and existing bytes in one IDB readwrite transaction; conflicting content under the same immutable SHA aborts. Real browser tests cover idempotency, conflict and foreign-principal rejection. Acceptance requires exact-head Chromium CI.",
         "W05 real Chromium split-editor acceptance: both editor panes share one authoritative retry action; test clicks one of two rendered controls and verifies both errors clear before group closure. Native Close Group dirty guard verified during intermediate run; complete exact-head suite pending.",
         "W05.1: principal-locked owned backup export/import includes committed private draft and push-reconciliation journals in same authorized transaction (previous backup omitted both); real Chromium UI round-trip added. Verify exact-head CI.",
-        "W05.2: principal-authorized JSON backup restores content-addressed blobs as well as commits/overlays/staging/acknowledged drafts/remote push journal, all in one IDB transaction; real Chromium export/download/import test extended; exact-head CI pending."
+        "W05.2: principal-authorized JSON backup restores content-addressed blobs as well as commits/overlays/staging/acknowledged drafts/remote push journal, all in one IDB transaction; real Chromium export/download/import test extended; exact-head CI pending.",
+        "W05.2.1: authorized import accepts identical preexisting immutable content-addressed Git blob caches, blocks forged/different bytes and still forbids overwriting local edits or recovery. Browser acceptance pending."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
