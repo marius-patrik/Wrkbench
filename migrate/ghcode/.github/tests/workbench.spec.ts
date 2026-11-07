@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import {
   BASE_SHA,
@@ -562,6 +563,125 @@ test("keyboard shortcuts toggle root regions and focus both omnibar modes", asyn
   await expect(omnibar).toBeFocused();
 });
 
+
+
+test("owned backup round-trips private durable drafts and completed push journals", async ({ page }) => {
+  await installGithubMock(page);
+  await seedAuthenticatedSession(page);
+  await openPrivateRepository(page);
+
+  const recoveryIds = await page.evaluate(async () => {
+    const request = indexedDB.open("darkfactory-workbench");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      return await new Promise<{ draftId: string; pushId: string }>((resolve, reject) => {
+        const tx = db.transaction(["workspaces", "drafts", "pushOperations"], "readwrite");
+        const request = tx.objectStore("workspaces").getAll();
+        let result: { draftId: string; pushId: string } | null = null;
+        tx.oncomplete = () => result ? resolve(result) : reject(new Error("Fixture missing"));
+        tx.onabort = () => reject(tx.error ?? new Error("Fixture transaction aborted"));
+        request.onsuccess = () => {
+          const workspace = request.result.find(
+            (item) => item.ownership?.principalKey === "gh:github.com:1001",
+          );
+          if (!workspace) return tx.abort();
+          const principal = workspace.ownership.principalKey;
+          const session = workspace.ownership.session;
+          const fields = [
+            principal, workspace.id, session.id, session.repositoryKey,
+            session.ref, workspace.baseSha, "README.md",
+          ];
+          const draftId = "ghcode-document-v1:" + fields.map(encodeURIComponent).join(":");
+          const pushId = workspace.id + ":push:fixture-restore";
+          tx.objectStore("drafts").add({
+            id: draftId, workspaceId: workspace.id, principalKey: principal,
+            content: "# Safely checkpointed private bytes\n", revision: 3, updatedAt: Date.now(),
+          });
+          tx.objectStore("pushOperations").add({
+            id: pushId, workspaceId: workspace.id, principalKey: principal,
+            repositoryId: workspace.repository.id, ref: workspace.ref,
+            expectedRemoteSha: workspace.baseSha, targetSha: workspace.baseSha,
+            commitIds: [], phase: "completed", createdAt: Date.now(), updatedAt: Date.now(),
+          });
+          result = { draftId, pushId };
+        };
+        request.onerror = () => reject(request.error);
+      });
+    } finally {
+      db.close();
+    }
+  });
+
+  await page.getByRole("button", { name: /Open Repository/ }).first().click();
+  const downloadPending = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export owned local backup" }).click();
+  const download = await downloadPending;
+  const sourcePath = await download.path();
+  if (!sourcePath) throw new Error("Owned backup download did not produce a file");
+  const payload = JSON.parse(await readFile(sourcePath, "utf8"));
+  expect(payload.schema).toBe(1);
+  expect(payload.data.drafts).toEqual([
+    expect.objectContaining({
+      id: recoveryIds.draftId,
+      content: "# Safely checkpointed private bytes\n",
+    }),
+  ]);
+  expect(payload.data.pushOperations).toEqual([
+    expect.objectContaining({ id: recoveryIds.pushId, phase: "completed" }),
+  ]);
+
+  await page.evaluate(async ({ draftId, pushId }) => {
+    const request = indexedDB.open("darkfactory-workbench");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(["drafts", "pushOperations"], "readwrite");
+        tx.objectStore("drafts").delete(draftId);
+        tx.objectStore("pushOperations").delete(pushId);
+        tx.oncomplete = () => resolve();
+        tx.onabort = () => reject(tx.error ?? new Error("Fixture cleanup aborted"));
+      });
+    } finally {
+      db.close();
+    }
+  }, recoveryIds);
+  await page.getByLabel("Owned local workspace backup file").setInputFiles({
+    name: "owned-workspace-backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(payload), "utf8"),
+  });
+  await expect(page.getByTitle("Sign out")).toBeVisible();
+  const recovered = await page.evaluate(async ({ draftId, pushId }) => {
+    const request = indexedDB.open("darkfactory-workbench");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const tx = db.transaction(["drafts", "pushOperations"], "readonly");
+      const draftReq = tx.objectStore("drafts").get(draftId);
+      const pushReq = tx.objectStore("pushOperations").get(pushId);
+      return await new Promise<{ draft: unknown; push: unknown }>((resolve, reject) => {
+        tx.oncomplete = () => resolve({ draft: draftReq.result, push: pushReq.result });
+        tx.onabort = () => reject(tx.error ?? new Error("Recovery lookup aborted"));
+      });
+    } finally {
+      db.close();
+    }
+  }, recoveryIds);
+  expect(recovered.draft).toEqual(expect.objectContaining({
+    id: recoveryIds.draftId, content: "# Safely checkpointed private bytes\n",
+  }));
+  expect(recovered.push).toEqual(expect.objectContaining({
+    id: recoveryIds.pushId, phase: "completed",
+  }));
+});
 
 test("uncertain remote push survives reload and safely reconciles without a second ref mutation", async ({ page }) => {
   const github = await installGithubMock(page);
