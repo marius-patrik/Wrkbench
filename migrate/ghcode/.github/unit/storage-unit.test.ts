@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { bindStoragePrincipal, saveWorkspace, commitLocalChanges, clearLocalGitState } from "../../src/workspace/storage";
+import { bindStoragePrincipal, saveWorkspace, commitLocalChanges, clearLocalGitState, samePushCommitOrder } from "../../src/workspace/storage";
 import type { WorkspaceSnapshot } from "../../src/workspace/model";
 
 const principal = "gh:github.com:1001" as const;
@@ -245,15 +245,48 @@ describe("atomic GHCode staged commits and remote-push cleanup", () => {
                { workspaceId: foreign, key: `${foreign}:private` }],
       committed: [{ workspaceId: id, key: `${id}:a` }],
       commits: [{ workspaceId: id, id: `${id}:local:1:one` }],
-    }, 3);
+    }, 4);
     try {
       const pending = clearLocalGitState(id);
       await mock.readsReady;
-      expect(mock.transactionStores).toEqual([["workspaces", "staged", "committed", "commits"]]);
+      expect(mock.transactionStores).toEqual([["workspaces", "staged", "committed", "commits", "pushOperations"]]);
       expect(mock.actions.filter(a => a.op === "delete")).toHaveLength(3);
       expect(mock.actions.some(a => String(a.value).includes("private"))).toBe(false);
       mock.complete();
       await pending;
+    } finally { mock.restore(); }
+  });
+});
+
+describe("immutable local commit push order and uncertain remote publication", () => {
+  test("push ancestry compares deterministic commit order, never only set membership", () => {
+    const local = [
+      { id: "later", createdAt: 7 },
+      { id: "earlier", createdAt: 3 },
+      { id: "last", createdAt: 9 },
+    ];
+    expect(samePushCommitOrder(local, ["earlier", "later", "last"])).toBe(true);
+    expect(samePushCommitOrder(local, ["last", "later", "earlier"])).toBe(false);
+    expect(samePushCommitOrder(local, ["earlier", "earlier", "last"])).toBe(false);
+    expect(samePushCommitOrder(local, ["earlier", "later"])).toBe(false);
+    expect(samePushCommitOrder([
+      { id: "b", createdAt: 5 }, { id: "a", createdAt: 5 },
+    ], ["a", "b"])).toBe(true);
+  });
+
+  test("local Git cleanup aborts atomically if any push journal is unresolved", async () => {
+    bindStoragePrincipal(principal);
+    const mock = fakeMultiStore({
+      commits: [{ workspaceId: id, id: id + ":local:1:one" }],
+      pushOperations: [{ workspaceId: id, id: id + ":push:pending", phase: "ready" }],
+    }, 1);
+    try {
+      await expect(clearLocalGitState(id)).rejects.toThrow(/push requires reconciliation/);
+      expect(mock.transactionStores).toEqual([
+        ["workspaces", "staged", "committed", "commits", "pushOperations"],
+      ]);
+      expect(mock.isAborted()).toBe(true);
+      expect(mock.actions).toHaveLength(0);
     } finally { mock.restore(); }
   });
 });
