@@ -49,8 +49,8 @@ export function ExplorerView({onOpen}:{onOpen:(path:string)=>void}){
  if(!/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./\- ]+$/.test(path)){notify('Invalid file path','error');return}
  if(await files.get(path)){notify('File already exists','error');return}try{await files.save(path,'',0);refresh();onOpen(path)}catch(e){notify(String(e),'error')}};
  const rename=async(path:string)=>{if(useUI.getState().documents[path]?.dirty){notify('Save changes before renaming','error');return;}const next=prompt('Rename file',path);if(!next||next===path)return;
- try{await files.rename(path,next);notify(`Renamed to ${next}`)}catch(e){notify(String(e),'error')}};
- const remove=async(path:string)=>{if(useUI.getState().documents[path]?.dirty){notify('Save changes before deleting','error');return;}if(!confirm(`Delete ${path}? This cannot be undone.`))return;await files.remove(path);notify(`${path} deleted`)};
+ try{await files.rename(path,next,list.find(f=>f.path===path)?.revision);notify(`Renamed to ${next}`)}catch(e){notify(String(e),'error')}};
+ const remove=async(path:string)=>{if(useUI.getState().documents[path]?.dirty){notify('Save changes before deleting','error');return;}if(!confirm(`Delete ${path}? This cannot be undone.`))return;try{await files.remove(path,list.find(f=>f.path===path)?.revision);notify(`${path} deleted`)}catch(e){notify(String(e),'error')}};
  const folders=new Set<string>();list.forEach(f=>{const parts=f.path.split('/');for(let i=1;i<parts.length;i++)folders.add(parts.slice(0,i).join('/'))});
  const rows=[...Array.from(folders).map(path=>({path,isFolder:true})),...list.map(file=>({path:file.path,isFolder:false}))].sort((a,b)=>a.path.localeCompare(b.path));
  return <div className="view vertical"><div className="view-toolbar"><span className="section-label">FILES</span><div className="spacer"/><ToolbarButton title="New local file" icon="plus" onClick={()=>void newFile()}/><ToolbarButton title="Refresh file tree" icon="refresh" onClick={refresh}/></div>

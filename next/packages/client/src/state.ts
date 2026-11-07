@@ -30,7 +30,7 @@ export const useUI=create<UIState>()(persist((set,get)=>({
  themeToggle:()=>set(s=>({theme:s.theme==='dark'?'light':'dark'})),switchWorkbench:(workbench)=>set({workbench,activeViewId:null}),setActiveView:(activeViewId)=>set({activeViewId}),
  setContext:(change,viewId)=>set(s=>viewId?({contextOverrides:{...s.contextOverrides,[viewId]:{...s.contextOverrides[viewId],...change}}}):({context:{...s.context,...change}})),
  resetContext:(viewId)=>set(s=>{const next={...s.contextOverrides};delete next[viewId];return {contextOverrides:next}}),
- selectFile:(filePath)=>set({filePath}),cacheDocument:(path,content,revision)=>set(s=>({documents:{...s.documents,[path]:{content,revision,dirty:false}}})),
+ selectFile:(filePath)=>set({filePath}),cacheDocument:(path,content,revision)=>set(s=>{const current=s.documents[path];if(current?.dirty||(current&&current.revision>revision))return s;return {documents:{...s.documents,[path]:{content,revision,dirty:false}}}}),
  editDocument:(path,content)=>set(s=>({documents:{...s.documents,[path]:{content,revision:s.documents[path]?.revision??0,dirty:true}}})),
  markSaved:(path,revision,savedContent)=>set(s=>{const current=s.documents[path];if(!current)return s;return {documents:{...s.documents,[path]:{...current,revision,dirty:current.content!==savedContent}}}}),
  moveDocument:(from,to)=>set(s=>{const documents={...s.documents};if(documents[from]){documents[to]={...documents[from],revision:documents[from].revision+1};delete documents[from]}return {documents,filePath:s.filePath===from?to:s.filePath}}),
