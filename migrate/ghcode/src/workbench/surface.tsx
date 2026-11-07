@@ -309,16 +309,21 @@ export function WorkbenchSurfaceView({
 
     items.push("separator");
 
-    if (!hasProtectedPeer) {
+    // Close Others and Close Group must share the workbench's atomic
+    // pre-removal guard. Invoking closeTab in a loop could otherwise leave a
+    // partially closed group if an intervening writer fails or revokes.
+    if (groupPanels.length > 1) {
       items.push({
         label: "Close Others",
-        action: () => {
-          for (const peer of groupPanels) {
-            if (peer.id !== tab.id) runtimeRef.current.closeTab(peer.id);
-          }
-        },
+        disabled: hasProtectedPeer,
+        action: () => runtimeRef.current.closeOthers(tab.id),
       });
     }
+    items.push({
+      label: "Close Group",
+      disabled: groupPanels.some((peer: any) => paramsOf(peer)?.pinned === true),
+      action: () => runtimeRef.current.closeGroup(tab.id),
+    });
 
     items.push(
       {
