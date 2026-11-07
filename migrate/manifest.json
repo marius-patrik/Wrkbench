@@ -19,7 +19,7 @@
       "originalSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
       "reconciliationSourceSHA": "0e797adca5315e859d61e216d8a763f2920c39fc",
       "additionalSourceSHA": "6ed334bcad6e89a1837c299937c4c50207904541",
-      "snapshotTreeSHA": "aa9ce92ccd5ec56029a942b67ec9f83b7c7e69c5",
+      "snapshotTreeSHA": "cfc51143936d34f2bf4b323449030f05651ef6e4",
       "expectedOwner": "DarkFactory-web unified local provider",
       "acceptedChanges": [
         "RSC-03 exact-origin loopback security code and tests from existing verified integration tree",
@@ -118,10 +118,10 @@
         }
       },
       "phaseB": {
-        "sourceTreeSHA": "aa9ce92ccd5ec56029a942b67ec9f83b7c7e69c5",
+        "sourceTreeSHA": "cfc51143936d34f2bf4b323449030f05651ef6e4",
         "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
         "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
-        "status": "EXACT_HEAD_ACCEPTANCE_PENDING; RSC_ROOT_CHROMIUM_STRESS_PREVIOUSLY_RED",
+        "status": "IMPLEMENTED_ACCEPTANCE_BLOCKED_30_CYCLE_CHROMIUM_STRESS_RED",
         "boundedNativeRecovery": "initial-profile-lock-preserving; retry only after observed SIGSEGV",
         "nativeAcceptance": "extracted bundled Bun, real server WebSocket Chromium stream + resize + navigation, required checks all PASS",
         "stress": "3 separate hosted Ubuntu runs x 10 browserService suites; PR-only and read-only",
@@ -130,7 +130,15 @@
           "GitHub Actions run 42415183496: all three Chromium stress replicas failed with varying 20s timeouts (blank initial frame, orphan idle cleanup, filechooser). No passing 30-cycle claim.",
           "GitHub Actions run 42415183571: Linux installed browser persisted-session restart delivered state but no navigated frame (fixed with screenshot-on-navigation fallback; retest pending)."
         ],
-        "toolchain": "Bun 1.4.4 all 4 native installed targets and isolated rscode source/stress suites"
+        "toolchain": "Bun 1.4.4 all 4 native installed targets and isolated rscode source/stress suites",
+        "testEvidence": {
+          "previousNativePassedHead": "6099af7f0b88103d376177d133a3fc1a7c515b0f",
+          "previousNativeRun": 42416248313,
+          "previousStrictStressRun": 42416248366,
+          "previousStrictStressResult": "FAIL_NATIVE_CHROMIUM_PROCESS_AND_CDP_INTERMITTENT",
+          "toolchainCandidate": "BUN_1_4_4_ALL_FOUR_NATIVE_TARGETS_PENDING_EXACT_HEAD",
+          "note": "No suppression of 3x10 stress; frozen source needs exact-HEAD verification"
+        }
       }
     },
     "ghcode": {
