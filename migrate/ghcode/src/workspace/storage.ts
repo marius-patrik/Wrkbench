@@ -588,6 +588,92 @@ export async function compareAndSetOverlay(
   }
 }
 
+
+/**
+ * Apply a multi-path overlay transition atomically.
+ * Examples include a source deletion and destination creation during rename.
+ * Every affected path requires its caller-observed durable predecessor.
+ * No partial rename is committed if another tab writes either path first.
+ */
+export async function compareAndApplyOverlays(
+  workspaceId: string,
+  changes: Array<{ path: string; expected: WorkingFile | null; next: WorkingFile | null }>,
+): Promise<void> {
+  requireOwned(workspaceId);
+  if (!changes.length) throw new Error("Overlay transaction requires at least one change.");
+  const paths = new Set<string>();
+  for (const change of changes) {
+    if (!validDocumentPath(change.path) || paths.has(change.path))
+      throw new Error("Invalid or duplicate overlay mutation path.");
+    paths.add(change.path);
+    for (const file of [change.expected, change.next]) {
+      if (!file) continue;
+      requireCanonicalFileKey(file);
+      if (file.workspaceId !== workspaceId || file.path !== change.path)
+        throw new Error("Overlay mutation resource identity mismatch.");
+    }
+  }
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  const db = await openDatabase();
+  try {
+    requireOwned(workspaceId);
+    if (!owner || owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Overlay authority changed before group transaction.");
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(["workspaces", "overlays"], "readwrite");
+      trackWrite(tx);
+      const store = tx.objectStore("overlays");
+      let reason: Error | null = null;
+      const abort = (error: unknown) => {
+        reason = error instanceof Error ? error : new Error(String(error));
+        try { tx.abort(); } catch { reject(reason); }
+      };
+      tx.oncomplete = () => {
+        if (reason) return reject(reason);
+        if (owner !== activePrincipal || generation !== principalGeneration)
+          return reject(new Error("Overlay authority revoked before transaction acknowledgment."));
+        resolve();
+      };
+      tx.onabort = () => reject(reason ?? tx.error ?? new Error("Overlay group CAS aborted."));
+      tx.onerror = () => reject(reason ?? tx.error ?? new Error("Overlay group CAS failed."));
+      const proof = tx.objectStore("workspaces").get(workspaceId);
+      proof.onsuccess = () => {
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration ||
+              !isOwnedWorkspace(proof.result as WorkspaceSnapshot | undefined, owner))
+            throw new Error("Overlay group CAS lacks persisted workspace ownership.");
+          // Requests must be enqueued before IndexedDB's transaction becomes idle.
+          for (const change of changes) {
+            const req = store.get(workspaceId + ":" + change.path);
+            req.onsuccess = () => {
+              try {
+                if (owner !== activePrincipal || generation !== principalGeneration)
+                  throw new Error("Overlay authority revoked while validating transition.");
+                const current = req.result as WorkingFile | undefined;
+                const expected = change.expected;
+                const matches = expected === null ? current === undefined :
+                  !!current && current.key === expected.key &&
+                  current.workspaceId === expected.workspaceId &&
+                  current.updatedAt === expected.updatedAt &&
+                  sameWorking(current, expected);
+                if (!matches)
+                  throw new Error("Overlay conflict: file changed since multi-path operation began.");
+                if (change.next) store.put(change.next);
+                else store.delete(workspaceId + ":" + change.path);
+              } catch (error) { abort(error); }
+            };
+            req.onerror = () => abort(req.error ?? new Error("Overlay snapshot read failed."));
+          }
+        } catch (error) { abort(error); }
+      };
+      proof.onerror = () => abort(proof.error ?? new Error("Workspace ownership read failed."));
+    });
+  } finally {
+    db.close();
+  }
+}
+
 export function loadOverlays(workspaceId: string) {
   return allForWorkspace<WorkingFile>("overlays", workspaceId);
 }
