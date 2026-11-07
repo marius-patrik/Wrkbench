@@ -23,7 +23,9 @@ test('Dockview is actual layout owner',()=>{
  assert.match(source,/api\.toJSON/);
  assert.match(source,/closeEmptyGroups=\{false\}/);
  assert.match(source,/getTabContextMenuItems/);
- assert.match(source,/layoutHistory=\{\{enabled:true\}\}/);
+ assert.match(source,/function travelLayout\(/);
+ assert.match(source,/function recordLayout\(/);
+ assert.doesNotMatch(source,/layoutHistory=\{\{enabled:true\}\}/);
  assert.doesNotMatch(source,/class\s+(CustomDock|FakeDock|TabTree)/);
 });
 test('Cordis owns plugin lifecycle and feature registry',()=>{
@@ -44,6 +46,7 @@ test('Cordis owns plugin lifecycle and feature registry',()=>{
   assert.match(plugin,/render:/);
   assert.ok(existsSync(path.join(root,prefix+'src/View.tsx')));
   assert.ok(existsSync(path.join(root,prefix+'src/index.ts')));
+  assert.match(read(prefix+'src/View.tsx'),/export default function FeatureView/);
  }
 });
 test('local files are revision guarded by IndexedDB transaction; OPFS is nonauthoritative',()=>{
@@ -69,7 +72,7 @@ test('Cordis features contribute renderers and tools, not metadata-only placehol
  assert.match(app,/contribution\.render\(/);
  assert.match(sdk,/class ViewActionService extends Service/);
  assert.match(sdk,/ctx\.viewActions\.open/);
- for(const pathPart of ['services.ts','state.ts','icons.tsx','views/Editors.tsx','views/Features.tsx']) {
+ for(const pathPart of ['services.ts','state.ts','icons.tsx','views/Editors.tsx','views/Primitives.tsx','views/Capabilities.tsx']) {
   assert.ok(existsSync(path.join(root,'packages/client/src',pathPart)));
  }
 });
@@ -90,4 +93,17 @@ test('every source-relative import resolves inside this monorepo',()=>{
   }
  }
  assert.ok(n>200,'too few imports verified');
+});
+
+test('first-party view modules live in feature packages, not the shell or a mega presenter',()=>{
+ assert.ok(!existsSync(path.join(root,'apps/web/src/views/Features.tsx')));
+ assert.ok(!existsSync(path.join(root,'packages/client/src/views/Features.tsx')));
+ const agent=read('features/agent/src/View.tsx');
+ const timeline=read('features/timeline/src/View.tsx');
+ const plugins=read('features/plugins/src/View.tsx');
+ assert.match(agent,/export function AgentView/);
+ assert.match(timeline,/export function TimelineView/);
+ assert.match(plugins,/export function PluginsView/);
+ assert.match(agent,/scrollIntoView/);
+ assert.match(agent,/useEffect\(\(\)=>\{/);
 });
