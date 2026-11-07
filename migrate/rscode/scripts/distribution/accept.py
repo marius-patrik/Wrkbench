@@ -200,6 +200,13 @@ try:
     browser_env["DEBUG"] = "pw:browser"
     run([binary, installed / "bin" / "browser-probe.ts", "first"], browser_env, user_dir, 70)
     record("bundled_chromium_and_first_browser_profile", "PASS")
+    # Unlike the direct Playwright probe, this opens the actual installed
+    # server's /api/browser/stream WebSocket. It verifies native CDP frames,
+    # truthful PNG dimensions, resize and navigation through BrowserFrameService.
+    browser_env["RSCODE_PROBE_WORKSPACE_ID"] = workspace_id
+    run([binary, installed / "bin" / "browser-stream-probe.ts", "first"],
+        browser_env, user_dir, 90)
+    record("installed_server_chromium_stream", "PASS")
     stop()
     service_log = (canvas_home / "logs" / "service.log").read_text()
     expected_signal = "SIGBREAK" if os.name == "nt" else "SIGTERM"
@@ -220,8 +227,35 @@ try:
             "No workspace mutation can be verified until Windows absolute paths are accepted")
     run([binary, installed / "bin" / "browser-probe.ts", "restart"], browser_env, user_dir, 70)
     record("browser_profile_persistence", "PASS")
+    run([binary, installed / "bin" / "browser-stream-probe.ts", "restart"],
+        browser_env, user_dir, 90)
+    record("server_browser_session_restart", "PASS")
     stop()
     record("shutdown_and_port_reuse", "PASS")
+    # A former Windows compatibility pathway recorded BLOCKED but returned
+    # success. Installed acceptance is now all-or-nothing: every required
+    # capability must be an executed PASS, never an unaccepted fallback.
+    required = (
+        "clean_extraction_and_launcher",
+        "startup_health_and_data_directory",
+        "frontend_bundle",
+        "controlled_workspace_create",
+        "controlled_file_create_and_modify",
+        "controlled_git_repository_and_status",
+        "terminal_pty",
+        "bundled_chromium_and_first_browser_profile",
+        "installed_server_chromium_stream",
+        "graceful_shutdown",
+        "restart_and_workspace_persistence",
+        "browser_profile_persistence",
+        "server_browser_session_restart",
+        "shutdown_and_port_reuse",
+    )
+    unacceptable = [name for name in required
+        if checks.get(name, {}).get("status") != "PASS"]
+    if unacceptable:
+        raise RuntimeError("Required installed capabilities not accepted: " +
+            ", ".join(unacceptable))
 except Exception as exc:
     record("acceptance", "FAIL", str(exc))
     if log.exists():
