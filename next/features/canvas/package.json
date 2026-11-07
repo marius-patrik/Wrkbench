@@ -6,6 +6,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@wrkbench/sdk": "workspace:*"
+    "@wrkbench/sdk": "workspace:*",
+    "react": "^19.2.5",
+    "@wrkbench/client-ui": "workspace:*"
   }
 }
