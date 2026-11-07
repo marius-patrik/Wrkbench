@@ -72,11 +72,13 @@ test(
 test(
   "browser frame service streams native blank pages",
   async () => {
+    browserStressTrace("blank: before setup");
     tempRoot = await mkdtemp(join(tmpdir(), "canvas-browser-"));
     const service = new BrowserFrameService(join(tempRoot, "profiles"), () => undefined);
     const frames: BrowserFrameMessage[] = [];
 
     try {
+      browserStressTrace("blank: before stream");
       const handle = await service.stream(
         {
           workspaceId: "workspace:test",
@@ -94,7 +96,9 @@ test(
         },
       );
       try {
+        browserStressTrace("blank: stream ready");
         await waitFor(() => frames.some((frame) => frame.url === "about:blank"), "blank screencast frame");
+        browserStressTrace("blank: received frame");
       } finally {
         handle.close();
       }
@@ -281,15 +285,20 @@ test("native Chromium recovery never retries unrelated failures or repeats an ob
 test(
   "disconnected browser streams release orphan Chromium contexts",
   async () => {
+    browserStressTrace("idle: before setup");
     tempRoot = await mkdtemp(join(tmpdir(), "canvas-browser-idle-"));
     const service = new BrowserFrameService(join(tempRoot, "profiles"), () => undefined, 50);
     const session = browserSession("<title>Idle cleanup</title>");
     try {
+      browserStressTrace("idle: before stream");
       const handle = await service.stream(session, { send: () => undefined });
+      browserStressTrace("idle: stream ready");
       const internals = service as unknown as { liveBrowsers: Map<string, unknown> };
       expect(internals.liveBrowsers.size).toBe(1);
       handle.close();
+      browserStressTrace("idle: handle closed");
       await waitFor(() => internals.liveBrowsers.size === 0, "idle Chromium cleanup");
+      browserStressTrace("idle: cleaned up");
     } finally {
       await service.close();
     }
@@ -336,6 +345,7 @@ test(
 test(
   "browser file chooser rejects malformed bytes and accepts valid host uploads",
   async () => {
+    browserStressTrace("file: before setup");
     tempRoot = await mkdtemp(join(tmpdir(), "canvas-browser-upload-"));
     const service = new BrowserFrameService(join(tempRoot, "profiles"), () => undefined);
     const session = browserSession(
@@ -343,21 +353,27 @@ test(
     );
     const messages: Array<{ type: string; title?: string }> = [];
     try {
+      browserStressTrace("file: before stream");
       const handle = await service.stream(session, { send: (message) => { messages.push(message); } });
+      browserStressTrace("file: stream ready");
       try {
         await service.interact(session, { type: "viewport", width: 500, height: 320 });
+        browserStressTrace("file: viewport ready");
         await service.interact(session, { type: "mouse", event: "down", x: 60, y: 40, button: "left" });
         await service.interact(session, { type: "mouse", event: "up", x: 60, y: 40, button: "left" });
         await waitFor(() => messages.some((message) => message.type === "fileChooser"), "file picker event");
+        browserStressTrace("file: chooser shown");
         await expect(service.interact(session, {
           type: "chooseFiles",
           files: [{ name: "bad.txt", mimeType: "text/plain", data: "%%%%" }],
         })).rejects.toThrow("file chooser rejected");
+        browserStressTrace("file: invalid bytes rejected");
         await service.interact(session, {
           type: "chooseFiles",
           files: [{ name: "fixture.txt", mimeType: "text/plain", data: Buffer.from("hello").toString("base64") }],
         });
         await waitFor(() => messages.some((message) => message.type === "state" && message.title === "fixture.txt"), "file chooser upload");
+        browserStressTrace("file: uploaded");
       } finally {
         handle.close();
       }
@@ -489,6 +505,12 @@ test("closing browser service during CDP startup rejects pending screencast", as
   expect(live.screencastStarting).toBeNull();
   expect(live.screencastStarted).toBe(false);
 });
+
+function browserStressTrace(phase: string): void {
+  if (process.env.RSCODE_BROWSER_STRESS_TRACE === "1") {
+    console.error(`[rscode-browser-stress] ${phase} @ ${Date.now()}`);
+  }
+}
 
 function browserSession(html: string): BrowserSession {
   return {
