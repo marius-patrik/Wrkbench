@@ -368,6 +368,16 @@ body {
   position: relative;
   touch-action: none;
 }
+/* The visual divider remains 4px, but the hit target is forgiving even
+   after the user scales the interface. Pointer events on the pseudo-element
+   are dispatched to the separator itself. */
+.cx-shell .cx-resizer.sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  inset: 0 -5px;
+  cursor: col-resize;
+  touch-action: none;
+}
 .cx-shell .cx-resizer.sidebar-resizer:hover,
 body.cx-resizing .cx-resizer.sidebar-resizer {
   background: var(--border);
