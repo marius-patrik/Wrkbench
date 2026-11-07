@@ -38,7 +38,7 @@ await cp(join(repositoryRoot, "dist", "web"), join(stage, "dist", "web"), { recu
 await cp(browsersPath, join(stage, "browsers"), { recursive: true });
 await cp(process.execPath, join(stage, "bin", platform === "win32" ? "bun.exe" : "bun"));
 await rejectNonPortableSymlinks(stage);
-for (const filename of ["launch.ts", "browser-probe.ts", "terminal-probe.ts"]) {
+for (const filename of ["launch.ts", "browser-probe.ts", "browser-stream-probe.ts", "terminal-probe.ts"]) {
   await cp(join(import.meta.dir, filename), join(stage, "bin", filename));
 }
 if (platform === "win32") {
