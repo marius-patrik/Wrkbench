@@ -446,6 +446,50 @@ export function WorkbenchShell() {
     [locate, persist],
   );
 
+  // Native Dockview group operations must use the SAME authoritative dirty
+  // document guard before removing even one panel. The group mutation is
+  // batched so a failed guard cannot persist a half-closed workspace layout.
+  const closeGroupPanels = useCallback(
+    (id: string, includeSelected: boolean) => {
+      const found = locate(id);
+      if (!found) return;
+      const groupId = found.panel.api?.group?.id;
+      if (!groupId) return;
+      const members = (found.api.panels ?? []).filter(
+        (panel: any) => panel.api?.group?.id === groupId,
+      );
+      const targets = includeSelected
+        ? members : members.filter((panel: any) => panel.id !== id);
+      if (!targets.length) return;
+      // Pinned tabs are intentionally not silently removed by group actions.
+      if (targets.some((panel: any) => paramsOf(panel)?.pinned)) return;
+      try {
+        documentService.assertSafeToNavigate();
+      } catch (reason) {
+        window.alert(reason instanceof Error ? reason.message : String(reason));
+        return;
+      }
+      layoutMutationRef.current = true;
+      try {
+        for (const panel of targets) {
+          if (found.api.getPanel?.(panel.id)) found.api.removePanel(panel);
+        }
+      } finally {
+        layoutMutationRef.current = false;
+        persist();
+      }
+    },
+    [locate, persist],
+  );
+  const closeOthers = useCallback(
+    (id: string) => closeGroupPanels(id, false),
+    [closeGroupPanels],
+  );
+  const closeGroup = useCallback(
+    (id: string) => closeGroupPanels(id, true),
+    [closeGroupPanels],
+  );
+
   const setPinned = useCallback(
     (id: string, pinned: boolean) => {
       const found = locate(id);
@@ -493,6 +537,8 @@ export function WorkbenchShell() {
       transferTab,
       splitTab,
       closeTab,
+      closeOthers,
+      closeGroup,
       setPinned,
       updateTabState,
       toggleSurface,
@@ -512,6 +558,8 @@ export function WorkbenchShell() {
       transferTab,
       splitTab,
       closeTab,
+      closeOthers,
+      closeGroup,
       setPinned,
       updateTabState,
       toggleSurface,
