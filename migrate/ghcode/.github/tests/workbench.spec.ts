@@ -425,7 +425,9 @@ test("Monaco save failures guard Dockview close and account transition until ack
   await page.evaluate(() => {
     (window as Window & { restoreOverlayStore?: () => void }).restoreOverlayStore?.();
   });
-  await surface(page, "main").getByRole("button", { name: "Retry save" }).click();
+  // Both split views share one authoritative DocumentService model.
+  // Either retry action flushes the same resource; avoid strict-mode ambiguity.
+  await surface(page, "main").getByRole("button", { name: "Retry save" }).first().click();
   await expect(surface(page, "main").locator(".resource-generated-notice[role=\"alert\"]")).toHaveCount(0);
   // Once durably acknowledged, close the split group and remaining editor.
   await editors.last().click({ button: "right", force: true });
