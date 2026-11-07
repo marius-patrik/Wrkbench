@@ -121,7 +121,7 @@
         "sourceTreeSHA": "cfc51143936d34f2bf4b323449030f05651ef6e4",
         "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
         "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
-        "status": "IMPLEMENTED_ACCEPTANCE_BLOCKED_30_CYCLE_CHROMIUM_STRESS_RED",
+        "status": "ACCEPTED_INERT_SOURCE_30_CHROMIUM_STRESS_AND_FOUR_NATIVE_OS",
         "boundedNativeRecovery": "initial-profile-lock-preserving; retry only after observed SIGSEGV",
         "nativeAcceptance": "extracted bundled Bun, real server WebSocket Chromium stream + resize + navigation, required checks all PASS",
         "stress": "3 separate hosted Ubuntu runs x 10 browserService suites; PR-only and read-only",
@@ -132,12 +132,24 @@
         ],
         "toolchain": "Bun 1.4.4 all 4 native installed targets and isolated rscode source/stress suites",
         "testEvidence": {
-          "previousNativePassedHead": "6099af7f0b88103d376177d133a3fc1a7c515b0f",
-          "previousNativeRun": 42416248313,
-          "previousStrictStressRun": 42416248366,
-          "previousStrictStressResult": "FAIL_NATIVE_CHROMIUM_PROCESS_AND_CDP_INTERMITTENT",
-          "toolchainCandidate": "BUN_1_4_4_ALL_FOUR_NATIVE_TARGETS_PENDING_EXACT_HEAD",
-          "note": "No suppression of 3x10 stress; frozen source needs exact-HEAD verification"
+          "sourceTreeSHA": "cfc51143936d34f2bf4b323449030f05651ef6e4",
+          "integrationHeadSHA": "40b0b457661322516ff9e2cc7b07dcee3b8a5284",
+          "stressRun": 42417053136,
+          "stressReplicas": "PASS x3",
+          "repetitionsPerReplica": 10,
+          "requiredBrowserSuites": 30,
+          "nativeRun": 42417053111,
+          "nativeOSResults": {
+            "linux-x64": "PASS",
+            "windows-x64": "PASS",
+            "macos-x64": "PASS",
+            "macos-arm64": "PASS"
+          },
+          "sourceJob": "PASS",
+          "rootVerify": "PASS",
+          "rootRuntime": "PASS",
+          "compositeMigrationSourceWorkflow": "FAIL only standalone Canvas drag smoke test",
+          "scope": "migrate/rscode only, no root or unified release"
         }
       }
     },
@@ -277,8 +289,8 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
-      "appSubtreeSHA": "9e4880ad5742f73ad5ea482b127fdf80742695e5",
+      "snapshotTreeSHA": "b1fc8fe4da335e36eae560482392f3a9c5096c32",
+      "appSubtreeSHA": "106584111f42b5c1d3f33822dce5f215b9c870ce",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
         "Canvas PR #41 complete standalone app, original persistence source, and app-specific browser/persistence tests preserved; no active runtime import"
@@ -288,7 +300,8 @@
         "W02 generated real Bun 1.3.11 lockfile on GitHub Actions Ubuntu and enforced frozen-install CI",
         "W02-R validated repository-context parser and deterministic bounded source graph/search, selected-repository identity contract and five active Bun contract scenarios.",
         "W03: injected read-only runtime selected-repository provider with immutable identity/revision validation, async stale-load abort, controlled repository UI selection and bounded document/graph/search consumer rewiring. Standalone generated source remains fallback only when no adapter is supplied.",
-        "W05: SidebarResize persists authoritative pointerup coordinates to avoid coalesced pointermove causing lost resizing; independent real browser smoke retest pending."
+        "W05: SidebarResize persists authoritative pointerup coordinates to avoid coalesced pointermove causing lost resizing; independent real browser smoke retest pending.",
+        "W06: captured pointer on Canvas sidebar separator while Dockview flex panes move, extended 4px visual divider to 14px invisible hit area; Chromium smoke now fails with event tracing instead of opaque 9s drag timeout. Exact-head browser smoke pending."
       ],
       "knownUnresolved": [
         "Standalone Canvas generator still publishes curated build-time repository documents, not a live runtime selected-repository adapter.",
@@ -339,6 +352,14 @@
         "validation": "Real Chromium injected adapter, rapid repository switch, stale content rejection, forged identity fail-closed, recovery",
         "status": "PENDING_EXACT_HEAD_FORMATTED_BROWSER_CI",
         "privacyFix": "Invalid identity now increments generation, clears selected identity and old source context, preserves validation error. Browser test forces stale completion."
+      },
+      "w06SidebarResize": {
+        "sourceTreeSHA": "b1fc8fe4da335e36eae560482392f3a9c5096c32",
+        "appSubtreeSHA": "106584111f42b5c1d3f33822dce5f215b9c870ce",
+        "case": "real Chromium pointer capture, drag +56px after ArrowRight resize, persisted aria-valuenow >=325",
+        "status": "PENDING_EXACT_HEAD_BROWSER_SMOKE",
+        "priorFailureRun": 42417053136,
+        "priorFailure": "Canvas standalone smoke_canvas.mjs line 218 intermittent pointer drag timeout; all RSCode stress jobs succeeded"
       }
     }
   },
