@@ -1377,6 +1377,82 @@ export async function finalizeConfirmedPush(
   } finally { db.close(); }
 }
 
+
+export type AuthorizedWorkspaceExport = {
+  workspace: WorkspaceSnapshot;
+  overlays: WorkingFile[];
+  staged: StagedFile[];
+  committedFiles: CommittedFile[];
+  commits: LocalCommit[];
+};
+
+/**
+ * One read-only IndexedDB snapshot for an explicit export action.
+ * Never consult cached React arrays or unattributed v2 records for private
+ * exports. A principal change between query and transaction acknowledgment
+ * rejects the entire result; all stores share the SAME MVCC transaction.
+ */
+export async function exportOwnedWorkspaceSnapshot(workspaceId: string): Promise<AuthorizedWorkspaceExport> {
+  requireOwned(workspaceId);
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  const db = await openDatabase();
+  try {
+    if (!owner || owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Workspace export authority changed before transaction.");
+    return await new Promise<AuthorizedWorkspaceExport>((resolve, reject) => {
+      const tx = db.transaction(["workspaces", "overlays", "staged", "committed", "commits"], "readonly");
+      const proof = tx.objectStore("workspaces").get(workspaceId);
+      const range = ownedKeyRange(workspaceId);
+      const overlays = tx.objectStore("overlays").getAll(range);
+      const staged = tx.objectStore("staged").getAll(range);
+      const committed = tx.objectStore("committed").getAll(range);
+      const commits = tx.objectStore("commits").getAll(range);
+      tx.oncomplete = () => {
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration)
+            throw new Error("Workspace export revoked before transaction committed.");
+          const workspace = proof.result as WorkspaceSnapshot | undefined;
+          if (!workspace || !isOwnedWorkspace(workspace, owner))
+            throw new Error("Workspace export requires persisted immutable owner/session proof.");
+          const lists = [
+            ["overlays", overlays.result],
+            ["staged", staged.result],
+            ["committed", committed.result],
+          ] as const;
+          for (const [_store, files] of lists) {
+            for (const file of files as Array<{ workspaceId: string; key: string; path: string }>) {
+              if (file.workspaceId !== workspaceId ||
+                  file.key !== workspaceId + ":" + file.path ||
+                  !validDocumentPath(file.path))
+                throw new Error("Export includes corrupt or cross-principal resource.");
+            }
+          }
+          for (const commit of commits.result as LocalCommit[]) {
+            if (commit.workspaceId !== workspaceId ||
+                !commit.id.startsWith(workspaceId + ":local:") ||
+                !Array.isArray(commit.files) || commit.files.some((file) =>
+                  file.workspaceId !== workspaceId ||
+                  !validDocumentPath(file.path) ||
+                  file.key !== workspaceId + ":" + file.path))
+              throw new Error("Export includes a corrupt or cross-principal local commit.");
+          }
+          resolve({
+            workspace, overlays: overlays.result as WorkingFile[],
+            staged: staged.result as StagedFile[],
+            committedFiles: committed.result as CommittedFile[],
+            commits: commits.result as LocalCommit[],
+          });
+        } catch (error) { reject(error); }
+      };
+      tx.onabort = () => reject(tx.error ?? new Error("Authorized workspace export transaction aborted."));
+      tx.onerror = () => reject(tx.error ?? new Error("Authorized workspace export transaction failed."));
+    });
+  } finally {
+    db.close();
+  }
+}
+
 export function loadRecentWorkspaces(owner: PrincipalKey): WorkspaceSnapshot[] {
   if (!activePrincipal || owner !== activePrincipal) return [];
   try {
