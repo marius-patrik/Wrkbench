@@ -5,9 +5,12 @@ import { WorkspaceProvider, useWorkspace } from "./workspace/context";
 import { WorkbenchShell } from "./workbench/shell";
 
 function IdentityBoundWorkbench() {
-  const { principal, ownershipGeneration } = useWorkspace();
+  const { principal, ownershipGeneration, workspace } = useWorkspace();
+  // Repository/ref sessions own independent Dockview tab trees. Remount the
+  // full surface when the immutable workspace identity changes: private A
+  // tabs and titles must not remain visible after opening unrelated B.
   return (
-    <FactoryProvider key={`${principal.key}:${ownershipGeneration}`}>
+    <FactoryProvider key={`${principal.key}:${ownershipGeneration}:${workspace?.id ?? "no-workspace"}`}>
       <WorkbenchShell />
     </FactoryProvider>
   );
