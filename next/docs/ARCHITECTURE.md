@@ -31,3 +31,7 @@ Normal build: Rsbuild + React19. Standalone: one Rsbuild production compilation 
 ## Current verification
 
 Source syntax and structural checks can run offline. Actual dependency resolution, typecheck and Playwright navigation **must** be performed after `bun install`, and acceptance status must remain pending until those pass. See `docs/ACCEPTANCE.md`.
+
+## Feature-owned registration boundary (2026-11-07)
+
+Each Cordis feature package now contributes a lazy view renderer and a validated tool together with its metadata. These contributions register and unregister in the same Cordis fiber lifetime. The application shell no longer has a feature-type switch. `FeatureCatalog` notifies React when a feature is enabled/disabled; existing Dockview tabs retain stable IDs and display recoverable placeholders for disabled features. `ViewActionService` is the typed action boundary for opening views, replacing the untyped DOM feature-open event. The shared first-party presenter implementations have moved from `apps/web` to `packages/client` and are imported by package-owned view entrypoints. Moving individual feature business logic into feature-specific modules and hardening cross-workbench transfer are subsequent acceptance work; this architecture change alone does not complete Phase 1.

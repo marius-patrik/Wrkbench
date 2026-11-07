@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { defaultContext, type ViewContext, type WorkbenchId, type RuntimeId } from '../../../packages/core/src/index.ts';
+import { defaultContext, type ViewContext, type WorkbenchId, type RuntimeId } from '../../core/src/index.ts';
 export type ChatMessage={id:string;role:'user'|'system';text:string;time:number};
 export type TimelineClip={id:string;name:string;start:number;duration:number;track:number;kind:'audio'|'video'};
 export type CanvasNode={id:string;label:string;x:number;y:number};

@@ -22,3 +22,10 @@ All criteria below are **pending real dependency installation and browser testin
 | Standalone compiled HTML | Build from actual packages; inline assets; open in ordinary browser | Pending — cannot compile offline |
 
 Run `bun run verify` on a machine with the real packages installed. Failure of any gate must be recorded; do not claim Phase 1 complete until all acceptance gates that belong to Phase 1 are satisfied.
+
+## New architecture gates
+
+- Real `bun install`, `bun run typecheck`, `bun run test:core`, `bun run build`, and browser boot must pass on the integration branch.
+- Disable/re-enable a feature through Extensions; tool and renderer registrations follow the Cordis fiber lifecycle; existing tabs persist as recoverable placeholders.
+- No hardcoded feature-kind view switch or `wrkbench:openkind` event bus in the app shell.
+- Compile and verify the deployed build before merging into the Pages publishing branch.
