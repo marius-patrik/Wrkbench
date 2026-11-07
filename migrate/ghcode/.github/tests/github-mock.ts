@@ -177,6 +177,9 @@ export async function installGithubMock(page: Page): Promise<GithubMock> {
   const createdBlobs = new Map<string, string>();
   let createdTree = 0;
   let createdCommit = 0;
+  // A genuine local source ref creation must be visible in subsequent branch
+  // enumeration. Preserve the existing PR feature ref fixture.
+  const branchHeads = new Map<string, string>([["feature", pullRequest.head.sha]]);
   let failAfterMutationOnce = false;
   const trees = new Map<string, ReturnType<typeof tree>>();
   trees.set(BASE_TREE, tree(BASE_TREE));
@@ -286,8 +289,19 @@ export async function installGithubMock(page: Page): Promise<GithubMock> {
     if (path === `/repos/${MOCK_REPOSITORY}/branches` && method === "GET") {
       return json(route, [
         { name: "main", commit: { sha: state.remoteHead } },
-        { name: "feature", commit: { sha: pullRequest.head.sha } },
+        ...[...branchHeads].map(([name, sha]) => ({ name, commit: { sha } })),
       ]);
+    }
+    if (path === `/repos/${MOCK_REPOSITORY}/git/refs` && method === "POST") {
+      const payload = request.postDataJSON() as { ref?: string; sha?: string };
+      const name = payload.ref?.startsWith("refs/heads/")
+        ? payload.ref.slice("refs/heads/".length) : "";
+      if (!name || name === "main" || branchHeads.has(name) ||
+          !/^[A-Za-z0-9_.-]+$/.test(name) || payload.sha !== BASE_SHA)
+        return json(route, { message: "Invalid, duplicate or stale branch create" }, 422);
+      branchHeads.set(name, payload.sha);
+      state.writes.push("create-branch");
+      return json(route, { ref: payload.ref, object: { sha: payload.sha } }, 201);
     }
     if (path === `/repos/${MOCK_REPOSITORY}/tags` && method === "GET") {
       return json(route, [{ name: "v1.0.0", commit: { sha: BASE_SHA } }]);

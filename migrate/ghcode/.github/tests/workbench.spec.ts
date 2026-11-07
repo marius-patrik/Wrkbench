@@ -319,6 +319,63 @@ test("authenticated private repo supports dirty edits, staging, local commit, pu
 });
 
 
+test("real Source Control branch creation preserves staged private edits in an atomic local fork", async ({ page }) => {
+  const github = await installGithubMock(page);
+  await seedAuthenticatedSession(page);
+  await openPrivateRepository(page);
+  await tab(page, "primary", "Explorer").click();
+  await surface(page, "primary").getByTitle("README.md").click();
+  await expect(tab(page, "main", "README.md")).toBeVisible();
+  await editActiveMonaco(page, "# Newly staged branch work\\n");
+
+  await tab(page, "primary", "Source Control").click();
+  const row = surface(page, "primary").locator(".scm-change-row").filter({ hasText: "README.md" });
+  await expect(row.getByTitle("Stage", { exact: true })).toBeVisible();
+  await row.getByTitle("Stage", { exact: true }).click();
+  await expect(row.getByTitle("Unstage", { exact: true })).toBeVisible();
+
+  page.once("dialog", async (dialog) => dialog.accept("topic"));
+  await surface(page, "primary").getByTitle("Create branch").click();
+  await expect(page.getByRole("combobox", { name: "Repository ref" })).toHaveValue("topic");
+  await expect.poll(() => github.state.writes.includes("create-branch")).toBe(true);
+
+  const persisted = await page.evaluate(async () => {
+    const open = indexedDB.open("darkfactory-workbench");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(open.error);
+    });
+    try {
+      const tx = db.transaction(["workspaces", "overlays", "staged"], "readonly");
+      const read = (store: string) => new Promise<any[]>((resolve, reject) => {
+        const request = tx.objectStore(store).getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      const [workspaces, overlays, staged] = await Promise.all([
+        read("workspaces"), read("overlays"), read("staged"),
+      ]);
+      const branch = workspaces.find((item) => item.ref === "topic");
+      return {
+        branchPresent: Boolean(branch),
+        distinctSession: branch?.id !== workspaces.find((item) => item.ref === "main")?.id,
+        stagedContent: staged.find((file) => file.workspaceId === branch?.id)?.content,
+        workingContent: overlays.find((file) => file.workspaceId === branch?.id)?.content,
+        belongsToPrincipal: branch?.ownership?.principalKey === "gh:github.com:1001",
+      };
+    } finally {
+      db.close();
+    }
+  });
+  expect(persisted).toEqual({
+    branchPresent: true,
+    distinctSession: true,
+    stagedContent: "# Newly staged branch work\\n",
+    workingContent: "# Newly staged branch work\\n",
+    belongsToPrincipal: true,
+  });
+});
+
 test("Monaco save failures guard Dockview close and account transition until acknowledged", async ({ page }) => {
   await installGithubMock(page);
   await seedAuthenticatedSession(page);

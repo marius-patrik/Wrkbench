@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "2e1d7579f80403c4957e5facc9f585d0fc9c0dee",
+      "snapshotTreeSHA": "a4f2db4ddf22e5919e379a66f2918124d6ca4b82",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -146,7 +146,8 @@
         "W05: Real v2-to-v5 IndexedDB upgrade browser acceptance fixture now initializes a six-store v2 schema before native v5 upgrade. Provenance tree fingerprint updated at exact commit.",
         "W05 Dockview: native context-menu Close Others and Close Group delegate to atomic pre-removal group guards, including pinned-peer protection, rather than serial individual tab closes. Added implementation; context-menu browser behavior remains to be verified.",
         "W05: Discard local work/renames now performs a combined overlays+staged compare-and-delete transaction with persisted ownership, epoch check, full snapshot CAS and oncomplete acknowledgment. Real browser test exercises injected staged-store abort, stale-tab conflict, cross-principal rejection and successful atomic discard.",
-        "W05: Remote branch creation now atomically forks the full existing principal-owned repository working tree, staged changes, committed files, local commit history and immutable blobs through one persisted-authority and version/CAS IDB transaction. Source pending push journals are blocked, never copied to a new ref. Real Chromium test covers transaction abort/no target, byte-preserving copy, duplicate target denial and cross-principal isolation."
+        "W05: Remote branch creation now atomically forks the full existing principal-owned repository working tree, staged changes, committed files, local commit history and immutable blobs through one persisted-authority and version/CAS IDB transaction. Source pending push journals are blocked, never copied to a new ref. Real Chromium test covers transaction abort/no target, byte-preserving copy, duplicate target denial and cross-principal isolation.",
+        "W05 browser integration: GitHub mock now persists newly created remote refs; real Source Control Playwright test creates branch with staged private edits and verifies the verified principal, selected ref, distinct session and cloned overlay/staged bytes via actual IndexedDB."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
