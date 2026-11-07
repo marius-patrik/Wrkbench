@@ -7,8 +7,8 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { files, notify } from '../services.ts';
 import { useUI } from '../state.ts';
 import { Icon } from '../icons.tsx';
-import type { WorkspaceFile } from '../../../../packages/storage/src/index.ts';
-import type { ViewKind } from '../../../../packages/core/src/index.ts';
+import type { WorkspaceFile } from '../../../storage/src/index.ts';
+import type { ViewKind } from '../../../core/src/index.ts';
 loader.config({monaco});
 // Monaco workers are bundled from the real monaco-editor package, never a CDN.
 type InlineWorkers = Partial<Record<'editor'|'typescript'|'json'|'css'|'html',string>>;

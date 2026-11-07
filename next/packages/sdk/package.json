@@ -8,6 +8,7 @@
   "dependencies": {
     "cordis": "4.0.0-rc.12",
     "zod": "^4.3.6",
-    "@wrkbench/core": "workspace:*"
+    "@wrkbench/core": "workspace:*",
+    "react": "^19.2.5"
   }
 }
