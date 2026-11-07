@@ -160,7 +160,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "b1bc42f00cfc58aa29b0d23eab217ac7b98478a8",
+      "snapshotTreeSHA": "cf3c7bb0194a9754a788f625fd4c98d7f4973f0e",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -203,7 +203,8 @@
         "W05.2: principal-authorized JSON backup restores content-addressed blobs as well as commits/overlays/staging/acknowledged drafts/remote push journal, all in one IDB transaction; real Chromium export/download/import test extended; exact-head CI pending.",
         "W05.2.1: authorized import accepts identical preexisting immutable content-addressed Git blob caches, blocks forged/different bytes and still forbids overwriting local edits or recovery. Browser acceptance pending.",
         "Phase C1: saved local commit IDs now immutable via IDB add; Git push journal matches ordered unique createdAt+ID commit ancestry, and no pending-push commits may be removed/cleared. Unit and real Chromium IDB regression tests added; exact-head acceptance pending.",
-        "Phase C1 followup: confirmed remote push finalization now validates exactly the same deterministic commit sequence as preparation/retry; missing sameCommitSet symbol from initial build corrected and source CI rerun required."
+        "Phase C1 followup: confirmed remote push finalization now validates exactly the same deterministic commit sequence as preparation/retry; missing sameCommitSet symbol from initial build corrected and source CI rerun required.",
+        "Phase C1 GHC-00: ported historical repository-switch with pending private edits and dirty Monaco cross-surface Dockview move assertions to active Playwright acceptance. Original historical reproductions remain inert as evidence; full exact-head browser verification pending."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -288,9 +289,9 @@
         ]
       },
       "phaseC1": {
-        "sourceTreeSHA": "b1bc42f00cfc58aa29b0d23eab217ac7b98478a8",
+        "sourceTreeSHA": "cf3c7bb0194a9754a788f625fd4c98d7f4973f0e",
         "evidence": "docs/migrations/PHASE_C_GHCODE_PUSH_INTEGRITY.md",
-        "status": "FIXED_TSC_SEQUENCE_REFERENCE_PENDING_EXACT_HEAD_UNIT_AND_CHROMIUM",
+        "status": "IMPLEMENTED_PENDING_FULL_GHC00_AND_ORDERED_PUSH_BROWSER_ACCEPTANCE",
         "immutableCommits": "IDB.add prevents in-place local commit mutation",
         "orderedPushAncestry": "createdAt+id canonical ordering checked in storage and React before network calls",
         "destructiveRecovery": "removeLocalCommit and clearLocalGitState protect unresolved push journal in same IDB transaction",
@@ -298,7 +299,13 @@
           ".github/unit/storage-unit.test.ts",
           "real IndexedDB push-journal.spec.ts"
         ],
-        "legacyPolicy": "unattributed v2 localStorage and IDB remain unchanged and quarantined; no cross-account automatic attribution"
+        "legacyPolicy": "unattributed v2 localStorage and IDB remain unchanged and quarantined; no cross-account automatic attribution",
+        "activeHistoricalAcceptance": "docs/migrations/GHC00_ACTIVE_ACCEPTANCE_CROSSWALK.md",
+        "newActiveBrowserCases": [
+          "workbench.spec.ts: GHC-00 pending Monaco draft survives Dockview cross-surface move and retry",
+          "workbench.spec.ts: GHC-00 pending private edits block repository switch until committed save",
+          "push-journal.spec.ts: IDB local commits immutable, ordered push ancestry, delete/clear while pending denied"
+        ]
       }
     },
     "canvas": {
