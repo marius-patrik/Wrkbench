@@ -1308,23 +1308,38 @@ export async function clearLocalGitState(workspaceId: string) {
     requireOwned(workspaceId);
     await new Promise<void>((resolve, reject) => {
       const names: Array<"staged" | "committed" | "commits"> = ["staged", "committed", "commits"];
-      const tx = db.transaction(["workspaces", ...names], "readwrite");
+      // The pending push journal participates in the same transaction.
+      // Destructive cleanup without checking it can silently delete commits
+      // for an uncertain GitHub ref update before reconciliation.
+      const tx = db.transaction(["workspaces", ...names, "pushOperations"], "readwrite");
       trackWrite(tx);
+      const owner = activePrincipal;
+      const generation = principalGeneration;
       let abortReason: Error | null = null;
       const abortWith = (reason: Error) => {
         abortReason = reason;
         try { tx.abort(); } catch { reject(reason); }
       };
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => {
+        if (owner === activePrincipal && generation === principalGeneration) resolve();
+        else reject(new Error("Git cleanup authority revoked before acknowledgment."));
+      };
       tx.onabort = () => reject(abortReason ?? tx.error ?? new Error("Git state cleanup aborted"));
       tx.onerror = () => reject(abortReason ?? tx.error ?? new Error("Git state cleanup failed"));
       const proof = tx.objectStore("workspaces").get(workspaceId);
-      proof.onsuccess = () => {
+      const pushes = tx.objectStore("pushOperations").getAll();
+      let proofReady = false;
+      let pushesReady = false;
+      const apply = () => {
+        if (!proofReady || !pushesReady) return;
         try {
           requireOwned(workspaceId);
-          if (!activePrincipal ||
-              !isOwnedWorkspace(proof.result as WorkspaceSnapshot | undefined, activePrincipal))
+          if (!owner || owner !== activePrincipal || generation !== principalGeneration ||
+              !isOwnedWorkspace(proof.result as WorkspaceSnapshot | undefined, owner))
             throw new Error("No persisted repository/session proof for Git cleanup.");
+          if ((pushes.result as PushOperation[]).some((operation) =>
+                operation.workspaceId === workspaceId && operation.phase !== "completed"))
+            throw new Error("Local commits are retained while a remote push requires reconciliation.");
           for (const name of names) {
             const store = tx.objectStore(name);
             const request = store.getAll();
@@ -1342,13 +1357,19 @@ export async function clearLocalGitState(workspaceId: string) {
                 abortWith(reason instanceof Error ? reason : new Error(String(reason)));
               }
             };
+            request.onerror = () => abortWith(request.error ??
+              new Error("Git cleanup resource scan failed."));
           }
         } catch (reason) {
           abortWith(reason instanceof Error ? reason : new Error(String(reason)));
         }
       };
+      proof.onsuccess = () => { proofReady = true; apply(); };
+      pushes.onsuccess = () => { pushesReady = true; apply(); };
       proof.onerror = () => abortWith(proof.error ??
         new Error("Git cleanup workspace lookup failed."));
+      pushes.onerror = () => abortWith(pushes.error ??
+        new Error("Git cleanup pending-push lookup failed."));
     });
   } finally {
     db.close();
