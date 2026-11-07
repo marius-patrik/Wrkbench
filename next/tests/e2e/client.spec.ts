@@ -63,3 +63,18 @@ test('local file survives real navigation and browser reload',async({page})=>{
  await expect(page.getByText('acceptance-check.ts').first()).toBeVisible();
  expect(exceptions).toEqual([]);
 });
+
+
+test('a second browser tab refreshes Explorer after a committed file create',async({page,context})=>{
+ const primaryErrors=await boot(page);
+ const second=await context.newPage();
+ const secondaryErrors=await boot(second);
+ const filename='cross-tab-'+Date.now()+'.ts';
+ await expect(second.getByText(filename,{exact:true})).toHaveCount(0);
+ page.once('dialog',dialog=>void dialog.accept('src/'+filename));
+ await page.getByRole('button',{name:'New local file'}).click();
+ await expect(second.getByText(filename,{exact:true}).first()).toBeVisible();
+ expect(primaryErrors).toEqual([]);
+ expect(secondaryErrors).toEqual([]);
+ await second.close();
+});

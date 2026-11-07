@@ -114,23 +114,42 @@ export function App(){const theme=useUI(s=>s.theme),toggle=useUI(s=>s.themeToggl
  const selectWorkbench=useCallback((id:WorkbenchId)=>{switchWorkbench(id);navigate('/workbench/'+id)},[switchWorkbench,navigate]);
  useEffect(()=>{const match=location.match(/^\/workbench\/(development|research|audio|video|operations|agents|trading)$/);if(match&&match[1]!==wb)switchWorkbench(match[1] as WorkbenchId)},[location,wb,switchWorkbench]);
  useEffect(()=>files.subscribe(change=>{
-  if(change.type==='renamed'){
-   useUI.getState().moveDocument(change.from,change.to);
-   for(const panel of apiRef.current?.panels??[]){
-    const params=panel.api.getParameters() as {path?:string;kind?:ViewKind};
-    if(params.path===change.from){
-     panel.api.updateParameters({...params,path:change.to});
-     panel.api.setTitle(change.to.split('/').at(-1)??change.to);
+   if(change.type==='saved'){
+    if(!change.external)return;
+    void files.get(change.path).then(file=>{
+     if(!file)return;
+     const current=useUI.getState().documents[file.path];
+     if(current?.dirty){
+      notify(`${file.path} changed in another browser tab. Your unsaved edits are preserved; compare before saving.`,'error');
+      return;
+     }
+     useUI.getState().cacheDocument(file.path,file.content,file.revision);
+    }).catch(error=>notify(`Could not refresh ${change.path}: ${String(error)}`,'error'));
+    return;
+   }
+   if(change.type==='renamed'){
+    if(change.external&&useUI.getState().documents[change.from]?.dirty){
+     notify(`${change.from} was renamed in another tab. Unsaved edits were preserved.`,'error');return;
+    }
+    useUI.getState().moveDocument(change.from,change.to);
+    for(const panel of apiRef.current?.panels??[]){
+     const params=panel.api.getParameters() as {path?:string;kind?:ViewKind};
+     if(params.path===change.from){
+      panel.api.updateParameters({...params,path:change.to});
+      panel.api.setTitle(change.to.split('/').at(-1)??change.to);
+     }
+    }
+   }else if(change.type==='deleted'){
+    if(change.external&&useUI.getState().documents[change.path]?.dirty){
+     notify(`${change.path} was deleted in another tab. Unsaved edits were preserved.`,'error');return;
+    }
+    useUI.getState().removeDocument(change.path);
+    for(const panel of [...(apiRef.current?.panels??[])]){
+     const params=panel.api.getParameters() as {path?:string};
+     if(params.path===change.path)panel.api.close();
     }
    }
-  }else if(change.type==='deleted'){
-   useUI.getState().removeDocument(change.path);
-   for(const panel of [...(apiRef.current?.panels??[])]){
-    const params=panel.api.getParameters() as {path?:string};
-    if(params.path===change.path)panel.api.close();
-   }
-  }
- }),[]);
+  }),[]);
  const transferTab=useCallback((panelId:string,target:WorkbenchId)=>{
    const api=apiRef.current,panel=api?.getPanel(panelId);
    if(!api||!panel||target===wb)return;
