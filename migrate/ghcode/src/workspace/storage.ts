@@ -1687,6 +1687,8 @@ export type AuthorizedWorkspaceExport = {
   staged: StagedFile[];
   committedFiles: CommittedFile[];
   commits: LocalCommit[];
+  /** Owned content-addressed Git blobs must be preserved for offline recovery. */
+  blobs?: BlobRecord[];
   /** Acknowledged private draft checkpoints and unresolved remote push journals are
    * part of the recoverable workspace, never silently omitted by a "full" backup. */
   drafts?: DocumentDraftRecord[];
@@ -1709,11 +1711,12 @@ export async function exportOwnedWorkspaceSnapshot(workspaceId: string): Promise
       throw new Error("Workspace export authority changed before transaction.");
     return await new Promise<AuthorizedWorkspaceExport>((resolve, reject) => {
       const tx = db.transaction(
-        ["workspaces", "overlays", "staged", "committed", "commits", "drafts", "pushOperations"],
+        ["workspaces", "blobs", "overlays", "staged", "committed", "commits", "drafts", "pushOperations"],
         "readonly",
       );
       const proof = tx.objectStore("workspaces").get(workspaceId);
       const range = ownedKeyRange(workspaceId);
+      const blobs = tx.objectStore("blobs").getAll(range);
       const overlays = tx.objectStore("overlays").getAll(range);
       const staged = tx.objectStore("staged").getAll(range);
       const committed = tx.objectStore("committed").getAll(range);
@@ -1729,6 +1732,15 @@ export async function exportOwnedWorkspaceSnapshot(workspaceId: string): Promise
           const workspace = proof.result as WorkspaceSnapshot | undefined;
           if (!workspace || !isOwnedWorkspace(workspace, owner))
             throw new Error("Workspace export requires persisted immutable owner/session proof.");
+          const ownedBlobs = blobs.result as BlobRecord[];
+          for (const blob of ownedBlobs) {
+            if (blob.workspaceId !== workspaceId ||
+                !/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(blob.sha) ||
+                blob.key !== workspaceId + ":" + blob.sha ||
+                typeof blob.content !== "string" ||
+                !Number.isSafeInteger(blob.updatedAt) || blob.updatedAt < 0)
+              throw new Error("Export includes a corrupt or foreign-owned blob.");
+          }
           const lists = [
             ["overlays", overlays.result],
             ["staged", staged.result],
@@ -1772,7 +1784,7 @@ export async function exportOwnedWorkspaceSnapshot(workspaceId: string): Promise
             staged: staged.result as StagedFile[],
             committedFiles: committed.result as CommittedFile[],
             commits: commits.result as LocalCommit[],
-            drafts: ownedDrafts, pushOperations: ownedPushes,
+            blobs: ownedBlobs, drafts: ownedDrafts, pushOperations: ownedPushes,
           });
         } catch (error) { reject(error); }
       };
@@ -1967,12 +1979,14 @@ export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExp
   requireOwned(id);
   if (!Array.isArray(input.overlays) || !Array.isArray(input.staged) ||
       !Array.isArray(input.committedFiles) || !Array.isArray(input.commits) ||
+      (input.blobs !== undefined && !Array.isArray(input.blobs)) ||
       (input.drafts !== undefined && !Array.isArray(input.drafts)) ||
       (input.pushOperations !== undefined && !Array.isArray(input.pushOperations)))
     throw new Error("Imported state collections are malformed.");
+  const blobs = input.blobs ?? [];
   const drafts = input.drafts ?? [];
   const pushOperations = input.pushOperations ?? [];
-  if ([input.overlays, input.staged, input.committedFiles, input.commits, drafts, pushOperations]
+  if ([input.overlays, input.staged, input.committedFiles, input.commits, blobs, drafts, pushOperations]
       .reduce((count, group) => count + group.length, 0) > 10_000)
     throw new Error("Imported local state exceeds the safe record count.");
   if (JSON.stringify(input).length > 32_000_000)
@@ -2014,6 +2028,17 @@ export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExp
     validateFiles(commit.files);
   }
 
+  const blobKeys = new Set<string>();
+  for (const blob of blobs) {
+    if (!blob || typeof blob !== "object" || blob.workspaceId !== id ||
+        typeof blob.sha !== "string" ||
+        !/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(blob.sha) ||
+        blob.key !== id + ":" + blob.sha || blobKeys.has(blob.key) ||
+        typeof blob.content !== "string" ||
+        !Number.isSafeInteger(blob.updatedAt) || blob.updatedAt < 0)
+      throw new Error("Invalid or foreign imported content-addressed blob.");
+    blobKeys.add(blob.key);
+  }
   const draftIds = new Set<string>();
   for (const draft of drafts) {
     const parsed = draft && typeof draft.id === "string" ?
@@ -2056,18 +2081,19 @@ export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExp
       throw new Error("Import authority changed before transaction.");
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
-        ["workspaces", "overlays", "staged", "committed", "commits", "drafts", "pushOperations"],
+        ["workspaces", "blobs", "overlays", "staged", "committed", "commits", "drafts", "pushOperations"],
         "readwrite",
       );
       trackWrite(tx);
       const proof = tx.objectStore("workspaces").get(id);
+      const existingBlobs = tx.objectStore("blobs").getAll(ownedKeyRange(id));
       const overlays = tx.objectStore("overlays").getAll(ownedKeyRange(id));
       const staged = tx.objectStore("staged").getAll(ownedKeyRange(id));
       const committed = tx.objectStore("committed").getAll(ownedKeyRange(id));
       const commits = tx.objectStore("commits").getAll(ownedKeyRange(id));
       const existingDrafts = tx.objectStore("drafts").getAll();
       const existingPushes = tx.objectStore("pushOperations").getAll(ownedKeyRange(id));
-      let pending = 7;
+      let pending = 8;
       let reason: Error | null = null;
       const abort = (error: unknown) => {
         reason = error instanceof Error ? error : new Error(String(error));
@@ -2090,11 +2116,12 @@ export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExp
               (proof.result as WorkspaceSnapshot).baseSha !== input.workspace.baseSha ||
               (proof.result as WorkspaceSnapshot).treeSha !== input.workspace.treeSha)
             throw new Error("Import workspace ownership or base source revision mismatch.");
-          if ([overlays, staged, committed, commits, existingPushes].some(
+          if ([existingBlobs, overlays, staged, committed, commits, existingPushes].some(
                 (request) => request.result.length > 0) ||
               (existingDrafts.result as DocumentDraftRecord[]).some(
                 (item) => item.workspaceId === id))
             throw new Error("Import would overwrite existing local work or recovery state; export it first.");
+          for (const blob of blobs) tx.objectStore("blobs").add(blob);
           for (const file of input.overlays) tx.objectStore("overlays").add(file);
           for (const file of input.staged) tx.objectStore("staged").add(file);
           for (const file of input.committedFiles) tx.objectStore("committed").add(file);
@@ -2103,7 +2130,7 @@ export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExp
           for (const push of pushOperations) tx.objectStore("pushOperations").add(push);
         } catch (error) { abort(error); }
       };
-      for (const request of [proof, overlays, staged, committed, commits, existingDrafts, existingPushes]) {
+      for (const request of [proof, existingBlobs, overlays, staged, committed, commits, existingDrafts, existingPushes]) {
         request.onsuccess = apply;
         request.onerror = () => abort(request.error ?? new Error("Import conflict query failed."));
       }
