@@ -60,9 +60,10 @@ export default function SidebarResize() {
         // must be committed even if no final move event was delivered.
         const state = drag.current;
         if (state) {
-          state.nextWidth = current.type === "pointercancel"
-            ? state.startWidth
-            : clamp(startWidth + sign * (current.clientX - startX));
+          state.nextWidth =
+            current.type === "pointercancel"
+              ? state.startWidth
+              : clamp(startWidth + sign * (current.clientX - startX));
         }
         finish();
       };
