@@ -26,6 +26,15 @@ export default function SidebarResize() {
       if (event.button !== 0 || drag.current) return;
       event.preventDefault();
       const id = event.pointerId;
+      const handle = event.currentTarget;
+      // Pointer capture keeps the resize gesture attached to the separator
+      // while its flex position changes under the cursor. Without capture,
+      // Chromium can retarget/cancel the drag as another pane slides beneath.
+      try {
+        handle.setPointerCapture(id);
+      } catch {
+        // Window capture listeners remain the fallback for older hosts.
+      }
       const startX = event.clientX;
       const startWidth = width;
       const sign = side === "left" ? 1 : -1;
@@ -48,6 +57,9 @@ export default function SidebarResize() {
         window.removeEventListener("pointerup", onEnd, true);
         window.removeEventListener("pointercancel", onEnd, true);
         document.body.classList.remove("cx-resizing");
+        if (handle.isConnected && handle.hasPointerCapture(id)) {
+          handle.releasePointerCapture(id);
+        }
         if (!state) return;
         if (state.frame) cancelAnimationFrame(state.frame);
         document.documentElement.style.setProperty("--cx-sidebar-width", `${state.nextWidth}px`);
