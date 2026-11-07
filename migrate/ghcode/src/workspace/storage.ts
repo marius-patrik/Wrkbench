@@ -916,7 +916,60 @@ export async function saveLocalCommit(commit: LocalCommit) {
 export async function removeLocalCommit(id: string) {
   const workspaceId = id.split(":local:")[0];
   requireOwned(workspaceId);
-  await withOwnedStore("commits", "readwrite", workspaceId, (store) => store.delete(id));
+  if (!id.startsWith(workspaceId + ":local:"))
+    throw new Error("Invalid local commit resource identifier.");
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  const db = await openDatabase();
+  try {
+    requireOwned(workspaceId);
+    await new Promise<void>((resolve, reject) => {
+      // Never delete a commit protected by an unresolved remote push intent.
+      // A same-transaction check prevents a second tab creating the journal
+      // between a separate read and this destructive write.
+      const tx = db.transaction(["workspaces", "commits", "pushOperations"], "readwrite");
+      trackWrite(tx);
+      const proof = tx.objectStore("workspaces").get(workspaceId);
+      const stored = tx.objectStore("commits").get(id);
+      const pushes = tx.objectStore("pushOperations").getAll();
+      let awaiting = 3;
+      let failure: Error | null = null;
+      const abort = (reason: unknown) => {
+        failure = reason instanceof Error ? reason : new Error(String(reason));
+        try { tx.abort(); } catch { reject(failure); }
+      };
+      tx.oncomplete = () => {
+        if (owner !== activePrincipal || generation !== principalGeneration)
+          reject(new Error("Commit deletion authority changed before acknowledgment."));
+        else resolve();
+      };
+      tx.onabort = () => reject(failure ?? tx.error ?? new Error("Commit deletion aborted."));
+      tx.onerror = () => reject(failure ?? tx.error ?? new Error("Commit deletion failed."));
+      const apply = () => {
+        if (--awaiting !== 0) return;
+        try {
+          requireOwned(workspaceId);
+          if (!owner || owner !== activePrincipal || generation !== principalGeneration ||
+              !isOwnedWorkspace(proof.result as WorkspaceSnapshot | undefined, owner))
+            throw new Error("Missing owner proof for local commit deletion.");
+          const record = stored.result as LocalCommit | undefined;
+          if (record && (record.id !== id || record.workspaceId !== workspaceId))
+            throw new Error("Foreign local commit cannot be deleted.");
+          if ((pushes.result as PushOperation[]).some((operation) =>
+                operation.workspaceId === workspaceId && operation.phase !== "completed" &&
+                operation.commitIds.includes(id)))
+            throw new Error("Commit belongs to a pending remote push; reconcile before deletion.");
+          tx.objectStore("commits").delete(id);
+        } catch (error) { abort(error); }
+      };
+      for (const request of [proof, stored, pushes]) {
+        request.onsuccess = apply;
+        request.onerror = () => abort(request.error ?? new Error("Commit deletion lookup failed."));
+      }
+    });
+  } finally {
+    db.close();
+  }
 }
 
 export async function loadLocalCommits(workspaceId: string) {
