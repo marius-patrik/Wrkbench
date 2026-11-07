@@ -231,10 +231,10 @@ try {
   await page.mouse.down();
   if (!(await page.evaluate(() => document.body.classList.contains("cx-resizing"))))
     throw new Error("Sidebar resize pointerdown was not delivered to separator: " +
-      JSON.stringify(await page.evaluate(() => ({
+      JSON.stringify(await page.evaluate(([x, y]) => ({
         trace: window.__canvasSidebarDragTrace,
-        hit: document.elementFromPoint(pointerX, pointerY)?.outerHTML?.slice(0, 240),
-      }))));
+        hit: document.elementFromPoint(x, y)?.outerHTML?.slice(0, 240),
+      }), [pointerX, pointerY])));
   await page.mouse.move(pointerX + 56, pointerY, { steps: 6 });
   await page.mouse.up();
   try {
