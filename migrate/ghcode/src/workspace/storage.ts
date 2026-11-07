@@ -888,6 +888,116 @@ export async function compareAndApplyStaged(
   }
 }
 
+/**
+ * Transactional discard for an entire local change/rename group.
+ *
+ * A traditional sequence of removeOverlay() then removeStaged() can leave
+ * half a rename or permanently delete working bytes if a second operation
+ * aborts. Compare the caller's ENTIRE observed working and staged snapshots
+ * against one serialized IndexedDB transaction before deleting anything.
+ */
+export async function compareAndDiscardLocalPaths(
+  workspaceId: string,
+  expectedOverlays: WorkingFile[],
+  expectedStaged: StagedFile[],
+  paths: string[],
+): Promise<void> {
+  requireOwned(workspaceId);
+  if (!paths.length || paths.length > 10_000)
+    throw new Error("Discard requires a bounded nonempty resource set.");
+  const discarded = new Set(paths);
+  if (discarded.size !== paths.length || paths.some((path) => !validDocumentPath(path)))
+    throw new Error("Invalid or duplicated discard resource path.");
+
+  const overlayKeys = new Set<string>();
+  for (const file of expectedOverlays) {
+    requireCanonicalFileKey(file);
+    if (file.workspaceId !== workspaceId || overlayKeys.has(file.key))
+      throw new Error("Invalid expected working-tree snapshot.");
+    overlayKeys.add(file.key);
+  }
+  const stagedKeys = new Set<string>();
+  for (const file of expectedStaged) {
+    requireCanonicalFileKey(file);
+    if (file.workspaceId !== workspaceId || stagedKeys.has(file.key))
+      throw new Error("Invalid expected staged-tree snapshot.");
+    stagedKeys.add(file.key);
+  }
+  if (paths.some((path) =>
+    !overlayKeys.has(workspaceId + ":" + path) &&
+    !stagedKeys.has(workspaceId + ":" + path)
+  )) throw new Error("Cannot discard a path missing from the observed local state.");
+
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  const db = await openDatabase();
+  try {
+    requireOwned(workspaceId);
+    if (!owner || owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Discard authority changed before transaction.");
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(["workspaces", "overlays", "staged"], "readwrite");
+      trackWrite(tx);
+      let reason: Error | null = null;
+      const abort = (error: unknown) => {
+        reason = error instanceof Error ? error : new Error(String(error));
+        try { tx.abort(); } catch { reject(reason); }
+      };
+      tx.oncomplete = () => {
+        if (reason) return reject(reason);
+        if (owner !== activePrincipal || generation !== principalGeneration)
+          return reject(new Error("Discard authority revoked before commit acknowledgement."));
+        resolve();
+      };
+      tx.onabort = () => reject(reason ?? tx.error ?? new Error("Discard transaction aborted."));
+      tx.onerror = () => reject(reason ?? tx.error ?? new Error("Discard transaction failed."));
+
+      const proof = tx.objectStore("workspaces").get(workspaceId);
+      const actualOverlays = tx.objectStore("overlays").getAll(ownedKeyRange(workspaceId));
+      const actualStaged = tx.objectStore("staged").getAll(ownedKeyRange(workspaceId));
+      let pending = 3;
+      const apply = () => {
+        if (--pending !== 0) return;
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration ||
+              !isOwnedWorkspace(proof.result as WorkspaceSnapshot | undefined, owner))
+            throw new Error("Discard lacks current persisted principal/repository/session authority.");
+          const existingOverlays = actualOverlays.result as WorkingFile[];
+          const existingStaged = actualStaged.result as StagedFile[];
+          if (existingOverlays.length !== expectedOverlays.length ||
+              existingStaged.length !== expectedStaged.length)
+            throw new Error("Working or staged state changed concurrently; reload before discard.");
+          for (const current of existingOverlays) {
+            requireCanonicalFileKey(current);
+            const expected = expectedOverlays.find((file) => file.key === current.key);
+            if (!expected || current.workspaceId !== workspaceId ||
+                current.updatedAt !== expected.updatedAt || !sameWorking(current, expected))
+              throw new Error("Working overlay changed concurrently; reload before discard.");
+          }
+          for (const current of existingStaged) {
+            requireCanonicalFileKey(current);
+            const expected = expectedStaged.find((file) => file.key === current.key);
+            if (!expected || current.workspaceId !== workspaceId ||
+                !sameStaged(current, expected))
+              throw new Error("Staging changed concurrently; reload before discard.");
+          }
+          for (const path of paths) {
+            const key = workspaceId + ":" + path;
+            tx.objectStore("overlays").delete(key);
+            tx.objectStore("staged").delete(key);
+          }
+        } catch (error) { abort(error); }
+      };
+      for (const request of [proof, actualOverlays, actualStaged]) {
+        request.onsuccess = apply;
+        request.onerror = () => abort(request.error ?? new Error("Discard source read failed."));
+      }
+    });
+  } finally {
+    db.close();
+  }
+}
+
 function sameWorking(left: WorkingFile, right: WorkingFile) {
   return left.path === right.path && left.status === right.status &&
     left.content === right.content && left.baseSha === right.baseSha &&

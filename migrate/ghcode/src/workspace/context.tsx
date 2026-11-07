@@ -57,6 +57,7 @@ import {
   compareAndSetOverlay,
   compareAndApplyOverlays,
   compareAndApplyStaged,
+  compareAndDiscardLocalPaths,
   advancePushOperation,
   finalizeConfirmedPush,
   loadPendingPushOperation,
@@ -71,8 +72,6 @@ import {
   loadStaged,
   loadWorkspace,
   rememberWorkspace,
-  removeOverlay,
-  removeStaged,
   saveBlob,
   saveCommittedFile,
   saveLocalCommit,
@@ -624,7 +623,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       assertCurrent(lease);
       await refreshOverlays();
     },
-    [assertCurrent, capture, overlays, refreshOverlays, workspace],
+    [assertCurrent, capture, overlays, refreshOverlays, staged, workspace],
   );
 
   const writeFile = useCallback(
@@ -855,10 +854,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         );
         if (target) paths.add(target.path);
       }
-      for (const candidate of paths) {
-        await removeOverlay(workspace.id, candidate);
-        await removeStaged(workspace.id, candidate);
-      }
+      // Deleting overlays and staging independently can lose half a rename
+      // if a later transaction aborts. Guard active Monaco writers and apply
+      // both resource sets with one persisted-authority/expected-revision CAS.
+      documentService.assertSafeToNavigate();
+      await compareAndDiscardLocalPaths(workspace.id, overlays, staged, [...paths]);
       const nextStaged = await loadStaged(workspace.id);
       assertCurrent(lease);
       await refreshOverlays();

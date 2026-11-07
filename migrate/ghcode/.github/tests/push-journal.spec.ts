@@ -80,6 +80,89 @@ test("real IndexedDB v5 denies cross-principal reads, blobs and push preparation
   });
 });
 
+test("discarding renamed or staged work is one principal-authorized CAS transaction", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const principal = "gh:github.com:1001";
+    const sessionId = crypto.randomUUID();
+    const localWorkspaceId = crypto.randomUUID();
+    const id = `ghcode-owned-v2:${encodeURIComponent(principal)}:${sessionId}`;
+    const workspace = {
+      version: 2, id, ref: "main", updatedAt: 1,
+      baseSha: "1".repeat(40), treeSha: "2".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: principal, workspace: { id: localWorkspaceId, principalKey: principal },
+        session: { id: sessionId, workspaceId: localWorkspaceId, principalKey: principal,
+          repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main" },
+      },
+    };
+    storage.bindStoragePrincipal(principal);
+    await storage.saveWorkspace(workspace);
+    const overlay = {
+      key: id + ":README.md", workspaceId: id, path: "README.md",
+      status: "modified", content: "ORIGINAL_PRIVATE_EDIT", updatedAt: 10,
+    };
+    const staged = { ...overlay, stagedAt: 11 };
+    await storage.saveOverlay(overlay);
+    await storage.saveStaged(staged);
+
+    // Simulate IndexedDB throwing after the overlay deletion was enqueued.
+    // Every record must remain intact when this single transaction aborts.
+    const originalDelete = IDBObjectStore.prototype.delete;
+    IDBObjectStore.prototype.delete = function (...args) {
+      if (this.name === "staged")
+        throw new DOMException("Injected staged-store failure", "AbortError");
+      return originalDelete.apply(this, args as Parameters<IDBObjectStore["delete"]>);
+    };
+    let aborted = false;
+    try {
+      await storage.compareAndDiscardLocalPaths(id, [overlay], [staged], ["README.md"]);
+    } catch { aborted = true; }
+    finally { IDBObjectStore.prototype.delete = originalDelete; }
+    const retainedOverlay = (await storage.loadOverlays(id))[0]?.content;
+    const retainedStaged = (await storage.loadStaged(id))[0]?.content;
+
+    // A stale tab cannot discard another tab's newer working file.
+    const newer = { ...overlay, content: "NEWER_PRIVATE_EDIT", updatedAt: 12 };
+    await storage.saveOverlay(newer);
+    let conflict = false;
+    try {
+      await storage.compareAndDiscardLocalPaths(id, [overlay], [staged], ["README.md"]);
+    } catch { conflict = true; }
+    const afterConflict = (await storage.loadOverlays(id))[0]?.content;
+
+    // No other account can initiate a discard of the same resource.
+    storage.bindStoragePrincipal("gh:github.com:2002");
+    let unauthorized = false;
+    try {
+      await storage.compareAndDiscardLocalPaths(id, [newer], [staged], ["README.md"]);
+    } catch { unauthorized = true; }
+    storage.bindStoragePrincipal(principal);
+
+    await storage.compareAndDiscardLocalPaths(id, [newer], [staged], ["README.md"]);
+    return {
+      aborted, retainedOverlay, retainedStaged, conflict,
+      afterConflict, unauthorized,
+      emptyOverlay: (await storage.loadOverlays(id)).length === 0,
+      emptyStaged: (await storage.loadStaged(id)).length === 0,
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    aborted: true,
+    retainedOverlay: "ORIGINAL_PRIVATE_EDIT",
+    retainedStaged: "ORIGINAL_PRIVATE_EDIT",
+    conflict: true,
+    afterConflict: "NEWER_PRIVATE_EDIT",
+    unauthorized: true,
+    emptyOverlay: true,
+    emptyStaged: true,
+  });
+});
+
 test("prepared push survives browser reload and confirmed push finalizes atomically", async ({ page }) => {
   const seeded = await page.evaluate(async (url) => {
     const storage = await import(url);

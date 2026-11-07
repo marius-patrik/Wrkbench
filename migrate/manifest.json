@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "3edcd2754857ed6a8aebe7ebe05a8dd3e7323aed",
+      "snapshotTreeSHA": "feb98aa93032e41d40790dfd4c911c99e4fc78cb",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -144,7 +144,8 @@
         "W05: RepositoryDialog exposes explicit Preserve legacy browser data action; runs transactional v5 quarantine, returns count-only status, never grants access/visibility to anonymous legacy private records or relabels them.",
         "W05: importOwnedWorkspaceSnapshot validates principal, repository/session/ref/source SHA, path/key/CAS state and size before one all-store IndexedDB transaction; import refuses to overwrite any existing local work; RepositoryDialog has explicit JSON export/import for the selected verified workspace with error feedback.",
         "W05: Real v2-to-v5 IndexedDB upgrade browser acceptance fixture now initializes a six-store v2 schema before native v5 upgrade. Provenance tree fingerprint updated at exact commit.",
-        "W05 Dockview: native context-menu Close Others and Close Group delegate to atomic pre-removal group guards, including pinned-peer protection, rather than serial individual tab closes. Added implementation; context-menu browser behavior remains to be verified."
+        "W05 Dockview: native context-menu Close Others and Close Group delegate to atomic pre-removal group guards, including pinned-peer protection, rather than serial individual tab closes. Added implementation; context-menu browser behavior remains to be verified.",
+        "W05: Discard local work/renames now performs a combined overlays+staged compare-and-delete transaction with persisted ownership, epoch check, full snapshot CAS and oncomplete acknowledgment. Real browser test exercises injected staged-store abort, stale-tab conflict, cross-principal rejection and successful atomic discard."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
