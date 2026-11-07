@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "95a464200187986fec15cdd2e9299a69e2c3f9da",
+      "snapshotTreeSHA": "27a6de0c213d12944e5d211b05fc0c6b077d163e",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -135,7 +135,9 @@
         "W03 continued: revocation-epoch fencing protects A→B→A; persistent same-principal workspace evidence is required in resource read/write, overlay CAS, stage and commit transitions, push intent/phase/finalization, cleanup; unknown or forged workspace IDs fail closed.",
         "W03 continued: resource storage rejects cross-account forged primary keys, invalid paths, corrupt file records, invalid blob object hashes; snapshot updates deny immutable repository/session reassignment and stale timestamps.",
         "W03 continued: atomic stage/unstage changes use one full-staged-snapshot CAS, including multi-file rename pairs. Chromium acceptance expanded for same-principal forgery, key poisoning, staged writers, and incomplete push recovery.",
-        "W03 continued: explicit source-control pending-push reconciliation exposes journal phase, expected/last observed/intended SHAs, local commit count, inspect/export/safe retry actions; no force or automatic merge."
+        "W03 continued: explicit source-control pending-push reconciliation exposes journal phase, expected/last observed/intended SHAs, local commit count, inspect/export/safe retry actions; no force or automatic merge.",
+        "W05: IndexedDB structural upgrade v3 -> v4 adds principal-owned, immutable-resource-bound draft recovery journal. Every transaction validates persisted repository/session/ref/source identity, with epoch fencing, monotonic checkpoint CAS and exact compare-to-discard. Journal writes commit before overlay CAS and do not automatically replay recovered drafts.",
+        "W05: EditorTab hydrates same-account committed draft checkpoints only after authorized workspace file read, shows explicit recovery review and Retry save, and avoids Monaco no-change autosave; Bun lifecycle and actual Chromium IDB regression tests added."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -147,7 +149,7 @@
         "Legacy ambiguous-data non-destructive migration, secure import/export, quota recovery under real capacity pressure and comprehensive cross-tab release acceptance remain incomplete.",
         "GraphQL beforeOid conditional mutation implemented in W03, but realistic conflict, permission and network-recovery acceptance are pending exact-head CI and live provider test.",
         "Historical .darkfactory submodule gitlink and .gitmodules omitted from source snapshot (retained in original Git DAG).",
-        "Principal-revoked dirty content is only in-memory safeguarded with browser unload warning; durable principal-scoped backup and explicit export/recovery UX remain P0."
+        "W05 crash-durable draft journal is implemented but not independently accepted until exact-head source CI and Chromium browser reload tests pass; last keystrokes without committed draft transaction remain unrecoverable by design."
       ],
       "license": "GPL-3.0",
       "testCommands": [
@@ -155,7 +157,7 @@
         "bun run check",
         "bun run acceptance"
       ],
-      "testResults": "W03_CONTINUATION_CI_PASS_42032588558_21_BUN_36_CHROMIUM; P0_ACCEPTANCE_INCOMPLETE",
+      "testResults": "W05_DURABLE_DRAFT_JOURNAL_IMPLEMENTED_CI_PENDING",
       "acceptanceState": "PROVISIONAL_SOURCE_ONLY",
       "originalSourceRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
@@ -193,6 +195,24 @@
           "GitHub permission contract and UI reconciliation"
         ],
         "lastFullyTestedSourceHead": "8a2d5067fb3715398f8d0713e85f4ab46e04472a"
+      },
+      "w05": {
+        "checkpointHead": "9b84470656372f349c3dbd75b90d7275c7c94871",
+        "sourceTreeSHA": "27a6de0c213d12944e5d211b05fc0c6b077d163e",
+        "databaseStructuralVersion": 4,
+        "draftJournal": "principal-scoped IDB store; authoritative workspace CAS remains existing overlay",
+        "addedTests": [
+          ".github/unit/document-service.test.ts (4)",
+          "real IndexedDB draft reload, account switch, immutable ref denial, stale cleanup in .github/tests/push-journal.spec.ts"
+        ],
+        "state": "PENDING_EXACT_HEAD_REAL_BROWSER_CI",
+        "remaining": [
+          "non-destructive legacy all-resource migration/quarantine",
+          "cross-record CAS",
+          "full Dockview native close/move lifecycle",
+          "authorized import/export",
+          "root Chromium stability"
+        ]
       }
     },
     "canvas": {
