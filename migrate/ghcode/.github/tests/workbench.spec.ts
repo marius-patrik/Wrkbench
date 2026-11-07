@@ -478,7 +478,7 @@ test("GHC-00 pending Monaco draft survives a real Dockview cross-surface move an
       return original.apply(this, args as Parameters<IDBObjectStore["put"]>);
     };
   });
-  const content = "# PENDING_MOVE_SENTINEL\\n";
+  const content = "# PENDING_MOVE_SENTINEL\n";
   await editActiveMonaco(page, content);
   await expect(surface(page, "main").getByRole("alert").filter({
     hasText: "Document save not acknowledged",
@@ -514,7 +514,7 @@ test("GHC-00 pending Monaco draft survives a real Dockview cross-surface move an
       const overlays = tx.objectStore("overlays").getAll();
       return await new Promise<boolean>((resolve, reject) => {
         tx.oncomplete = () => resolve(overlays.result.some((item) =>
-          item.path === "README.md" && item.content === "# PENDING_MOVE_SENTINEL\\n" &&
+          item.path === "README.md" && item.content === "# PENDING_MOVE_SENTINEL\n" &&
           workspaces.result.some((workspace) => workspace.id === item.workspaceId &&
             workspace.ownership?.principalKey === "gh:github.com:1001")));
         tx.onerror = () => reject(tx.error);
