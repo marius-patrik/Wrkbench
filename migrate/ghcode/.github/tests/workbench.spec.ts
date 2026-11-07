@@ -406,6 +406,14 @@ test("Monaco save failures guard Dockview close and account transition until ack
   page.once("dialog", (dialog) => dialog.dismiss());
   await tab(page, "main", "README.md").click({ button: "middle", force: true });
   await expect(tab(page, "main", "README.md")).toBeVisible();
+  // Dockview's group-close UI must invoke the same pre-removal guard;
+  // otherwise one native group action could discard this dirty editor.
+  await tab(page, "main", "README.md").click({ button: "right", force: true });
+  const closeGroupAction = page.getByText("Close Group", { exact: true }).last();
+  await expect(closeGroupAction).toBeVisible();
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await closeGroupAction.click();
+  await expect(tab(page, "main", "README.md")).toBeVisible();
   await page.getByTitle("Sign out").click();
   await expect(page.getByTitle("Sign out")).toBeVisible();
 
