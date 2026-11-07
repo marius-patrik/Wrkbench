@@ -650,8 +650,21 @@ test("real IndexedDB v5 quarantines every unattributed legacy record atomically 
     const a = "gh:github.com:1001";
     storage.bindStoragePrincipal(a);
     const legacyId = "acme/private@main";
+    // Construct a genuine v2 database before calling the v5 storage module.
+    // Opening a brand-new database directly at version 5 bypasses the storage
+    // module's onupgradeneeded handler, creating NO object stores at all.
+    // This fixture must exercise the actual v2 -> v5 structural upgrade.
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const open = indexedDB.open("darkfactory-workbench", 5);
+      const open = indexedDB.open("darkfactory-workbench", 2);
+      open.onupgradeneeded = () => {
+        const db = open.result;
+        for (const [name, keyPath] of [
+          ["workspaces", "id"], ["blobs", "key"], ["overlays", "key"],
+          ["staged", "key"], ["committed", "key"], ["commits", "id"],
+        ] as const) {
+          if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath });
+        }
+      };
       open.onsuccess = () => resolve(open.result);
       open.onerror = () => reject(open.error);
     });
