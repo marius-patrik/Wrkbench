@@ -29,6 +29,8 @@ jobs:
           persist-credentials: false
       - name: Validate source history, exact trees and root isolation
         run: python3 migrate/verify.py
+      - name: Verify all 77 historical refs and RSCode branch dispositions
+        run: python3 migrate/verify_branch_disposition.py
 
   rscode:
     runs-on: ubuntu-latest
