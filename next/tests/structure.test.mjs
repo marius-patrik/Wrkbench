@@ -29,7 +29,7 @@ test('Dockview is actual layout owner',()=>{
 test('Cordis owns plugin lifecycle and feature registry',()=>{
  const source=read('packages/sdk/src/index.ts');
  assert.match(source,/import\s*\{\s*Context,\s*Service\s*\}\s*from\s*'cordis'/);
- assert.match(source,/root\.plugin\(feature\.activate\)/);
+ assert.match(source,/root\.plugin\(p\.activate\)/);
  assert.match(source,/ctx\.effect\(/);
  assert.match(source,/fiber\.dispose\(/);
  const features=path.join(root,'features');
@@ -42,6 +42,8 @@ test('Cordis owns plugin lifecycle and feature registry',()=>{
   assert.ok(manifest.name.startsWith('@wrkbench/feature-'));
   assert.match(plugin,/defineFeature\(/);
   assert.ok(existsSync(path.join(root,prefix+'src/index.ts')));
+  assert.match(plugin,/render:/);
+  assert.ok(existsSync(path.join(root,prefix+'src/View.tsx')));
  }
 });
 test('local files are revision guarded by IndexedDB transaction; OPFS is nonauthoritative',()=>{
@@ -58,4 +60,31 @@ test('single-file step demands a genuine Rsbuild bundle',()=>{
  assert.match(source,/Standalone HTML contains external/);
  assert.match(read('rsbuild.config.ts'),/inlineScripts:\s*inline/);
  assert.match(read('rsbuild.config.ts'),/inlineStyles:\s*inline/);
+});
+
+test('shell consumes feature-owned renderers via Cordis and preserves disabled tab identity',()=>{
+ const shell=read('apps/web/src/App.tsx'),sdk=read('packages/sdk/src/index.ts');
+ assert.doesNotMatch(shell,/switch\(kind\)/);
+ assert.match(shell,/contribution\.render\(/);
+ assert.match(shell,/TabTransferQueue/);
+ assert.match(sdk,/class ViewActionService extends Service/);
+ assert.match(sdk,/ctx\.viewActions\.open/);
+});
+test('client shared modules are outside shell and all relative imports resolve',()=>{
+ for(const part of ['state.ts','services.ts','icons.tsx','views/Editors.tsx','views/Features.tsx'])assert.ok(existsSync(path.join(root,'packages/client/src',part)));
+ assert.ok(!existsSync(path.join(root,'apps/web/src/state.ts')));
+ let resolved=0;
+ for(const dir of ['apps','features','packages']){
+  const queue=[path.join(root,dir)];
+  while(queue.length){
+   const current=queue.pop();
+   for(const item of readdirSync(current,{withFileTypes:true})){
+    const name=path.join(current,item.name);
+    if(item.isDirectory()){queue.push(name);continue}
+    if(!/\.tsx?$/.test(name))continue;
+    for(const match of readFileSync(name,'utf8').matchAll(/(?:from|import)\s*(?:\(\s*)?['"](\.[^'"\s]+)['"]/g)){resolved++;assert.ok(existsSync(path.resolve(current,match[1])),name+': unresolved '+match[1]);}
+   }
+  }
+ }
+ assert.ok(resolved>100);
 });
