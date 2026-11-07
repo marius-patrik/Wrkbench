@@ -2033,10 +2033,13 @@ export async function importOwnedWorkspaceSnapshot(input: AuthorizedWorkspaceExp
         typeof push.id !== "string" || !push.id.startsWith(id + ":push:") ||
         pushIds.has(push.id) || push.repositoryId !== input.workspace.repository.id ||
         push.ref !== input.workspace.ref ||
-        push.expectedRemoteSha !== input.workspace.baseSha ||
+        !shaIsValid(push.expectedRemoteSha) ||
+        (push.phase !== "completed" && push.expectedRemoteSha !== input.workspace.baseSha) ||
+        (push.phase === "completed" && push.targetSha !== input.workspace.baseSha) ||
         !Array.isArray(push.commitIds) ||
         push.commitIds.some((commitId: unknown) =>
-          typeof commitId !== "string" || !commitIds.has(commitId)) ||
+          typeof commitId !== "string" ||
+          (push.phase !== "completed" && !commitIds.has(commitId))) ||
         !["prepared", "ready", "remote-confirmed", "completed"].includes(push.phase) ||
         (push.targetSha !== undefined && !shaIsValid(push.targetSha)) ||
         (push.phase === "ready" || push.phase === "remote-confirmed") &&
