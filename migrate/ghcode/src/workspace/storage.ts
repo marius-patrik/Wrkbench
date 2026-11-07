@@ -907,7 +907,10 @@ export async function saveLocalCommit(commit: LocalCommit) {
       !commit.files.every((file) => file.workspaceId === commit.workspaceId))
     throw new Error("Invalid local commit resource identity.");
   for (const file of commit.files) requireCanonicalFileKey(file);
-  await withOwnedStore("commits", "readwrite", commit.workspaceId, (store) => store.put(commit));
+  // A local commit is a content snapshot. Reusing its ID to overwrite bytes
+  // would invalidate a prepared push journal without changing commitIds.
+  // IndexedDB add() enforces immutable identity even across browser tabs.
+  await withOwnedStore("commits", "readwrite", commit.workspaceId, (store) => store.add(commit));
 }
 
 export async function removeLocalCommit(id: string) {
@@ -918,7 +921,8 @@ export async function removeLocalCommit(id: string) {
 
 export async function loadLocalCommits(workspaceId: string) {
   const commits = await allForWorkspace<LocalCommit>("commits", workspaceId);
-  return commits.sort((left, right) => left.createdAt - right.createdAt);
+  return commits.sort((left, right) =>
+    left.createdAt - right.createdAt || left.id.localeCompare(right.id));
 }
 
 async function clearStoreForWorkspace<T extends { key?: string; id?: string; workspaceId: string }>(
@@ -1387,11 +1391,17 @@ function shaIsValid(sha: string) {
   return /^[a-f0-9]{40}$/i.test(sha);
 }
 
-function sameCommitSet(actual: LocalCommit[], expected: string[]) {
-  const ids = actual.map((item) => item.id);
+/** A journal is ordered: changing commit order changes its Git ancestry.
+ * All local writers and readers must agree even for equal-millisecond commits.
+ */
+export function samePushCommitOrder(actual: ReadonlyArray<Pick<LocalCommit, "id" | "createdAt">>, expected: string[]): boolean {
+  const ids = [...actual]
+    .sort((left, right) => left.createdAt - right.createdAt || left.id.localeCompare(right.id))
+    .map((item) => item.id);
   return ids.length === expected.length &&
     new Set(ids).size === ids.length &&
-    expected.every((id) => ids.includes(id));
+    new Set(expected).size === expected.length &&
+    expected.every((id, index) => ids[index] === id);
 }
 
 /** Establish an immutable push intent atomically with validation of local commit IDs. */
@@ -1449,7 +1459,7 @@ export async function beginPushOperation(
             return;
           }
           const local = commits.filter((item) => item.workspaceId === workspace.id);
-          if (!sameCommitSet(local, expectedCommitIds))
+          if (!samePushCommitOrder(local, expectedCommitIds))
             throw new Error("Local commits changed while preparing push; reload and retry.");
           for (const item of local) {
             if (!item.id.startsWith(workspace.id + ":local:") ||
