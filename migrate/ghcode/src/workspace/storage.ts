@@ -1719,7 +1719,7 @@ export async function finalizeConfirmedPush(
           assertPushOwner(currentJournal, previous);
           const local = (reqs.commits.result as LocalCommit[])
             .filter((item) => item.workspaceId === previous.id);
-          if (!sameCommitSet(local, operation.commitIds))
+          if (!samePushCommitOrder(local, operation.commitIds))
             throw new Error("New local commits exist; confirmed remote push needs reconciliation.");
           for (const item of local) {
             if (!item.id.startsWith(previous.id + ":local:") ||
