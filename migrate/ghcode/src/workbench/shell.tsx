@@ -152,7 +152,7 @@ export function WorkbenchShell() {
   const { settings, setSetting } = useWorkbenchSettings();
   const workspace = useWorkspace();
   const factory = useFactory();
-  const [initial] = useState(() => loadWorkbench(settings.theme, workspace.principal.key));
+  const [initial] = useState(() => loadWorkbench(settings.theme, workspace.principal.key, workspace.workspace?.id ?? null));
   const [visibility, setVisibility] = useState<Record<WorkbenchSurface, boolean>>(() => ({
     primary: initial.surfaces.primary.visible,
     main: true,
@@ -204,9 +204,9 @@ export function WorkbenchShell() {
           },
         },
       };
-      saveWorkbench(state, workspace.principal.key);
+      saveWorkbench(state, workspace.principal.key, workspace.workspace?.id ?? null);
     },
-    [initial, settings.theme, visibility, workspace.principal.key],
+    [initial, settings.theme, visibility, workspace.principal.key, workspace.workspace?.id],
   );
 
   useEffect(() => {
