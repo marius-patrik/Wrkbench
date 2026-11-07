@@ -25,7 +25,8 @@
     "relation": "Comparisons obtained from GitHub compare with original ref as base and selected source as head; ANCESTOR=branch reachable from selected source, DIVERGED=independent unique commits, TIP_DESCENDANT=branch ahead of selected source.",
     "disposition": "History inclusion never implies current functional behavior. Review unique deltas and test contracts before marking accepted.",
     "exceptions": "Specific branch-only changed paths and their interpretation are recorded in docs/migrations/PHASE_A_BRANCH_DISPOSITION.md. Original PR #34 is rejected rather than activated; C01 persistence is included but not authoritative.",
-    "changedFiles": "branchOnlyChangedPaths on divergent/descendant refs is merge-base-to-tip (for RSCode original main to branch); paths are exact GitHub compare file names, not proof of active functionality."
+    "changedFiles": "branchOnlyChangedPaths on divergent/descendant refs is merge-base-to-tip (for RSCode original main to branch); paths are exact GitHub compare file names, not proof of active functionality.",
+    "perRefEvidence": "Rows include exact original tip, any associated original PR title/state from PHASE0_REPOSITORY_INVENTORY.json, selected source subtree SHA and active candidate test paths. The source test paths do not prove historical branch behavior unless explicitly accepted."
   },
   "entries": [
     {
@@ -44,7 +45,27 @@
       "nextGate": "C_GHCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 11,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T06:20:12Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -62,7 +83,27 @@
       "nextGate": "C_GHCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 13,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T10:13:04Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -80,7 +121,27 @@
       "nextGate": "C_GHCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 15,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-17T10:58:30Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -98,7 +159,27 @@
       "nextGate": "C_GHCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 16,
+        "title": "feat: unify native GHCode workbench, factory and governed Actions release",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-11-01T00:01:13Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -120,7 +201,27 @@
         ".github/workflows/darkfactory-control.yml",
         "repo.dfconfig"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 20,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -138,7 +239,27 @@
       "nextGate": "C_GHCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 21,
+        "title": "release: unified GHCode workbench and Actions-only production site",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-11-01T00:03:04Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -156,7 +277,27 @@
       "nextGate": "C_GHCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 23,
+        "title": "fix(release): correct Rsbuild Pages static asset validation",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-11-01T00:08:21Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -176,7 +317,27 @@
         "refs/remotes/ghcode/fix/ghc-09a-safe-branch-cleanup"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 29,
+        "title": "fix(release): preserve unmerged work instead of deleting every branch",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-11-01T02:37:39Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -197,7 +358,27 @@
         ".github/workflows/darkfactory.yml",
         "repo.dfconfig"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 3,
+        "title": "chore(df): adopt released DarkFactory v0.3.3",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-11T10:46:42Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -228,7 +409,27 @@
         ".github/tests/test_ghc00_dependency_graph.py",
         "playwright.config.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 30,
+        "title": "test(ghc00): reproduce account, editor and IndexedDB integrity risks",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -248,7 +449,27 @@
         "refs/remotes/ghcode/agent/ghc-01-identity-isolation"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 33,
+        "title": "feat(identity): isolate verified principals and contain unattributed v2 data",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-11-01T11:16:42Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -278,7 +499,27 @@
         "src/workspace/storage-v3.ts",
         "src/workspace/storage.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 34,
+        "title": "feat(storage): transactional IndexedDB v3 foundation and recoverable legacy quarantine",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Excluded due to confirmed privacy/transaction/push risks."
+      }
     },
     {
       "source": "ghcode",
@@ -299,7 +540,27 @@
         ".github/workflows/darkfactory.yml",
         "repo.dfconfig"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 5,
+        "title": "chore(df): adopt v0.288.0",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-11T15:22:03Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -320,7 +581,27 @@
         ".github/workflows/darkfactory.yml",
         "repo.dfconfig"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 7,
+        "title": "chore(df): adopt v0.288.1",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-11T16:00:06Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -343,7 +624,27 @@
         ".github/workflows/darkfactory.yml",
         "repo.dfconfig"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 9,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -374,7 +675,20 @@
         ".github/tests/test_ghc00_dependency_graph.py",
         "playwright.config.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -394,7 +708,20 @@
         "refs/remotes/ghcode-pr/33"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -424,7 +751,20 @@
         "src/workspace/storage-v3.ts",
         "src/workspace/storage.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Excluded due to confirmed privacy/transaction/push risks."
+      }
     },
     {
       "source": "ghcode",
@@ -442,7 +782,20 @@
       "nextGate": "C_GHCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -462,7 +815,20 @@
         "refs/remotes/ghcode-pr/29"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -482,7 +848,20 @@
         "refs/tags/ghcode/v0.1.8"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "ghcode",
@@ -500,7 +879,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -518,7 +910,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -536,7 +941,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -554,7 +972,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -572,7 +1003,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -590,7 +1034,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -608,7 +1065,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -626,7 +1096,20 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "ghcode",
@@ -646,7 +1129,20 @@
         "refs/remotes/ghcode/main"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "acceptanceTestPaths": [
+        "migrate/ghcode/.github/tests/identity-isolation.spec.ts",
+        "migrate/ghcode/.github/tests/push-journal.spec.ts",
+        "migrate/ghcode/.github/tests/workbench.spec.ts",
+        "migrate/ghcode/.github/unit/storage-unit.test.ts",
+        "migrate/ghcode/.github/unit/document-service.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -664,7 +1160,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 1,
+        "title": "Initialize repository template, generated governance, versioning and release workflows",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T14:13:19Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -682,7 +1196,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 10,
+        "title": "Release TODO.md workspace root placement",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T15:02:01Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -700,7 +1232,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 11,
+        "title": "Consolidate repository metadata into .darkfactory and centralize all tests",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T19:09:30Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -718,7 +1268,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 12,
+        "title": "Release single .darkfactory tree and centralized tests",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T19:10:27Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -736,7 +1304,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 14,
+        "title": "Restore native GitHub directories; pin DarkFactory submodule; default to tag releases",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T19:25:03Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -754,7 +1340,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 15,
+        "title": "Release native GitHub layout and tag-only versioning",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T19:25:42Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -772,7 +1376,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 18,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T21:17:07Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -790,7 +1412,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 19,
+        "title": "feat(df): deliver default-branch installation through protected development lane",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T21:19:05Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -808,7 +1448,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 2,
+        "title": "Keep the integration branch durable and version automation writable",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T14:20:58Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -826,7 +1484,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 21,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T06:13:06Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -844,7 +1520,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 22,
+        "title": "chore(df): promote managed single-branch update through development",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T06:16:47Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -862,7 +1556,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 24,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T06:23:40Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -880,7 +1592,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 25,
+        "title": "chore(df): promote sealed main-only control update",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T06:27:06Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -898,7 +1628,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 27,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T10:15:32Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -916,7 +1664,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 28,
+        "title": "chore(df): promote v0.291.6 managed update to main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-14T10:17:53Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -934,7 +1700,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 3,
+        "title": "Promote durable development and version workflow fixes",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T14:22:33Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -952,7 +1736,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 30,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-16T15:10:13Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -970,7 +1772,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 32,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-17T18:15:17Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -994,7 +1814,25 @@
         ".github/workflows/darkfactory-control.yml",
         "repo.dfconfig"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 34,
+        "title": "feat(df): install managed configuration and workflows on main",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1033,7 +1871,25 @@
         ".github/workflows/docs.yml",
         "canvas.html"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 36,
+        "title": "feat(canvas): repository-derived HTML view and agent plugin",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-29T14:54:43Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1051,7 +1907,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 37,
+        "title": "release: promote repository Canvas and agent plugin",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-29T14:56:39Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1069,7 +1943,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 39,
+        "title": "Canvas: source-first workspace redesign, focused graph and polished preferences",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-11-01T13:31:34Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1089,7 +1981,25 @@
         "refs/remotes/template/agent/canvas-c01-idb-foundation"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 41,
+        "title": "feat(canvas): transactional IndexedDB persistence foundation (C01)",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "C01 persistence module tested independently; old writers remain live."
+      }
     },
     {
       "source": "canvas",
@@ -1114,7 +2024,25 @@
         ".github/workflows/darkfactory-control.yml",
         ".github/workflows/darkfactory.yml"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 42,
+        "title": "fix(ci): isolate Canvas release privileges and make PR quality read-only",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1132,7 +2060,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 5,
+        "title": "Add administrator-authenticated main protection bootstrap",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T14:38:53Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1150,7 +2096,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 6,
+        "title": "Release branch protection bootstrap and policy verification",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T14:39:39Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1168,7 +2132,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 7,
+        "title": "Flatten agent workspace sources and add portable agent/skill catalog",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T14:49:43Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1186,7 +2168,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 8,
+        "title": "Release flattened agent workspace and role/skill catalog",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T14:50:37Z",
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1204,7 +2204,25 @@
       "nextGate": "D_CANVAS",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "originalPullRequest": {
+        "number": 9,
+        "title": "Move TODO.md into .agents root",
+        "stateAtInventory": "closed",
+        "mergedAtSnapshot": "2026-10-13T15:01:08Z",
+        "baseAtInventory": "development"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1224,7 +2242,18 @@
         "refs/remotes/template-pr/41"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "C01 persistence module tested independently; old writers remain live."
+      }
     },
     {
       "source": "canvas",
@@ -1249,7 +2278,18 @@
         ".github/workflows/darkfactory-control.yml",
         ".github/workflows/darkfactory.yml"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1267,7 +2307,18 @@
       "nextGate": "E_PUBLICATION_SECURITY",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1291,7 +2342,18 @@
         ".github/workflows/darkfactory-control.yml",
         "repo.dfconfig"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1330,7 +2392,18 @@
         ".github/workflows/docs.yml",
         "canvas.html"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1350,7 +2423,18 @@
         "refs/tags/template/v0.1.16"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "canvas",
@@ -1368,7 +2452,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1386,7 +2481,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1404,7 +2510,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1422,7 +2539,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1440,7 +2568,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1458,7 +2597,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1476,7 +2626,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1496,7 +2657,18 @@
         "refs/remotes/template/main"
       ],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1514,7 +2686,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1532,7 +2715,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1550,7 +2744,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "canvas",
@@ -1568,7 +2773,18 @@
       "nextGate": "NONE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "0dcad04f7bc7f15cc24f86a00bf7239b8e48ee77",
+      "acceptanceTestPaths": [
+        "migrate/canvas/.github/tests/repository-context.test.ts",
+        "migrate/canvas/.github/tests/runtime-repository-browser.mjs",
+        "migrate/canvas/.github/tests/persistence/canvas-persistence.mjs"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Historical release only; never activate old code by default."
+      }
     },
     {
       "source": "rscode",
@@ -1586,7 +2802,18 @@
       "nextGate": "B_RSCODE",
       "tipAliases": [],
       "branchOnlyChangedPaths": [],
-      "deltaEvidence": "git-compare-ancestor"
+      "deltaEvidence": "git-compare-ancestor",
+      "targetSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+      "acceptanceTestPaths": [
+        "migrate/rscode/src/tests/runtimeSecurity.test.ts",
+        "migrate/rscode/src/tests/browserService.test.ts",
+        "migrate/rscode/src/tests/store.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "rscode",
@@ -1612,7 +2839,25 @@
         "src/tests/devServer.test.ts",
         "src/tests/runtimeSecurity.test.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+      "acceptanceTestPaths": [
+        "migrate/rscode/src/tests/runtimeSecurity.test.ts",
+        "migrate/rscode/src/tests/browserService.test.ts",
+        "migrate/rscode/src/tests/store.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 23,
+        "title": "Security: harden privileged local HTTP, WebSocket and Chromium boundaries (RSC-01)",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "rscode",
@@ -1638,7 +2883,25 @@
         "src/tests/devServer.test.ts",
         "src/tests/runtimeSecurity.test.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+      "acceptanceTestPaths": [
+        "migrate/rscode/src/tests/runtimeSecurity.test.ts",
+        "migrate/rscode/src/tests/browserService.test.ts",
+        "migrate/rscode/src/tests/store.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 25,
+        "title": "RSC-03: independently accept and correct privileged runtime security",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "rscode",
@@ -1676,7 +2939,18 @@
         "src/tests/devServer.test.ts",
         "src/tests/runtimeSecurity.test.ts"
       ],
-      "deltaEvidence": "git-compare-from-original-root-main-to-integration-tip; includes historical import tools"
+      "deltaEvidence": "git-compare-from-original-root-main-to-integration-tip; includes historical import tools",
+      "targetSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+      "acceptanceTestPaths": [
+        "migrate/rscode/src/tests/runtimeSecurity.test.ts",
+        "migrate/rscode/src/tests/browserService.test.ts",
+        "migrate/rscode/src/tests/store.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "rscode",
@@ -1704,7 +2978,25 @@
         "scripts/distribution/launch.ts",
         "scripts/distribution/terminal-probe.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+      "acceptanceTestPaths": [
+        "migrate/rscode/src/tests/runtimeSecurity.test.ts",
+        "migrate/rscode/src/tests/browserService.test.ts",
+        "migrate/rscode/src/tests/store.test.ts"
+      ],
+      "originalPullRequest": {
+        "number": 28,
+        "title": "RSC-05: Native Bun/Chromium preview distributions and per-OS installation acceptance (#27)",
+        "stateAtInventory": "open",
+        "mergedAtSnapshot": null,
+        "baseAtInventory": "main"
+      },
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     },
     {
       "source": "rscode",
@@ -1727,7 +3019,18 @@
         "src/server/browserService.ts",
         "src/tests/browserService.test.ts"
       ],
-      "deltaEvidence": "git-compare-merge-base-to-tip"
+      "deltaEvidence": "git-compare-merge-base-to-tip",
+      "targetSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
+      "acceptanceTestPaths": [
+        "migrate/rscode/src/tests/runtimeSecurity.test.ts",
+        "migrate/rscode/src/tests/browserService.test.ts",
+        "migrate/rscode/src/tests/store.test.ts"
+      ],
+      "scopeReview": {
+        "evidence": "GitHub compare relation + exact changed paths; select target source blob fingerprint + migrated source CI",
+        "behavioralEquivalenceProven": false,
+        "reason": "Behavioral parity is gated independently from Git ancestry."
+      }
     }
   ]
 }
