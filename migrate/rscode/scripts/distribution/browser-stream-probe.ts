@@ -22,7 +22,11 @@ if (!Number.isInteger(port) || port < 1 || port > 65535 || !workspaceId) {
 const paneId = "browser:native-server-stream";
 const origin = `http://127.0.0.1:${port}`;
 const remote = `ws://127.0.0.1:${port}/api/browser/stream?workspaceId=${encodeURIComponent(workspaceId)}&paneId=${encodeURIComponent(paneId)}`;
-const pageUrl = `data:text/html,${encodeURIComponent("<!doctype html><html><head><title>Native Stream Proof</title></head><body style='background:#14395d'><h1>installed native browser</h1></body></html>")}`;
+// Use a distinct document after restart. Re-navigating to the same persisted
+// URL is intentionally a no-op in BrowserFrameService and cannot prove a new
+// frame; the old probe incorrectly classified that correct behavior as a hang.
+const pageTitle = mode === "restart" ? "Native Stream Proof Restart" : "Native Stream Proof";
+const pageUrl = `data:text/html,${encodeURIComponent(`<!doctype html><html><head><title>${pageTitle}</title></head><body style='background:#14395d'><h1>installed native browser ${mode}</h1></body></html>`)}`;
 
 async function api<T>(name: string, body: unknown): Promise<T> {
   const response = await fetch(`${origin}/api/${name}`, {
@@ -130,7 +134,7 @@ try {
   assertPNG(resized, 427, 311);
   messages.length = 0;
   socket.send(JSON.stringify({ type: "navigate", url: pageUrl }));
-  await waitForFrame((m) => m.type === "state" && m.title === "Native Stream Proof", "rendered page title after navigation");
+  await waitForFrame((m) => m.type === "state" && m.title === pageTitle, "rendered page title after genuine navigation");
   const navigated = await waitForFrame((m) => m.type === "frame" && m.url === pageUrl, "navigated native Chromium frame");
   assertPNG(navigated);
   console.log(JSON.stringify({ mode, serverChromium: "PASS", webSocket: "PASS", png: "VALID", resize: "427x311", navigation: "PASS", workspaceId, paneId }));
