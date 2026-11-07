@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "27a6de0c213d12944e5d211b05fc0c6b077d163e",
+      "snapshotTreeSHA": "a95e2222412567622cff3dda74dd3fcbc7cbc373",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -197,13 +197,14 @@
         "lastFullyTestedSourceHead": "8a2d5067fb3715398f8d0713e85f4ab46e04472a"
       },
       "w05": {
-        "checkpointHead": "9b84470656372f349c3dbd75b90d7275c7c94871",
-        "sourceTreeSHA": "27a6de0c213d12944e5d211b05fc0c6b077d163e",
+        "checkpointHead": "0edaeeb6d116dc01868c4bce44a7c5962bd8d086",
+        "sourceTreeSHA": "a95e2222412567622cff3dda74dd3fcbc7cbc373",
         "databaseStructuralVersion": 4,
         "draftJournal": "principal-scoped IDB store; authoritative workspace CAS remains existing overlay",
         "addedTests": [
           ".github/unit/document-service.test.ts (4)",
-          "real IndexedDB draft reload, account switch, immutable ref denial, stale cleanup in .github/tests/push-journal.spec.ts"
+          "real IndexedDB draft reload, account switch, immutable ref denial, stale cleanup in .github/tests/push-journal.spec.ts",
+          ".github/tests/identity-isolation.spec.ts updated for DB structural version 4 (5 direct connections)"
         ],
         "state": "PENDING_EXACT_HEAD_REAL_BROWSER_CI",
         "remaining": [
@@ -220,7 +221,7 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "ff07bec8e3fe3606f2f7cc6fae0b2d6f324f791a",
+      "snapshotTreeSHA": "2dd4631213ee8d87648ad32bd2206a0d6fc762fa",
       "appSubtreeSHA": "9e4880ad5742f73ad5ea482b127fdf80742695e5",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
@@ -230,7 +231,8 @@
         "IndexedDB adapter is not imported by Canvas App; do not activate alongside GHCode v3 store",
         "W02 generated real Bun 1.3.11 lockfile on GitHub Actions Ubuntu and enforced frozen-install CI",
         "W02-R validated repository-context parser and deterministic bounded source graph/search, selected-repository identity contract and five active Bun contract scenarios.",
-        "W03: injected read-only runtime selected-repository provider with immutable identity/revision validation, async stale-load abort, controlled repository UI selection and bounded document/graph/search consumer rewiring. Standalone generated source remains fallback only when no adapter is supplied."
+        "W03: injected read-only runtime selected-repository provider with immutable identity/revision validation, async stale-load abort, controlled repository UI selection and bounded document/graph/search consumer rewiring. Standalone generated source remains fallback only when no adapter is supplied.",
+        "W05: SidebarResize persists authoritative pointerup coordinates to avoid coalesced pointermove causing lost resizing; independent real browser smoke retest pending."
       ],
       "knownUnresolved": [
         "Standalone Canvas generator still publishes curated build-time repository documents, not a live runtime selected-repository adapter.",
