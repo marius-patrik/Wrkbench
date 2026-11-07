@@ -42,7 +42,12 @@ export function EditorTab({
   const factory = useFactory();
   const runtime = useWorkbenchRuntime();
   const path = typeof tab.state.path === "string" ? tab.state.path : "Untitled";
-  const repositoryFile = path !== "Untitled" && Boolean(workspace.workspace);
+  const repositoryPath = path !== "Untitled";
+  // A saved path is not a resource identity. Enforce its immutable workspace
+  // session before reading, mounting a Monaco model or rendering private bytes.
+  const resourceAuthorized = !repositoryPath ||
+    Boolean(workspace.workspace && tab.state.resourceWorkspaceId === workspace.workspace.id);
+  const repositoryFile = repositoryPath && resourceAuthorized;
   const generated = repositoryFile && isGeneratedDocument(path);
   const documentId = repositoryFile && workspace.workspace
     ? encodeDocumentResourceId(workspace.workspace, path)
@@ -63,7 +68,7 @@ export function EditorTab({
   const [value, setValue] = useState(() =>
     typeof tab.state.value === "string" ? tab.state.value : "",
   );
-  const [loadedPath, setLoadedPath] = useState(repositoryFile ? "" : path);
+  const [loadedResource, setLoadedResource] = useState(repositoryFile ? "" : documentId);
   const [error, setError] = useState<string | null>(null);
   const viewStateTimer = useRef<number | null>(null);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
@@ -121,14 +126,17 @@ export function EditorTab({
 
   useEffect(() => {
     if (!repositoryFile) {
-      setValue(typeof tab.state.value === "string" ? tab.state.value : "");
-      setLoadedPath(path);
+      // Never reuse a cached private editor value while another repository
+      // session is active, including the first render after account switch.
+      setValue(resourceAuthorized && !repositoryPath &&
+        typeof tab.state.value === "string" ? tab.state.value : "");
+      setLoadedResource(resourceAuthorized ? documentId : "");
       return;
     }
     let disposed = false;
     let acquired = false;
     let unsubscribe = () => {};
-    setLoadedPath("");
+    setLoadedResource("");
     setError(null);
     void readRef.current(path)
       .then(async (content) => {
@@ -147,7 +155,7 @@ export function EditorTab({
           setError(snapshot.error);
         });
         setValue(session.content);
-        setLoadedPath(path);
+        setLoadedResource(documentId);
       })
       .catch((reason) => {
         if (!disposed) setError(reason instanceof Error ? reason.message : String(reason));
@@ -157,19 +165,27 @@ export function EditorTab({
       unsubscribe();
       if (acquired) documentService.release(documentId);
     };
-  }, [documentId, path, repositoryFile, tab.state.value, workspace.principal.key]);
+  }, [documentId, path, repositoryFile, resourceAuthorized, repositoryPath, tab.state.value, workspace.principal.key]);
 
   const liveCurrent = useMemo(() => {
-    if (!resource.current || loadedPath !== path || resource.current.content === null)
+    if (!resource.current || loadedResource !== documentId || resource.current.content === null)
       return resource.current;
     return {
       ...resource.current,
       content: value,
       bytes: new TextEncoder().encode(value),
     };
-  }, [loadedPath, path, resource.current, value]);
+  }, [loadedResource, documentId, resource.current, value]);
 
-  if (error && loadedPath !== path) {
+  if (repositoryPath && !resourceAuthorized) {
+    return (
+      <div className="tab-empty" role="status">
+        <strong>File belongs to a different repository session</strong>
+        <span>Open this file from the current repository to create a separately owned editor tab.</span>
+      </div>
+    );
+  }
+  if (error && loadedResource !== documentId) {
     return (
       <div className="tab-empty">
         <strong>Could not open {path}</strong>
@@ -177,7 +193,7 @@ export function EditorTab({
       </div>
     );
   }
-  if (repositoryFile && loadedPath !== path) {
+  if (repositoryFile && loadedResource !== documentId) {
     return (
       <div className="tab-empty">
         <span>Loading {path}…</span>
@@ -311,7 +327,7 @@ export function EditorTab({
         onChange={updateState}
       />
       <div className="resource-content">
-      {error && loadedPath === path && (
+      {error && loadedResource === documentId && (
         <div className="resource-generated-notice" role="alert">
           <strong>Document save not acknowledged: {error}</strong>
           <button
