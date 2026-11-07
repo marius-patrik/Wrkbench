@@ -13,14 +13,14 @@ async function boot(page:import('@playwright/test').Page){
 
 test('loads real Cordis-backed feature host and Dockview over HTTP',async({page})=>{
  const exceptions=await boot(page);
- await expect(page.getByTitle('Create empty editor group (Ctrl/⌘ + \\)')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Split',exact:true})).toBeVisible();
  await expect(page.locator('.dv-tab').first()).toBeVisible();
  expect(exceptions).toEqual([]);
 });
 
 test('switches workbenches without discarding individual layouts',async({page})=>{
  const exceptions=await boot(page);
- await page.getByTitle('Create empty editor group (Ctrl/⌘ + \\)').click();
+ await page.getByRole('button',{name:'Split',exact:true}).click();
  const before=await page.locator('.dv-groupview').count();
  expect(before).toBeGreaterThan(1);
  await page.getByRole('button',{name:'Research workbench'}).click();
@@ -56,7 +56,7 @@ test('command palette, contextual status menus and appearance',async({page})=>{
 test('local file survives real navigation and browser reload',async({page})=>{
  const exceptions=await boot(page);
  page.once('dialog',d=>void d.accept('src/acceptance-check.ts'));
- await page.getByTitle('New local file').click();
+ await page.getByRole('button',{name:'New local file'}).click();
  await expect(page.locator('.dv-groupview').first()).toBeVisible();
  await page.reload();
  await expect(page.locator('.dv-groupview').first()).toBeVisible();
