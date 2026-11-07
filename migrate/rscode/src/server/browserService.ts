@@ -428,6 +428,10 @@ export class BrowserFrameService {
     const launch = () => chromium.launchPersistentContext(userDataDir, {
       ...(useBundledChromium ? { channel: "chromium" } : { executablePath }),
       headless: true,
+      // Playwright owns and cancels its spawned Chromium on launch timeout.
+      // A free-floating Promise.race around launch would leave an unowned
+      // browser process and an unsafe persistent-profile singleton lock.
+      timeout: 12_000,
       viewport: { width: DEFAULT_VIEWPORT.width, height: DEFAULT_VIEWPORT.height },
       deviceScaleFactor: DEFAULT_VIEWPORT.deviceScaleFactor,
       // Invalid TLS certificates must not be silently accepted by a privileged browser.
