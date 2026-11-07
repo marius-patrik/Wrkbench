@@ -54,7 +54,17 @@ export default function SidebarResize() {
         if (state.nextWidth !== state.startWidth) set({ sidebarWidth: state.nextWidth });
       };
       const onEnd = (current: globalThis.PointerEvent) => {
-        if (current.pointerId === id) finish();
+        if (current.pointerId !== id) return;
+        // Chromium can coalesce the last pointermove before pointerup during
+        // React layout changes. The release coordinate is authoritative and
+        // must be committed even if no final move event was delivered.
+        const state = drag.current;
+        if (state) {
+          state.nextWidth = current.type === "pointercancel"
+            ? state.startWidth
+            : clamp(startWidth + sign * (current.clientX - startX));
+        }
+        finish();
       };
       drag.current = {
         id,
