@@ -702,21 +702,52 @@ test("real IndexedDB v5 quarantines every unattributed legacy record atomically 
     const backup = overlayBackup as { raw?: { content?: string } } | undefined;
     const preserved = originalOverlay as { content?: string } | undefined;
     const migration = state as { stage?: string } | undefined;
+    // An edited legacy record must NOT overwrite the first raw backup.
+    const changedDb = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open("darkfactory-workbench", 5);
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(open.error);
+    });
+    const update = changedDb.transaction("overlays", "readwrite");
+    update.objectStore("overlays").put({ ...rawOverlay, content: "LATER_UNATTRIBUTED_CHANGE" });
+    await new Promise<void>((resolve, reject) => {
+      update.oncomplete = () => resolve();
+      update.onabort = () => reject(update.error);
+    });
+    changedDb.close();
+    const deniedOverwrite = await storage.quarantineUnattributedLegacyRecords()
+      .then(() => false, () => true);
+    const finalDb = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open("darkfactory-workbench", 5);
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(open.error);
+    });
+    const inspect = finalDb.transaction(["legacyBackups", "overlays"], "readonly");
+    const backedUp = inspect.objectStore("legacyBackups").get("overlays:" + legacyId + ":README.md");
+    const originalChanged = inspect.objectStore("overlays").get(legacyId + ":README.md");
+    await new Promise<void>((resolve, reject) => {
+      inspect.oncomplete = () => resolve();
+      inspect.onabort = () => reject(inspect.error);
+    });
+    finalDb.close();
     return {
-      first, second, deniedOwned,
+      first, second, deniedOwned, deniedOverwrite,
       backup: backup?.raw?.content,
       preserved: preserved?.content,
       workspaceRetained: !!originalWorkspace,
       workspaceBackedUp: !!workspaceBackup,
       quarantineStage: migration?.stage,
+      firstBackupUnchanged: backedUp.result?.raw?.content === "LEGACY_PRIVATE_SECRET",
+      laterOriginalUnchanged: originalChanged.result?.content === "LATER_UNATTRIBUTED_CHANGE",
     };
   }, sourceUrl);
   expect(result).toEqual({
     first: { preservedRecords: 2, existingBackups: 0 },
     second: { preservedRecords: 0, existingBackups: 2 },
-    deniedOwned: true,
+    deniedOwned: true, deniedOverwrite: true,
     backup: "LEGACY_PRIVATE_SECRET", preserved: "LEGACY_PRIVATE_SECRET",
     workspaceRetained: true, workspaceBackedUp: true,
     quarantineStage: "quarantined-not-attributed",
+    firstBackupUnchanged: true, laterOriginalUnchanged: true,
   });
 });
