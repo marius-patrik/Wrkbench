@@ -211,13 +211,45 @@ try {
   if (!before || before.height < 50) throw new Error("Sidebar drag handle must occupy full height");
   const pointerX = before.x + before.width / 2;
   const pointerY = before.y + before.height / 2;
+  // Preserve trustworthy event evidence when Chromium retargets a 4px
+  // separator while the adjacent flex pane moves. Do not retry a failed drag.
+  await page.evaluate(() => {
+    window.__canvasSidebarDragTrace = [];
+    for (const eventName of ["pointerdown", "pointermove", "pointerup", "pointercancel", "lostpointercapture"]) {
+      window.addEventListener(eventName, (event) => {
+        const trace = window.__canvasSidebarDragTrace;
+        if (trace.length < 80) trace.push({
+          event: eventName,
+          x: event.clientX,
+          target: event.target?.className?.baseVal ?? String(event.target?.className ?? ""),
+          resizing: document.body.classList.contains("cx-resizing"),
+        });
+      }, true);
+    }
+  });
   await page.mouse.move(pointerX, pointerY);
   await page.mouse.down();
+  if (!(await page.evaluate(() => document.body.classList.contains("cx-resizing"))))
+    throw new Error("Sidebar resize pointerdown was not delivered to separator: " +
+      JSON.stringify(await page.evaluate(() => ({
+        trace: window.__canvasSidebarDragTrace,
+        hit: document.elementFromPoint(pointerX, pointerY)?.outerHTML?.slice(0, 240),
+      }))));
   await page.mouse.move(pointerX + 56, pointerY, { steps: 6 });
   await page.mouse.up();
-  await page.waitForFunction(
-    () => Number(document.querySelector(".sidebar-resizer")?.getAttribute("aria-valuenow")) >= 325,
-  );
+  try {
+    await page.waitForFunction(
+      () => Number(document.querySelector(".sidebar-resizer")?.getAttribute("aria-valuenow")) >= 325,
+    );
+  } catch (error) {
+    const trace = await page.evaluate(() => ({
+      events: window.__canvasSidebarDragTrace,
+      width: document.querySelector(".sidebar-resizer")?.getAttribute("aria-valuenow"),
+      styleWidth: document.documentElement.style.getPropertyValue("--cx-sidebar-width"),
+    }));
+    throw new Error("Sidebar resize gesture did not persist expected width: " +
+      JSON.stringify(trace), { cause: error });
+  }
   await page.getByRole("combobox", { name: "Omnibar position" }).click();
   await page.getByRole("option", { name: "Floating" }).click();
   await page.locator(".floating-omnibar").waitFor();
