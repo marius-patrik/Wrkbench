@@ -84,7 +84,7 @@ test("A private repository is not accessible to anonymous or denied account B", 
   await page.locator('[data-workbench-surface="primary"]').getByTitle("README.md").click();
   await expect.poll(async () => page.evaluate(async () => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("darkfactory-workbench", 4);
+      const request = indexedDB.open("darkfactory-workbench", 5);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });
@@ -123,7 +123,7 @@ test("same repository and login are isolated by immutable numeric user ID", asyn
   await openRepository(page);
   const aIds = await page.evaluate(async () => {
     return new Promise<string[]>((resolve, reject) => {
-      const request = indexedDB.open("darkfactory-workbench", 4);
+      const request = indexedDB.open("darkfactory-workbench", 5);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const db = request.result;
@@ -142,7 +142,7 @@ test("same repository and login are isolated by immutable numeric user ID", asyn
   await openRepository(page);
   const keys = await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("darkfactory-workbench", 4);
+      const request = indexedDB.open("darkfactory-workbench", 5);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });
@@ -219,7 +219,7 @@ test("legacy unattributed cache and layout remain intact but cannot render", asy
   await openRepository(page, PUBLIC_REPOSITORY);
   await page.evaluate(async () => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("darkfactory-workbench", 4);
+      const request = indexedDB.open("darkfactory-workbench", 5);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });
@@ -289,7 +289,7 @@ test("legacy unattributed cache and layout remain intact but cannot render", asy
   await expect(page.getByText("LEGACY_PRIVATE_SENTINEL")).toHaveCount(0);
   const legacy = await page.evaluate(async () => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("darkfactory-workbench", 4);
+      const request = indexedDB.open("darkfactory-workbench", 5);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });
