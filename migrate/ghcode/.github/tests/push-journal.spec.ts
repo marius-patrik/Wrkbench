@@ -32,7 +32,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test("real IndexedDB v4 denies cross-principal reads, blobs and push preparation", async ({ page }) => {
+test("real IndexedDB v5 denies cross-principal reads, blobs and push preparation", async ({ page }) => {
   const result = await page.evaluate(async (url) => {
     const storage = await import(url);
     const a = "gh:github.com:1001";
@@ -306,7 +306,7 @@ test("real storage rejects forged same-principal workspace IDs with no persisted
       catch { rejection[key] = true; }
     }
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("darkfactory-workbench", 4);
+      const request = indexedDB.open("darkfactory-workbench", 5);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -501,7 +501,7 @@ test("real IndexedDB durable private draft survives reload, rejects account and 
     });
     return { documentId, principal, dbVersion, record: saved };
   }, sourceUrl);
-  expect(original.dbVersion).toBe(4);
+  expect(original.dbVersion).toBe(5);
   expect(original.record.content).toBe("secret crash draft");
 
   // Destroy all JS module state while retaining the real browser database.
