@@ -160,7 +160,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "cf3c7bb0194a9754a788f625fd4c98d7f4973f0e",
+      "snapshotTreeSHA": "aadb6897fe86a56b22a1479d73b88bc9c2624fb5",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -289,9 +289,9 @@
         ]
       },
       "phaseC1": {
-        "sourceTreeSHA": "cf3c7bb0194a9754a788f625fd4c98d7f4973f0e",
+        "sourceTreeSHA": "aadb6897fe86a56b22a1479d73b88bc9c2624fb5",
         "evidence": "docs/migrations/PHASE_C_GHCODE_PUSH_INTEGRITY.md",
-        "status": "IMPLEMENTED_PENDING_FULL_GHC00_AND_ORDERED_PUSH_BROWSER_ACCEPTANCE",
+        "status": "PHASE_C1_GHC00_BROWSER_AND_IDB_RECHECK_PENDING",
         "immutableCommits": "IDB.add prevents in-place local commit mutation",
         "orderedPushAncestry": "createdAt+id canonical ordering checked in storage and React before network calls",
         "destructiveRecovery": "removeLocalCommit and clearLocalGitState protect unresolved push journal in same IDB transaction",
@@ -313,8 +313,8 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "b1fc8fe4da335e36eae560482392f3a9c5096c32",
-      "appSubtreeSHA": "106584111f42b5c1d3f33822dce5f215b9c870ce",
+      "snapshotTreeSHA": "7d3f210f2ddb88dbaa2ff96bc4b9d55477aac388",
+      "appSubtreeSHA": "8c3a0f7aacc3adbfa808e4238359bd2217d8c274",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
         "Canvas PR #41 complete standalone app, original persistence source, and app-specific browser/persistence tests preserved; no active runtime import"
@@ -378,10 +378,10 @@
         "privacyFix": "Invalid identity now increments generation, clears selected identity and old source context, preserves validation error. Browser test forces stale completion."
       },
       "w06SidebarResize": {
-        "sourceTreeSHA": "b1fc8fe4da335e36eae560482392f3a9c5096c32",
-        "appSubtreeSHA": "106584111f42b5c1d3f33822dce5f215b9c870ce",
+        "sourceTreeSHA": "7d3f210f2ddb88dbaa2ff96bc4b9d55477aac388",
+        "appSubtreeSHA": "8c3a0f7aacc3adbfa808e4238359bd2217d8c274",
         "case": "real Chromium pointer capture, drag +56px after ArrowRight resize, persisted aria-valuenow >=325",
-        "status": "PASS_EXACT_HEAD_STANDALONE_CHROMIUM_SMOKE",
+        "status": "HIT_TARGET_REBUILT_12PX_PENDING_EXACT_HEAD_CHROMIUM_RECHECK",
         "priorFailureRun": 42417053136,
         "priorFailure": "Canvas standalone smoke_canvas.mjs line 218 intermittent pointer drag timeout; all RSCode stress jobs succeeded",
         "passedAtHeadSHA": "7eb7b044179ba4cc017ddf5e5c4ecd65e582f648",
