@@ -158,6 +158,45 @@ test(
 );
 
 
+test("successful navigation forces a new screenshot when CDP screencast has no frame", async () => {
+  const service = new BrowserFrameService("/tmp/rscode-cdp-navigation-fixture", () => undefined);
+  const target = "https://example.test/phase-b";
+  let currentUrl = "about:blank";
+  const captures: string[] = [];
+  const live = {
+    page: {
+      url: () => currentUrl,
+      goto: async (url: string) => {
+        currentUrl = url;
+      },
+    },
+    subscribers: new Map([[1, { send: () => undefined }]]),
+    pendingDialog: null as object | null,
+    currentUrl: null as string | null,
+    loading: false,
+  };
+  const internal = service as unknown as {
+    ensurePageUrl: (live: unknown, url: string) => Promise<void>;
+    captureInitialFrame: (live: unknown) => Promise<void>;
+    broadcastState: (live: unknown) => Promise<void>;
+    updateTitle: (live: unknown) => Promise<void>;
+  };
+  internal.captureInitialFrame = async () => {
+    captures.push(currentUrl);
+  };
+  internal.broadcastState = async () => undefined;
+  internal.updateTitle = async () => undefined;
+  await internal.ensurePageUrl(live, target);
+  expect(captures).toEqual([target]);
+  expect(live.currentUrl).toBe(target);
+  await internal.ensurePageUrl(live, target);
+  expect(captures).toEqual([target]);
+  live.pendingDialog = {};
+  await internal.ensurePageUrl(live, "https://example.test/dialog");
+  expect(captures).toEqual([target]); // a modal dialog must not deadlock a screenshot
+  await service.close();
+});
+
 test("Chromium profile contention never deletes another process's singleton lock", async () => {
   tempRoot = await mkdtemp(join(tmpdir(), "rscode-profile-lock-"));
   const singleton = join(tempRoot, "SingletonLock");
