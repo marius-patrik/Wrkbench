@@ -357,10 +357,14 @@ body {
   font-size: calc(var(--app-font-size) * 0.72);
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
+/* The resize handle is a real 12px flex item, not a 4px divider whose
+   overflowing pseudo-element can fall behind the navigation tree's hitbox.
+   Draw the 4px visual line separately to preserve the original appearance. */
 .cx-shell .cx-resizer.sidebar-resizer {
-  width: 4px;
-  flex: 0 0 4px;
+  width: 12px;
+  flex: 0 0 12px;
   margin: 0;
+  padding: 0;
   background: transparent;
   cursor: col-resize;
   border: 0;
@@ -368,18 +372,18 @@ body {
   position: relative;
   touch-action: none;
 }
-/* The visual divider remains 4px, but the hit target is forgiving even
-   after the user scales the interface. Pointer events on the pseudo-element
-   are dispatched to the separator itself. */
 .cx-shell .cx-resizer.sidebar-resizer::after {
   content: "";
   position: absolute;
-  inset: 0 -5px;
-  cursor: col-resize;
-  touch-action: none;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 4px;
+  pointer-events: none;
+  background: transparent;
 }
-.cx-shell .cx-resizer.sidebar-resizer:hover,
-body.cx-resizing .cx-resizer.sidebar-resizer {
+.cx-shell .cx-resizer.sidebar-resizer:hover::after,
+body.cx-resizing .cx-resizer.sidebar-resizer::after {
   background: var(--border);
 }
 body.cx-resizing {
