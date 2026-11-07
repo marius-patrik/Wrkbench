@@ -19,7 +19,7 @@
       "originalSHA": "39341ce5f8459b834c8e20b5227c25980078a87e",
       "reconciliationSourceSHA": "0e797adca5315e859d61e216d8a763f2920c39fc",
       "additionalSourceSHA": "6ed334bcad6e89a1837c299937c4c50207904541",
-      "snapshotTreeSHA": "505e68e60b6d476fcc98351e4a18e4749e6f0bba",
+      "snapshotTreeSHA": "fc3256411812b1be9c644d8d3e879a59120f6970",
       "expectedOwner": "DarkFactory-web unified local provider",
       "acceptedChanges": [
         "RSC-03 exact-origin loopback security code and tests from existing verified integration tree",
@@ -44,7 +44,8 @@
         "Phase B RSC-05: portable archives now contain installed server WebSocket Chromium frame/resize/navigation probe; four-platform extracted acceptance fails closed if any required capability is BLOCKED.",
         "Phase B RSC-ROOT: read-only PR-only three-replica x ten iteration Chromium process/frame/dialog stress, preserving the original #40 test breadth. Exact-head CI pending.",
         "Phase B: after successful page.goto with active subscribers and no pending dialog, capture an explicit source-backed PNG frame; real Linux installed restart had state without a navigated screenshot.",
-        "Phase B diagnostic: instrument native Chromium tests with opt-in phase trace for first-frame, orphan idle cleanup and file chooser hangs. Stress remains strict 3x10, not greenwashed."
+        "Phase B diagnostic: instrument native Chromium tests with opt-in phase trace for first-frame, orphan idle cleanup and file chooser hangs. Stress remains strict 3x10, not greenwashed.",
+        "Phase B: CDP screenshot after initial stream/navigation uses bounded view capture first and a separately bounded surface-capture fallback; no fabricated image or success acknowledgment; deterministic unit fallback test."
       ],
       "knownUnresolved": [
         "Active root (not inert migrated RSCode) Chromium blank-page/dialog stress remains intermittently failing; PR #40 root runtime correction is preserved but unmerged into production.",
@@ -113,10 +114,10 @@
         }
       },
       "phaseB": {
-        "sourceTreeSHA": "505e68e60b6d476fcc98351e4a18e4749e6f0bba",
+        "sourceTreeSHA": "fc3256411812b1be9c644d8d3e879a59120f6970",
         "startingSourceTreeSHA": "b3c0597806dc2cb841135d597a3170065ef0e6ce",
         "evidence": "docs/migrations/PHASE_B_RSCODE_ACCEPTANCE.md",
-        "status": "REAL_CHROMIUM_STRESS_AND_NATIVE_RESTART_ACCEPTANCE_FAILED_DIAGNOSTICS_ACTIVE",
+        "status": "PENDING_EXACT_HEAD_STRESS_AND_EXTRACTED_NATIVE_ACCEPTANCE",
         "boundedNativeRecovery": "initial-profile-lock-preserving; retry only after observed SIGSEGV",
         "nativeAcceptance": "extracted bundled Bun, real server WebSocket Chromium stream + resize + navigation, required checks all PASS",
         "stress": "3 separate hosted Ubuntu runs x 10 browserService suites; PR-only and read-only",
