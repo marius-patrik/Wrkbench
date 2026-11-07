@@ -594,10 +594,18 @@ export async function forkOwnedWorkspaceState(
   }
 }
 
-export async function saveBlob(workspaceId: string, sha: string, content: string) {
+/**
+ * Git blobs are content-addressed immutable objects. A source cache must not
+ * overwrite a previously stored SHA with different bytes: doing so silently
+ * corrupts the working tree, diff and commit base under that hash. The
+ * persisted workspace ownership proof, existing-blob comparison and optional
+ * insertion execute in ONE IndexedDB readwrite transaction.
+ */
+export async function saveBlob(workspaceId: string, sha: string, content: string): Promise<void> {
   requireOwned(workspaceId);
   if (!/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(sha))
     throw new Error("Blob SHA must be an immutable full object hash.");
+  if (typeof content !== "string") throw new Error("Blob content must be text.");
   const record: BlobRecord = {
     key: `${workspaceId}:${sha}`,
     workspaceId,
@@ -605,7 +613,57 @@ export async function saveBlob(workspaceId: string, sha: string, content: string
     content,
     updatedAt: Date.now(),
   };
-  await withOwnedStore("blobs", "readwrite", workspaceId, (store) => store.put(record));
+  const owner = activePrincipal;
+  const generation = principalGeneration;
+  const db = await openDatabase();
+  try {
+    requireOwned(workspaceId);
+    if (!owner || owner !== activePrincipal || generation !== principalGeneration)
+      throw new Error("Blob authority changed before transaction.");
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(["workspaces", "blobs"], "readwrite");
+      trackWrite(tx);
+      let reason: Error | null = null;
+      const abort = (error: unknown) => {
+        reason = error instanceof Error ? error : new Error(String(error));
+        try { tx.abort(); } catch { reject(reason); }
+      };
+      tx.oncomplete = () => {
+        if (reason) return reject(reason);
+        if (owner !== activePrincipal || generation !== principalGeneration)
+          return reject(new Error("Blob authority revoked before transaction acknowledgment."));
+        resolve();
+      };
+      tx.onabort = () => reject(reason ?? tx.error ?? new Error("Blob transaction aborted."));
+      tx.onerror = () => reject(reason ?? tx.error ?? new Error("Blob transaction failed."));
+      const proof = tx.objectStore("workspaces").get(workspaceId);
+      proof.onsuccess = () => {
+        try {
+          if (owner !== activePrincipal || generation !== principalGeneration ||
+              !isOwnedWorkspace(proof.result as WorkspaceSnapshot | undefined, owner))
+            throw new Error("Blob write lacks persisted workspace ownership.");
+          const blobs = tx.objectStore("blobs");
+          const previous = blobs.get(record.key);
+          previous.onsuccess = () => {
+            try {
+              if (owner !== activePrincipal || generation !== principalGeneration)
+                throw new Error("Blob authority changed before write.");
+              const current = previous.result as BlobRecord | undefined;
+              if (current) {
+                if (current.key !== record.key || current.workspaceId !== workspaceId ||
+                    current.sha !== sha || current.content !== content)
+                  throw new Error("Immutable Git blob conflict: existing SHA has different bytes.");
+                return; // Identical content is idempotent; preserve its timestamp.
+              }
+              blobs.add(record);
+            } catch (error) { abort(error); }
+          };
+          previous.onerror = () => abort(previous.error ?? new Error("Blob lookup failed."));
+        } catch (error) { abort(error); }
+      };
+      proof.onerror = () => abort(proof.error ?? new Error("Blob workspace lookup failed."));
+    });
+  } finally { db.close(); }
 }
 
 export async function loadBlob(workspaceId: string, sha: string) {
