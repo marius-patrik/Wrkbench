@@ -590,3 +590,55 @@ test("real IndexedDB rename CAS updates source and destination atomically and re
     count: 1, path: "renamed.md", content: "data that must survive",
   });
 });
+
+
+test("real authorized workspace export excludes foreign owners and snapshots persisted files atomically", async ({ page }) => {
+  const result = await page.evaluate(async (url) => {
+    const storage = await import(url);
+    const a = "gh:github.com:1001";
+    const b = "gh:github.com:2002";
+    const session = crypto.randomUUID();
+    const workspaceUuid = crypto.randomUUID();
+    const id = `ghcode-owned-v2:${encodeURIComponent(a)}:${session}`;
+    const workspace = {
+      version: 2, id, ref: "main", updatedAt: 1,
+      baseSha: "1".repeat(40), treeSha: "2".repeat(40), tree: [],
+      repository: {
+        id: 42, name: "private", owner: "acme", fullName: "acme/private",
+        private: true, defaultBranch: "main", htmlUrl: "", canPush: true,
+      },
+      ownership: {
+        principalKey: a, workspace: { id: workspaceUuid, principalKey: a },
+        session: { id: session, principalKey: a, workspaceId: workspaceUuid,
+          repositoryKey: "gh:github.com:repo:42", ref: "refs/heads/main" },
+      },
+    };
+    storage.bindStoragePrincipal(a);
+    await storage.saveWorkspace(workspace);
+    await storage.saveOverlay({
+      key: id + ":README.md", workspaceId: id, path: "README.md",
+      status: "modified", content: "PRIVATE_A_ONLY", updatedAt: 1,
+    });
+    // The export uses only persisted records rather than cached UI state.
+    const authorized = await storage.exportOwnedWorkspaceSnapshot(id);
+    storage.bindStoragePrincipal(b);
+    const crossPrincipalRejected = await storage.exportOwnedWorkspaceSnapshot(id)
+      .then(() => false, () => true);
+    const forgedId = `ghcode-owned-v2:${encodeURIComponent(b)}:${session}`;
+    const forgedRejected = await storage.exportOwnedWorkspaceSnapshot(forgedId)
+      .then(() => false, () => true);
+    storage.bindStoragePrincipal(a);
+    const retry = await storage.exportOwnedWorkspaceSnapshot(id);
+    return {
+      sameOwner: authorized.workspace.ownership?.principalKey === a,
+      overlays: authorized.overlays.map((entry: {content: string}) => entry.content),
+      crossPrincipalRejected, forgedRejected,
+      retryContent: retry.overlays[0]?.content,
+    };
+  }, sourceUrl);
+  expect(result).toEqual({
+    sameOwner: true, overlays: ["PRIVATE_A_ONLY"],
+    crossPrincipalRejected: true, forgedRejected: true,
+    retryContent: "PRIVATE_A_ONLY",
+  });
+});
