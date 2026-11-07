@@ -2,7 +2,7 @@
 
 **Branch:** `integration/tri-source-migration-baseline` → draft PR #39  
 **Starting source tree:** `b3c0597806dc2cb841135d597a3170065ef0e6ce`  
-**Phase B source tree:** `a9e654796a0dda5060876e1ed3a3f7a389d0baaf`  
+**Phase B source tree:** pinned in `migrate/manifest.json > sourceSnapshots.rscode.snapshotTreeSHA` (updated on every source edit)  
 **Scope:** `migrate/rscode/` (not production `src/`), plus the existing read-only migration acceptance workflow and evidence.
 
 ## Disposition: no ancestry-only acceptance
@@ -25,6 +25,16 @@ The original RSCode source base and all relevant PR heads are already in the his
 3. **Fail-closed packaging acceptance:** `scripts/distribution/accept.py` requires every critical check to report `PASS`. The previous Windows compatibility path that could report `BLOCKED` while returning process success is no longer considered passing.
 4. **Original PR #40 stress restored:** The source workflow adds three independent Ubuntu Chromium stress jobs, each running the real native browser suite ten times. This is PR-only, `contents: read`, `persist-credentials: false`, with failure logs as limited-retention artifacts. No old root runtime is published or mutated.
 5. **Native documentation corrected:** The migrated native distribution contract now reflects the platform-specific Bun versions, actual four-runner installed acceptance, persistent state, unsigned status, and the new server-owned CDP stream probe.
+
+## Phase B findings from real CI
+
+**Native extracted four-platform acceptance:** PASS at `6099af7f0b88103d376177d133a3fc1a7c515b0f`, [workflow run 42416248313](https://github.com/marius-patrik/Wrkbench/actions/runs/42416248313), including the real installed server browser-stream probe. This result predates the cross-platform Bun 1.4.4 toolchain/symlink changes and is not retroactively transferred.
+
+**Full 3 × 10 source Chromium stress:** FAILED on Bun 1.3.11 and Bun 1.4.4; earlier native runner and root unit suites were green, but real repeated Chromium process startups, first-frame screenshots and orphan context cleanup intermittently hung. The job logs, preserved failure artifacts, and opt-in non-sensitive phase traces identify when `launchPersistentContext` or CDP screenshots stopped responding. There is **no passing 30-cycle acceptance**. Do not mark this source production ready.
+
+**Corrections implemented after failures:** try full bundled Chromium new-headless channel instead of headless shell; bound screenshot operations with an alternate real PNG capture (fail closed); add a Playwright-owned 12-second launch timeout rather than abandoning a live child with `Promise.race`; preserve other profile owners' singleton files; test the extracted server/CDP interface and startup cancellation. Bun 1.4.4 initially exposed macOS `.framework` symlink escapes when staged with `cp`; the build now rebases only links provably internal to the provisioned browser cache.
+
+**Release decision:** Phase B is **IMPLEMENTED / ACCEPTANCE BLOCKED** until the current exact-head native matrix and all 30 stress cycles pass. A stale or cancelled job is not a passing job. PR #39 must remain draft.
 
 ## Independent verification
 
