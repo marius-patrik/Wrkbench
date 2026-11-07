@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "91121b054d935cd95533d05b3667e15578298488",
+      "snapshotTreeSHA": "83cd115834de38887181d5bf258a27bdf8630789",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -152,7 +152,8 @@
         "Fixed Dockview onDidRemovePanel callback's actual panel payload shape and updated real browser group-close regression to use an unpinned split editor group. Native uncontrolled panel fallback remains provisional pending Chromium UI acceptance.",
         "GHCode W05 follow-up: immutable SHA-addressed Git blob cache writes now compare persisted owner and existing bytes in one IDB readwrite transaction; conflicting content under the same immutable SHA aborts. Real browser tests cover idempotency, conflict and foreign-principal rejection. Acceptance requires exact-head Chromium CI.",
         "W05 real Chromium split-editor acceptance: both editor panes share one authoritative retry action; test clicks one of two rendered controls and verifies both errors clear before group closure. Native Close Group dirty guard verified during intermediate run; complete exact-head suite pending.",
-        "W05.1: principal-locked owned backup export/import includes committed private draft and push-reconciliation journals in same authorized transaction (previous backup omitted both); real Chromium UI round-trip added. Verify exact-head CI."
+        "W05.1: principal-locked owned backup export/import includes committed private draft and push-reconciliation journals in same authorized transaction (previous backup omitted both); real Chromium UI round-trip added. Verify exact-head CI.",
+        "W05.2: principal-authorized JSON backup restores content-addressed blobs as well as commits/overlays/staging/acknowledged drafts/remote push journal, all in one IDB transaction; real Chromium export/download/import test extended; exact-head CI pending."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -173,7 +174,7 @@
         "bun run check",
         "bun run acceptance"
       ],
-      "testResults": "W05.1 authorized local backup roundtrip browser test selector corrected; pending exact-head acceptance",
+      "testResults": "W05.2 lossless owned local backup source implementation and browser end-to-end tests pending exact-head CI",
       "acceptanceState": "PROVISIONAL_SOURCE_ONLY",
       "originalSourceRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",

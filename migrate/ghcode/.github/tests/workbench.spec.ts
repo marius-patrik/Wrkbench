@@ -578,9 +578,9 @@ test("owned backup round-trips private durable drafts and completed push journal
     });
     try {
       return await new Promise<{ draftId: string; pushId: string }>((resolve, reject) => {
-        const tx = db.transaction(["workspaces", "drafts", "pushOperations"], "readwrite");
+        const tx = db.transaction(["workspaces", "blobs", "drafts", "pushOperations"], "readwrite");
         const request = tx.objectStore("workspaces").getAll();
-        let result: { draftId: string; pushId: string } | null = null;
+        let result: { blobKey: string; draftId: string; pushId: string } | null = null;
         tx.oncomplete = () => result ? resolve(result) : reject(new Error("Fixture missing"));
         tx.onabort = () => reject(tx.error ?? new Error("Fixture transaction aborted"));
         request.onsuccess = () => {
@@ -596,6 +596,12 @@ test("owned backup round-trips private durable drafts and completed push journal
           ];
           const draftId = "ghcode-document-v1:" + fields.map(encodeURIComponent).join(":");
           const pushId = workspace.id + ":push:fixture-restore";
+          const blobSha = "a".repeat(40);
+          const blobKey = workspace.id + ":" + blobSha;
+          tx.objectStore("blobs").add({
+            key: blobKey, workspaceId: workspace.id, sha: blobSha,
+            content: "Raw content-addressed blob fixture", updatedAt: Date.now(),
+          });
           tx.objectStore("drafts").add({
             id: draftId, workspaceId: workspace.id, principalKey: principal,
             content: "# Safely checkpointed private bytes\n", revision: 3, updatedAt: Date.now(),
@@ -606,7 +612,7 @@ test("owned backup round-trips private durable drafts and completed push journal
             expectedRemoteSha: workspace.baseSha, targetSha: workspace.baseSha,
             commitIds: [], phase: "completed", createdAt: Date.now(), updatedAt: Date.now(),
           });
-          result = { draftId, pushId };
+          result = { blobKey, draftId, pushId };
         };
         request.onerror = () => reject(request.error);
       });
@@ -624,6 +630,9 @@ test("owned backup round-trips private durable drafts and completed push journal
   if (!sourcePath) throw new Error("Owned backup download did not produce a file");
   const payload = JSON.parse(await readFile(sourcePath, "utf8"));
   expect(payload.schema).toBe(1);
+  expect(payload.data.blobs).toEqual([
+    expect.objectContaining({ key: recoveryIds.blobKey, content: "Raw content-addressed blob fixture" }),
+  ]);
   expect(payload.data.drafts).toEqual([
     expect.objectContaining({
       id: recoveryIds.draftId,
@@ -634,7 +643,7 @@ test("owned backup round-trips private durable drafts and completed push journal
     expect.objectContaining({ id: recoveryIds.pushId, phase: "completed" }),
   ]);
 
-  await page.evaluate(async ({ draftId, pushId }) => {
+  await page.evaluate(async ({ blobKey, draftId, pushId }) => {
     const request = indexedDB.open("darkfactory-workbench");
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
@@ -642,7 +651,8 @@ test("owned backup round-trips private durable drafts and completed push journal
     });
     try {
       await new Promise<void>((resolve, reject) => {
-        const tx = db.transaction(["drafts", "pushOperations"], "readwrite");
+        const tx = db.transaction(["blobs", "drafts", "pushOperations"], "readwrite");
+        tx.objectStore("blobs").delete(blobKey);
         tx.objectStore("drafts").delete(draftId);
         tx.objectStore("pushOperations").delete(pushId);
         tx.oncomplete = () => resolve();
@@ -660,24 +670,28 @@ test("owned backup round-trips private durable drafts and completed push journal
   });
   await reloaded;
   await expect(page.getByTitle("Sign out")).toBeVisible();
-  const recovered = await page.evaluate(async ({ draftId, pushId }) => {
+  const recovered = await page.evaluate(async ({ blobKey, draftId, pushId }) => {
     const request = indexedDB.open("darkfactory-workbench");
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
     try {
-      const tx = db.transaction(["drafts", "pushOperations"], "readonly");
+      const tx = db.transaction(["blobs", "drafts", "pushOperations"], "readonly");
+      const blobReq = tx.objectStore("blobs").get(blobKey);
       const draftReq = tx.objectStore("drafts").get(draftId);
       const pushReq = tx.objectStore("pushOperations").get(pushId);
-      return await new Promise<{ draft: unknown; push: unknown }>((resolve, reject) => {
-        tx.oncomplete = () => resolve({ draft: draftReq.result, push: pushReq.result });
+      return await new Promise<{ blob: unknown; draft: unknown; push: unknown }>((resolve, reject) => {
+        tx.oncomplete = () => resolve({ blob: blobReq.result, draft: draftReq.result, push: pushReq.result });
         tx.onabort = () => reject(tx.error ?? new Error("Recovery lookup aborted"));
       });
     } finally {
       db.close();
     }
   }, recoveryIds);
+  expect(recovered.blob).toEqual(expect.objectContaining({
+    key: recoveryIds.blobKey, content: "Raw content-addressed blob fixture",
+  }));
   expect(recovered.draft).toEqual(expect.objectContaining({
     id: recoveryIds.draftId, content: "# Safely checkpointed private bytes\n",
   }));
