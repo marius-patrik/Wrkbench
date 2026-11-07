@@ -406,14 +406,19 @@ test("Monaco save failures guard Dockview close and account transition until ack
   page.once("dialog", (dialog) => dialog.dismiss());
   await tab(page, "main", "README.md").click({ button: "middle", force: true });
   await expect(tab(page, "main", "README.md")).toBeVisible();
-  // Dockview's group-close UI must invoke the same pre-removal guard;
-  // otherwise one native group action could discard this dirty editor.
+  // The initial group contains pinned perspective tabs, so Close Group
+  // is intentionally disabled there. Split the editable document into its
+  // own unpinned group to exercise a genuinely enabled native group action.
   await tab(page, "main", "README.md").click({ button: "right", force: true });
-  const closeGroupAction = page.getByText("Close Group", { exact: true }).last();
-  await expect(closeGroupAction).toBeVisible();
+  await page.getByRole("menuitem", { name: "Split Right" }).click();
+  const editors = surface(page, "main").locator(".dv-tab").filter({ hasText: "README.md" });
+  await expect(editors).toHaveCount(2);
+  await editors.last().click({ button: "right", force: true });
+  const closeGroupAction = page.getByRole("menuitem", { name: "Close Group" });
+  await expect(closeGroupAction).toBeEnabled();
   page.once("dialog", (dialog) => dialog.dismiss());
   await closeGroupAction.click();
-  await expect(tab(page, "main", "README.md")).toBeVisible();
+  await expect(editors).toHaveCount(2);
   await page.getByTitle("Sign out").click();
   await expect(page.getByTitle("Sign out")).toBeVisible();
 
@@ -422,7 +427,10 @@ test("Monaco save failures guard Dockview close and account transition until ack
   });
   await surface(page, "main").getByRole("button", { name: "Retry save" }).click();
   await expect(surface(page, "main").locator(".resource-generated-notice[role=\"alert\"]")).toHaveCount(0);
-  // The same native middle-click must close once durable writes are acknowledged.
+  // Once durably acknowledged, close the split group and remaining editor.
+  await editors.last().click({ button: "right", force: true });
+  await page.getByRole("menuitem", { name: "Close Group" }).click();
+  await expect(editors).toHaveCount(1);
   await tab(page, "main", "README.md").click({ button: "middle", force: true });
   await expect(tab(page, "main", "README.md")).toHaveCount(0);
   await page.reload();
