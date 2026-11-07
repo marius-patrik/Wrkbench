@@ -113,7 +113,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "c40f50903c080aafeb8a9de1b099e9a11cb62b6c",
+      "snapshotTreeSHA": "7036136d9e33aaf89538ba1231714ac8a7a84115",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -151,7 +151,8 @@
         "W05 follow-up: a dirty, principal-bound Monaco panel unexpectedly removed by native Dockview group/API callbacks is restored in its original surface after an authorized-identity check; explicit guarded close/group actions remain authoritative. Real Chromium context-menu group-close assertion added; exact-head CI required.",
         "Fixed Dockview onDidRemovePanel callback's actual panel payload shape and updated real browser group-close regression to use an unpinned split editor group. Native uncontrolled panel fallback remains provisional pending Chromium UI acceptance.",
         "GHCode W05 follow-up: immutable SHA-addressed Git blob cache writes now compare persisted owner and existing bytes in one IDB readwrite transaction; conflicting content under the same immutable SHA aborts. Real browser tests cover idempotency, conflict and foreign-principal rejection. Acceptance requires exact-head Chromium CI.",
-        "W05 real Chromium split-editor acceptance: both editor panes share one authoritative retry action; test clicks one of two rendered controls and verifies both errors clear before group closure. Native Close Group dirty guard verified during intermediate run; complete exact-head suite pending."
+        "W05 real Chromium split-editor acceptance: both editor panes share one authoritative retry action; test clicks one of two rendered controls and verifies both errors clear before group closure. Native Close Group dirty guard verified during intermediate run; complete exact-head suite pending.",
+        "W05.1: principal-locked owned backup export/import includes committed private draft and push-reconciliation journals in same authorized transaction (previous backup omitted both); real Chromium UI round-trip added. Verify exact-head CI."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -172,7 +173,7 @@
         "bun run check",
         "bun run acceptance"
       ],
-      "testResults": "W05 source: durable drafts, legacy quarantine, owned import/export and branch-fork functionality implemented; native Dockview unguarded removal recovery plus Close Group browser assertion pending exact-head CI.",
+      "testResults": "W05.1 real browser backup export/import test pending exact-head CI",
       "acceptanceState": "PROVISIONAL_SOURCE_ONLY",
       "originalSourceRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationRevision": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
