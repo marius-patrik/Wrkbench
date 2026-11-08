@@ -432,7 +432,7 @@
         }
       },
       "phaseDProfiles": {
-        "status": "CAN02_IMPLEMENTED_BROWSER_CAS_RECHECK_PENDING",
+        "status": "CAN02_LIVE_SOURCE_ACCEPTED_EXACT_TREE_FULL_CI_GREEN",
         "sourceTreeSHA": "2533010d5b49ae4015e7cdaa37ebb83c3ad2d828",
         "appSubtreeSHA": "50fffa919b203995d663bb7fae5ffae91df0f91f",
         "scope": "single writer profile catalog, notes, scratch editor drafts, selected document and pinned routes",
@@ -443,7 +443,24 @@
         "legacyPolicy": "Zustand canvas-profiles-v1 original localStorage raw bytes backed up exactly once with C01 migration lease and atomic import marker; old writer removed",
         "concurrency": "C01 profile workspace CAS; save chain serial, latest unacknowledged in-memory state retained and guarded on unload",
         "exclusions": "Canvas config preferences and hotkeys retain their own legacy writers; no root or unified product cutover",
-        "docs": "docs/migrations/PHASE_D_CANVAS_PROFILE_CUTOVER.md"
+        "docs": "docs/migrations/PHASE_D_CANVAS_PROFILE_CUTOVER.md",
+        "acceptedAtHeadSHA": "da23d50af4e919213929333daf5a509860d279cb",
+        "verification": {
+          "sourceWorkflowRun": 42462914847,
+          "sourceJobsPassed": 8,
+          "rootVerifyRun": 42462914851,
+          "runtimeRun": 42462915141,
+          "nativeWorkflowRun": 42462914878,
+          "nativePlatformsPassed": [
+            "linux-x64",
+            "windows-x64",
+            "macos-x64",
+            "macos-arm64"
+          ],
+          "liveBrowserResult": "canonical create/reload, lossless notes+draft import, malformed quarantine, quota retry, stale-tab CAS PASS",
+          "historicalAndSourceTests": "All source jobs and 30 migrated Chromium stress replicas passed"
+        },
+        "acceptanceScope": "Only canonical profile catalog, notes and scratch snapshot as one IDB C01 WorkspaceRecord with single-writer and CAS; CAN04 independent per-document model, config/hotkeys writers and unified root runtime remain unaccepted"
       }
     }
   },
