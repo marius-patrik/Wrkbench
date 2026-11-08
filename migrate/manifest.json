@@ -160,7 +160,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "4ed9455494c0b8c6a46c89558cfccea90758ad96",
+      "snapshotTreeSHA": "64bcbd414284d8a5f919cd405e74d6541fd40453",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -292,9 +292,9 @@
         ]
       },
       "phaseC1": {
-        "sourceTreeSHA": "4ed9455494c0b8c6a46c89558cfccea90758ad96",
+        "sourceTreeSHA": "64bcbd414284d8a5f919cd405e74d6541fd40453",
         "evidence": "docs/migrations/PHASE_C_GHCODE_PUSH_INTEGRITY.md",
-        "status": "GHCODE_ATOMIC_WORKSPACE_REHYDRATION_RECHECK_PENDING",
+        "status": "ATOMIC_PRIVATE_EDITOR_REOPEN_COMPILE_FIXED_PENDING_EXACT_HEAD_CHROMIUM",
         "immutableCommits": "IDB.add prevents in-place local commit mutation",
         "orderedPushAncestry": "createdAt+id canonical ordering checked in storage and React before network calls",
         "destructiveRecovery": "removeLocalCommit and clearLocalGitState protect unresolved push journal in same IDB transaction",
@@ -330,8 +330,8 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "7d3f210f2ddb88dbaa2ff96bc4b9d55477aac388",
-      "appSubtreeSHA": "8c3a0f7aacc3adbfa808e4238359bd2217d8c274",
+      "snapshotTreeSHA": "1505f4439a3e278d56385c58ceb07417eaee1e18",
+      "appSubtreeSHA": "3c849e8ceb7e4a896aad3a7df4ee5a3c06cb1da1",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
         "Canvas PR #41 complete standalone app, original persistence source, and app-specific browser/persistence tests preserved; no active runtime import"
@@ -342,7 +342,8 @@
         "W02-R validated repository-context parser and deterministic bounded source graph/search, selected-repository identity contract and five active Bun contract scenarios.",
         "W03: injected read-only runtime selected-repository provider with immutable identity/revision validation, async stale-load abort, controlled repository UI selection and bounded document/graph/search consumer rewiring. Standalone generated source remains fallback only when no adapter is supplied.",
         "W05: SidebarResize persists authoritative pointerup coordinates to avoid coalesced pointermove causing lost resizing; independent real browser smoke retest pending.",
-        "W06: captured pointer on Canvas sidebar separator while Dockview flex panes move, extended 4px visual divider to 14px invisible hit area; Chromium smoke now fails with event tracing instead of opaque 9s drag timeout. Exact-head browser smoke pending."
+        "W06: captured pointer on Canvas sidebar separator while Dockview flex panes move, extended 4px visual divider to 14px invisible hit area; Chromium smoke now fails with event tracing instead of opaque 9s drag timeout. Exact-head browser smoke pending.",
+        "Phase D CAN-03: active Dockview layout cutover from canvas-dockview-layout-v2-* localStorage to canonical C01 IndexedDB WorkspaceRecord (deterministic UUID, revision CAS, crash-consistent immutable raw v2 backup+import marker, fail-closed on invalid/blocked migration, visible quota abort). Profile/config/editor draft writers remain legacy and must be independently migrated. New live Chromium acceptance job pending."
       ],
       "knownUnresolved": [
         "Standalone Canvas generator still publishes curated build-time repository documents, not a live runtime selected-repository adapter.",
@@ -404,6 +405,19 @@
         "passedAtHeadSHA": "7eb7b044179ba4cc017ddf5e5c4ecd65e582f648",
         "sourceWorkflowRun": 42422575709,
         "note": "Canvas Chromium UI smoke and injected provider browser harness passed; C01 persistence adapter remains intentionally inactive and the unified root integration unverified."
+      },
+      "phaseDLayout": {
+        "sourceTreeSHA": "1505f4439a3e278d56385c58ceb07417eaee1e18",
+        "appSubtreeSHA": "3c849e8ceb7e4a896aad3a7df4ee5a3c06cb1da1",
+        "scope": "Dockview layouts only; profile directory, preferences, drafts not yet migrated",
+        "status": "IMPLEMENTED_PENDING_EXACT_HEAD_CAN03_CHROMIUM",
+        "canonicalAdapter": "migrate/canvas/.github/app/src/persistence/live-layouts.ts",
+        "ui": "migrate/canvas/.github/app/src/DockCanvas.tsx",
+        "activeBrowserGate": "migrate/canvas/.github/tests/live-layouts-browser.mjs",
+        "migration": "v2/v1 raw backup + IDB lease, createWorkspace and imported marker in one transaction; raw old key never deleted",
+        "id": "SHA256 namespaced deterministic UUID v5",
+        "concurrency": "per-window serial writes with revision CAS, foreign-tab conflict rejects",
+        "dataLossRisk": "editing a layout while storage unavailable shows error and cannot be acknowledged; no alternate writer"
       }
     }
   },
