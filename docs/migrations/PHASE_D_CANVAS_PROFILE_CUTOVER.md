@@ -29,6 +29,16 @@ The migrated-source PR-only `.github/workflows/migration-source-verification.yml
 
 These are not unit-only mocks and do not waive the independent original C01 browser suite or CAN-03 Dockview acceptance. **Acceptance requires an exact-head green source workflow and manifest-pinned tree SHA.**
 
+## Exact-source acceptance — 2026-11-08
+
+**SOURCE ACCEPTED** at PR #39 integration head `da23d50af4e919213929333daf5a509860d279cb`, Canvas migration tree `2533010d5b49ae4015e7cdaa37ebb83c3ad2d828` and app subtree `50fffa919b203995d663bb7fae5ffae91df0f91f`.
+
+- [Migration source verification run 42462914847](https://github.com/marius-patrik/Wrkbench/actions/runs/42462914847): **SUCCESS, all eight jobs** (history/manifest isolation, RSCode source+Windows, GHCode source+49 Chromium acceptance tests, Canvas checks+C01 native IndexedDB+source UI+CAN-03 and **CAN-02 live profile browser**+repository-context harness, and the 3×10 migrated Chromium stress replicas).
+- The new CAN-02 real Chromium test printed **`canonical create/reload, lossless notes+draft import, malformed quarantine, quota retry, stale-tab CAS PASS`**. It intentionally uses an explicit common `BrowserContext` for the conflicting tabs. The behavioral contract asserts that B's stale state cannot displace A or publish B's changes; it does **not** assert that A's own additional valid checkpoint cannot increment its revision.
+- [Root Verify run 42462914851](https://github.com/marius-patrik/Wrkbench/actions/runs/42462914851): **SUCCESS**. [DarkFactory Runtime run 42462915141](https://github.com/marius-patrik/Wrkbench/actions/runs/42462915141): **SUCCESS**. [Four-platform migrated native acceptance run 42462914878](https://github.com/marius-patrik/Wrkbench/actions/runs/42462914878): **SUCCESS on Linux x64, Windows x64, macOS x64, macOS arm64**.
+
+These results accept only the tested **source-domain cutover** at the exact pinned tree. `main` and the separately published React 19 client were not promoted; the draft migration branch is still not a production release.
+
 ## Explicit remaining integration boundaries
 
 **CAN-04 document lifecycle is not yet accepted.** The catalog currently stores notes and local scratch drafts as validated fields in one transactional C01 workspace record, matching the legacy application semantics. It does **not** yet give each Monaco draft an independently revisioned `EditableDocument` record, an authoritative resource/Monaco model registry, per-document CAS or recovered-draft cross-service disposal contract. Those are required before merging GHCode's separately principal-scoped document service into a unified successor app.
