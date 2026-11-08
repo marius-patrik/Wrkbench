@@ -428,10 +428,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         // Writes use only newly attributed v2 keys. Old anonymous records remain untouched.
         await saveWorkspace(snapshot);
         assertCurrent(lease);
+        // Publish a consistent repository + local work snapshot in the same
+        // React turn. Publishing workspace first, then awaiting IDB overlays,
+        // lets a restored Monaco tab read the new repository's remote README
+        // with the previous repository's overlay state and never reload it.
+        setOverlays(localState[0]);
+        setStaged(localState[1]);
+        setCommittedFiles(localState[2]);
+        setCommits(localState[3]);
         setWorkspace(snapshot);
         setRemoteHeadSha(remoteCommit.sha);
-        await loadLocalState(snapshot.id, lease);
-        assertCurrent(lease);
         setRecent(rememberWorkspace(snapshot));
         setRefs(nextRefs);
         setDialogOpen(false);
