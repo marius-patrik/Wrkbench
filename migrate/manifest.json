@@ -160,7 +160,7 @@
       "originalBranch": "development",
       "originalSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
       "reconciliationSourceSHA": "7801784b5bb596dcc720a48b7085443fc8f9ca3f",
-      "snapshotTreeSHA": "3e929f8c3fb413675200fbe9754d44c10448abce",
+      "snapshotTreeSHA": "4ed9455494c0b8c6a46c89558cfccea90758ad96",
       "expectedOwner": "DarkFactory-web unified GitHub + Factory provider",
       "acceptedChanges": [
         "GHC-01 principal isolation inherited from development source"
@@ -206,7 +206,8 @@
         "Phase C1 followup: confirmed remote push finalization now validates exactly the same deterministic commit sequence as preparation/retry; missing sameCommitSet symbol from initial build corrected and source CI rerun required.",
         "Phase C1 GHC-00: ported historical repository-switch with pending private edits and dirty Monaco cross-surface Dockview move assertions to active Playwright acceptance. Original historical reproductions remain inert as evidence; full exact-head browser verification pending.",
         "Phase C1 P0 discovery: successful A-private→same-account B-public repository switch left A's README Monaco text visible. Fixed EditorTab fail-closed resourceWorkspaceId identity guard, resourceId-qualified content loading, and shell editor deduplication scoped to immutable workspace ID; Playwright asserts public README makes distinct panel, private bytes hidden, original repo work still present on reopen.",
-        "Phase C1 P0 active UI acceptance: cross-repository private file text/title leak. Resolved by keyed WorkbenchShell remount and per-verified-workspace Dockview storage, resourceWorkspaceId on editor tabs and strict Monaco content reader guard, preserving old principal-wide layout inert and private work in original identity. Source/browser CI pending."
+        "Phase C1 P0 active UI acceptance: cross-repository private file text/title leak. Resolved by keyed WorkbenchShell remount and per-verified-workspace Dockview storage, resourceWorkspaceId on editor tabs and strict Monaco content reader guard, preserving old principal-wide layout inert and private work in original identity. Source/browser CI pending.",
+        "W06: patched local-workspace rehydration race: repo A persisted overlay was invisible on reopen because workspace state rendered before local IDB overlays. Open and branch fork now publish new workspace and cached/forked slices together; exact-head GHC-00 browser test pending."
       ],
       "rejectedChanges": [
         "GHC-02 PR #34 transactional v3 unsafe privacy/export and push queue implementation not activated"
@@ -291,9 +292,9 @@
         ]
       },
       "phaseC1": {
-        "sourceTreeSHA": "3e929f8c3fb413675200fbe9754d44c10448abce",
+        "sourceTreeSHA": "4ed9455494c0b8c6a46c89558cfccea90758ad96",
         "evidence": "docs/migrations/PHASE_C_GHCODE_PUSH_INTEGRITY.md",
-        "status": "PENDING_EXACT_HEAD_SOURCE_ACCEPTANCE_SESSION_SCOPED_LAYOUT_AND_EDITOR_PRIVACY",
+        "status": "GHCODE_ATOMIC_WORKSPACE_REHYDRATION_RECHECK_PENDING",
         "immutableCommits": "IDB.add prevents in-place local commit mutation",
         "orderedPushAncestry": "createdAt+id canonical ordering checked in storage and React before network calls",
         "destructiveRecovery": "removeLocalCommit and clearLocalGitState protect unresolved push journal in same IDB transaction",
@@ -314,6 +315,13 @@
           "behavior": "Private A doc contents and filenames never render or auto-restore inside B, even if A and B have the same path/principal",
           "layoutKey": "principal + verified immutable workspace ID; legacy principal-wide layouts preserved inert",
           "evidence": "docs/migrations/PHASE_C_GHCODE_PUSH_INTEGRITY.md"
+        },
+        "rehydration": {
+          "rootCause": "React published new workspace before awaiting local overlay retrieval, letting Monaco cache old/base content",
+          "source": "migrate/ghcode/src/workspace/context.tsx",
+          "fix": "load cached/forked overlays, staged, committed and commits before setting workspace, publish in same React tick",
+          "browserRegression": "GHC-00 pending private edits block repository switch until a committed save",
+          "acceptance": "PENDING_EXACT_HEAD_CI"
         }
       }
     },
