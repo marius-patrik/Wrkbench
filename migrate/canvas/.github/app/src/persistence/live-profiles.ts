@@ -244,29 +244,39 @@ class LiveProfileDirectory {
    */
   save(next: ProfileDirectory): Promise<void> {
     const directory = normalizeDirectory(next);
-    const attempt = this.queue.catch(() => {}).then(async () => {
-      await this.load();
-      if (this.revision === undefined)
-        throw new Error("Cannot save an unhydrated profile directory.");
-      const id = await directoryId();
-      const existing = requireResult(await storage.readWorkspace(id), "Check profile revision");
-      if (existing) readRecord(existing);
-      if ((existing?.revision ?? null) !== this.revision)
-        throw new Error("Another window changed the profile directory; export or reload before overwriting.");
-      const result = await storage.commit({
-        mutations: [existing ? {
-          kind: "updateWorkspace" as const,
-          id, expectedRevision: existing.revision,
-          data: { kind: KIND, directory: directory as unknown as JsonObject },
-        } : {
-          kind: "createWorkspace" as const,
-          id, expectedRevision: null,
-          data: { kind: KIND, directory: directory as unknown as JsonObject },
-        }],
+    const attempt = this.queue
+      .catch(() => {})
+      .then(async () => {
+        await this.load();
+        if (this.revision === undefined)
+          throw new Error("Cannot save an unhydrated profile directory.");
+        const id = await directoryId();
+        const existing = requireResult(await storage.readWorkspace(id), "Check profile revision");
+        if (existing) readRecord(existing);
+        if ((existing?.revision ?? null) !== this.revision)
+          throw new Error(
+            "Another window changed the profile directory; export or reload before overwriting.",
+          );
+        const result = await storage.commit({
+          mutations: [
+            existing
+              ? {
+                  kind: "updateWorkspace" as const,
+                  id,
+                  expectedRevision: existing.revision,
+                  data: { kind: KIND, directory: directory as unknown as JsonObject },
+                }
+              : {
+                  kind: "createWorkspace" as const,
+                  id,
+                  expectedRevision: null,
+                  data: { kind: KIND, directory: directory as unknown as JsonObject },
+                },
+          ],
+        });
+        requireResult(result, "Commit profile directory");
+        this.revision = (this.revision ?? -1) + 1;
       });
-      requireResult(result, "Commit profile directory");
-      this.revision = (this.revision ?? -1) + 1;
-    });
     this.queue = attempt;
     return attempt;
   }
