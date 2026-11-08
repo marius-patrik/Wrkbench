@@ -78,6 +78,10 @@ class LiveCanvasLayouts {
   private ready: Promise<void> | null = null;
   private writeQueue = new Map<string, Promise<void>>();
   private readonly migrating = new Map<string, Promise<JsonObject | null>>();
+  // The version of the layout this window ACTUALLY rendered. A subsequent
+  // write must use this version, not whichever revision happens to be newest
+  // in IndexedDB when a stale tab initiates an unrelated layout edit.
+  private readonly observedRevision = new Map<string, number | null>();
 
   private initialize(): Promise<void> {
     if (!this.ready) {
@@ -107,7 +111,11 @@ class LiveCanvasLayouts {
     await this.initialize();
     const id = await layoutWorkspaceId(profileId);
     const existing = demand(await storage.readWorkspace(id), "Read verified Canvas layout");
-    if (existing) return parseRecord(existing, profileId);
+    if (existing) {
+      const layout = parseRecord(existing, profileId);
+      this.observedRevision.set(profileId, existing.revision);
+      return layout;
+    }
 
     // The v2/v1 localStorage keys become immutable recovery inputs. Do not
     // reset, rewrite or remove them; the first accepted layout write uses IDB.
@@ -115,7 +123,10 @@ class LiveCanvasLayouts {
       profileId === "global" ? [legacyV2Key(profileId), legacyV1Key] : [legacyV2Key(profileId)];
     const raw = demand(storage.readLegacyValues(candidates), "Read raw legacy layouts");
     const found = raw.find((candidate) => candidate.raw !== null);
-    if (!found || found.raw === null) return null;
+    if (!found || found.raw === null) {
+      this.observedRevision.set(profileId, null);
+      return null;
+    }
 
     const prior = demand(await storage.readMigration(found.key), "Inspect layout migration");
     if (prior)
@@ -141,11 +152,16 @@ class LiveCanvasLayouts {
       // Another tab may have won the atomic creation. Only an independently
       // validated matching workspace is allowed to resolve that race.
       const winner = demand(await storage.readWorkspace(id), "Verify concurrent layout migration");
-      if (winner) return parseRecord(winner, profileId);
+      if (winner) {
+        const layout = parseRecord(winner, profileId);
+        this.observedRevision.set(profileId, winner.revision);
+        return layout;
+      }
       throw new Error(
         `Legacy layout import not committed: ${migrated.error.code}: ${migrated.error.message}`,
       );
     }
+    this.observedRevision.set(profileId, 0);
     return recovered;
   }
 
@@ -173,8 +189,13 @@ class LiveCanvasLayouts {
       .then(async () => {
         await this.initialize();
         const id = await layoutWorkspaceId(profileId);
+        if (!this.observedRevision.has(profileId))
+          throw new Error("Layout has not completed authorized hydration; refusing a blind write.");
+        const expectedRevision = this.observedRevision.get(profileId);
         const existing = demand(await storage.readWorkspace(id), "Read layout revision");
         if (existing) parseRecord(existing, profileId);
+        if ((existing?.revision ?? null) !== expectedRevision)
+          throw new Error("Another window changed this Dockview layout; reload before saving.");
         const result = await storage.commit({
           mutations: [
             existing
@@ -193,6 +214,7 @@ class LiveCanvasLayouts {
           ],
         });
         demand(result, "Acknowledge durable Dockview layout");
+        this.observedRevision.set(profileId, (expectedRevision ?? -1) + 1);
       });
     this.writeQueue.set(profileId, attempt);
     void attempt
