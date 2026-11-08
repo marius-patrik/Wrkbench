@@ -20,6 +20,10 @@ try {
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.goto(url, { waitUntil: "load" });
   await mobile.getByTestId("empty-workspace").waitFor();
+  // The UI may render the empty layout before its asynchronous IndexedDB
+  // hydration settles. Wait for that outcome so actual database exceptions,
+  // not an intercepted 30-second mouse click, explain a failing smoke.
+  await mobile.waitForTimeout(1200);
   const bootstrapFailure = await mobile.locator(".dock-layout-storage-error").count()
     ? await mobile.locator(".dock-layout-storage-error").textContent()
     : null;
