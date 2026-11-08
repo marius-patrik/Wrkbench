@@ -16,7 +16,13 @@ function requireResult<T>(result: Result<T>, message: string): T {
 }
 
 const legacyViews = new Set([
-  "overview", "projects", "agents", "graph", "roadmap", "artifacts", "context",
+  "overview",
+  "projects",
+  "agents",
+  "graph",
+  "roadmap",
+  "artifacts",
+  "context",
 ]);
 function convertView(candidate: unknown): CanvasView {
   if (candidate === "monaco" || candidate === "notepad") return "editor";
@@ -43,15 +49,24 @@ function normalizeDirectory(value: unknown): ProfileDirectory {
     if (!input || typeof input !== "object" || Array.isArray(input))
       throw new Error("Invalid profile record in preserved directory.");
     const row = input as Record<string, unknown>;
-    if (typeof row.id !== "string" || row.id.length < 1 || row.id.length >= 100 ||
-        row.id.includes("\0") || ids.has(row.id) ||
-        typeof row.name !== "string" || row.name.length < 1 || row.name.length > 48)
+    if (
+      typeof row.id !== "string" ||
+      row.id.length < 1 ||
+      row.id.length >= 100 ||
+      row.id.includes("\0") ||
+      ids.has(row.id) ||
+      typeof row.name !== "string" ||
+      row.name.length < 1 ||
+      row.name.length > 48
+    )
       throw new Error("Invalid or duplicated profile identity; refusing lossy migration.");
     ids.add(row.id);
     if (row.note !== undefined && (typeof row.note !== "string" || row.note.length > 100000))
       throw new Error("Profile note exceeds supported bounds; raw source is preserved.");
-    if (row.selectedDocument !== undefined &&
-        (typeof row.selectedDocument !== "string" || row.selectedDocument.length > 300))
+    if (
+      row.selectedDocument !== undefined &&
+      (typeof row.selectedDocument !== "string" || row.selectedDocument.length > 300)
+    )
       throw new Error("Invalid selected document; raw source is preserved.");
     if (row.pinned !== undefined && !Array.isArray(row.pinned))
       throw new Error("Invalid pinned views; raw source is preserved.");
@@ -60,11 +75,14 @@ function normalizeDirectory(value: unknown): ProfileDirectory {
       pins.add(convertView(pin));
       if (pins.size > 20) throw new Error("Too many pinned views in profile.");
     }
-    if (row.drafts !== undefined &&
-        (!row.drafts || typeof row.drafts !== "object" || Array.isArray(row.drafts)))
+    if (
+      row.drafts !== undefined &&
+      (!row.drafts || typeof row.drafts !== "object" || Array.isArray(row.drafts))
+    )
       throw new Error("Invalid profile draft dictionary; raw source is preserved.");
     const draftEntries = Object.entries(row.drafts ?? {});
-    if (draftEntries.length > 64) throw new Error("More than 64 profile drafts require manual recovery.");
+    if (draftEntries.length > 64)
+      throw new Error("More than 64 profile drafts require manual recovery.");
     const drafts: Record<string, string> = Object.create(null);
     for (const [path, text] of draftEntries) {
       if (path.length < 1 || path.length > 300 || typeof text !== "string")
@@ -120,12 +138,15 @@ class LiveProfileDirectory {
 
   private initialize(): Promise<void> {
     if (!this.ready) {
-      this.ready = storage.initialize().then((result) => {
-        requireResult(result, "Initialize profile IndexedDB");
-      }).catch((error) => {
-        this.ready = null;
-        throw error;
-      });
+      this.ready = storage
+        .initialize()
+        .then((result) => {
+          requireResult(result, "Initialize profile IndexedDB");
+        })
+        .catch((error) => {
+          this.ready = null;
+          throw error;
+        });
     }
     return this.ready;
   }
@@ -143,21 +164,32 @@ class LiveProfileDirectory {
   private async loadOnce(): Promise<ProfileDirectory | null> {
     await this.initialize();
     const id = await directoryId();
-    const present = requireResult(await storage.readWorkspace(id), "Read canonical profile directory");
+    const present = requireResult(
+      await storage.readWorkspace(id),
+      "Read canonical profile directory",
+    );
     if (present) {
       const value = readRecord(present);
       this.revision = present.revision;
       return value;
     }
-    const values = requireResult(storage.readLegacyValues([LEGACY_KEY]), "Read original profile directory");
+    const values = requireResult(
+      storage.readLegacyValues([LEGACY_KEY]),
+      "Read original profile directory",
+    );
     const raw = values[0].raw;
     if (raw === null) {
       this.revision = null;
       return null;
     }
-    const prior = requireResult(await storage.readMigration(LEGACY_KEY), "Read profile migration lease");
+    const prior = requireResult(
+      await storage.readMigration(LEGACY_KEY),
+      "Read profile migration lease",
+    );
     if (prior)
-      throw new Error(`Prior profile migration is ${prior.status}; original backup requires review.`);
+      throw new Error(
+        `Prior profile migration is ${prior.status}; original backup requires review.`,
+      );
     // Preserve the exact source BEFORE attempting any JSON parse or conversion.
     const lease = requireResult(
       await storage.beginLegacyMigration(LEGACY_KEY),
@@ -169,8 +201,12 @@ class LiveProfileDirectory {
     } catch {
       throw new Error("Legacy profile JSON is malformed; exact original backup was preserved.");
     }
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) ||
-        (parsed as { version?: unknown }).version !== 1)
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      Array.isArray(parsed) ||
+      (parsed as { version?: unknown }).version !== 1
+    )
       throw new Error("Unsupported profile state version; exact original bytes were preserved.");
     const directory = normalizeDirectory((parsed as { state?: unknown }).state);
     const commit = await storage.commit({
@@ -185,13 +221,18 @@ class LiveProfileDirectory {
       migration: { key: LEGACY_KEY, expectedRevision: lease.revision },
     });
     if (!commit.ok) {
-      const winner = requireResult(await storage.readWorkspace(id), "Resolve concurrent profile import");
+      const winner = requireResult(
+        await storage.readWorkspace(id),
+        "Resolve concurrent profile import",
+      );
       if (winner) {
         const existing = readRecord(winner);
         this.revision = winner.revision;
         return existing;
       }
-      throw new Error(`Profile import not committed: ${commit.error.code}: ${commit.error.message}`);
+      throw new Error(
+        `Profile import not committed: ${commit.error.code}: ${commit.error.message}`,
+      );
     }
     this.revision = 0;
     return directory;
