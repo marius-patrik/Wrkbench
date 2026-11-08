@@ -1,4 +1,4 @@
-import type { Result, } from "../domain/errors";
+import type { Result } from "../domain/errors";
 import type { JsonObject, WorkspaceId, WorkspaceRecord } from "../domain/types";
 import type { Profile } from "../profiles";
 import { isCanvasView, type CanvasView } from "../views";
@@ -84,7 +84,8 @@ function normalizeDirectory(value: unknown): ProfileDirectory {
   if (typeof data.currentId !== "string" || !ids.has(data.currentId))
     throw new Error("Profile selection is not owned by an existing profile.");
   const candidate = { profiles, currentId: data.currentId };
-  return requireResult(asJsonObject(candidate), "Validate canonical directory JSON") as ProfileDirectory;
+  requireResult(asJsonObject(candidate), "Validate canonical directory JSON");
+  return candidate;
 }
 
 function readRecord(row: WorkspaceRecord): ProfileDirectory {
@@ -103,13 +104,15 @@ async function directoryId(): Promise<WorkspaceId> {
   bytes[6] = (bytes[6] & 0x0f) | 0x50;
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
   const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-  return requireResult(asWorkspaceId(
-    `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`,
-  ), "Derive profile directory identity");
+  return requireResult(
+    asWorkspaceId(
+      `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`,
+    ),
+    "Derive profile directory identity",
+  );
 }
 
 class LiveProfileDirectory {
-  private readonly ongoing = new Map<string, Promise<void>>();
   private loading: Promise<ProfileDirectory | null> | null = null;
   private ready: Promise<void> | null = null;
   private revision: number | null | undefined;
@@ -156,20 +159,29 @@ class LiveProfileDirectory {
     if (prior)
       throw new Error(`Prior profile migration is ${prior.status}; original backup requires review.`);
     // Preserve the exact source BEFORE attempting any JSON parse or conversion.
-    const lease = requireResult(await storage.beginLegacyMigration(LEGACY_KEY),
-      "Back up original Zustand profile data");
+    const lease = requireResult(
+      await storage.beginLegacyMigration(LEGACY_KEY),
+      "Back up original Zustand profile data",
+    );
     let parsed: unknown;
-    try { parsed = JSON.parse(raw); }
-    catch { throw new Error("Legacy profile JSON is malformed; exact original backup was preserved."); }
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new Error("Legacy profile JSON is malformed; exact original backup was preserved.");
+    }
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) ||
         (parsed as { version?: unknown }).version !== 1)
       throw new Error("Unsupported profile state version; exact original bytes were preserved.");
     const directory = normalizeDirectory((parsed as { state?: unknown }).state);
     const commit = await storage.commit({
-      mutations: [{
-        kind: "createWorkspace", id, expectedRevision: null,
-        data: { kind: KIND, directory: directory as unknown as JsonObject },
-      }],
+      mutations: [
+        {
+          kind: "createWorkspace",
+          id,
+          expectedRevision: null,
+          data: { kind: KIND, directory: directory as unknown as JsonObject },
+        },
+      ],
       migration: { key: LEGACY_KEY, expectedRevision: lease.revision },
     });
     if (!commit.ok) {
