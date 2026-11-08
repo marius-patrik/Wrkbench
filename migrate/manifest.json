@@ -330,7 +330,7 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "1ab0f3c83571799a612359e6ca0425527ebabcad",
+      "snapshotTreeSHA": "e8eaa94f5988b7fce3b2d571d441393d8fbb8d8e",
       "appSubtreeSHA": "bc2aa4e3989a2fa729407a5c36c46ff76efd3c77",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
@@ -407,10 +407,10 @@
         "note": "Canvas Chromium UI smoke and injected provider browser harness passed; C01 persistence adapter remains intentionally inactive and the unified root integration unverified."
       },
       "phaseDLayout": {
-        "sourceTreeSHA": "1ab0f3c83571799a612359e6ca0425527ebabcad",
+        "sourceTreeSHA": "e8eaa94f5988b7fce3b2d571d441393d8fbb8d8e",
         "appSubtreeSHA": "bc2aa4e3989a2fa729407a5c36c46ff76efd3c77",
         "scope": "Dockview layouts only; profile directory, preferences, drafts not yet migrated",
-        "status": "REAL_CHROMIUM_CAN03_RECHECK_PENDING",
+        "status": "CHROMIUM_CAN03_LAYOUT_AND_MULTI_WINDOW_CONFLICT_ACCEPTANCE_PENDING",
         "canonicalAdapter": "migrate/canvas/.github/app/src/persistence/live-layouts.ts",
         "ui": "migrate/canvas/.github/app/src/DockCanvas.tsx",
         "activeBrowserGate": "migrate/canvas/.github/tests/live-layouts-browser.mjs",
@@ -423,7 +423,12 @@
           "Preserve observer revision on load, compare against actual cached revision before writes; cross-tab stale writer rejected",
           "Do not increment revision on unmodified layout open/reload in another tab"
         ],
-        "newConcurrentBrowserTest": "two real pages sharing browser context, stale revision writer must show conflict and preserve first writer's durable layout"
+        "newConcurrentBrowserTest": "two real pages sharing browser context, stale revision writer must show conflict and preserve first writer's durable layout",
+        "verification": {
+          "ci": "PR-only .github/workflows/migration-source-verification.yml Canvas job",
+          "require": "real compiled UI single-writer layout, reload, raw v2 backup, malformed preservation, quota fail alert, two-window stale CAS",
+          "lastKnownResult": "At source run 42460578036 legacy/reload/abort cases passed before test harness failed to create second tab under Playwright browser.newPage() owned context; shared BrowserContext test harness fixed. Pending exact-head rerun."
+        }
       }
     }
   },
