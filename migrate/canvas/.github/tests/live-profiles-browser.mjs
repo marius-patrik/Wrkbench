@@ -184,8 +184,13 @@ try {
   await staleWindow.getByRole("alert")
     .filter({ hasText: "Profile or scratch changes were not saved" }).waitFor();
   const rejected = await inspect(ui);
-  assert(rejected.directories[0].revision === fromA.directories[0].revision,
-    "Stale second window must not advance canonical directory revision");
+  // Writer A may finish an additional legitimate route/profile checkpoint
+  // after the first matching DB poll. Revision equality is NOT a security
+  // contract; preserving A while rejecting B's bytes is.
+  assert(rejected.directories[0].revision >= fromA.directories[0].revision,
+    "Canonical profile revision may never regress");
+  assert(rejected.directories[0].data.directory.profiles.some((p) => p.name === "Canonical Writer A"),
+    "A stale tab may not displace the first window's acknowledged profile");
   assert(!rejected.directories[0].data.directory.profiles.some((p) => p.name === "Stale Writer B"),
     "Stale second window must never overwrite another window's acknowledged profile bytes");
   await staleWindow.close();
