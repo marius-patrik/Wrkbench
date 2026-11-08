@@ -36,6 +36,14 @@ The active `workbench.spec.ts` test now exercises private draft → failed switc
 
 **No claim of acceptance until the exact-head browser and source CI pass**. These are source-only corrections, not a root runtime or public Pages deployment.
 
+## Phase C1 source rehydration race fixed
+
+The active repository-switch/reload test uncovered another **data-recovery defect**: the old verified private workspace's overlay existed in IndexedDB, but reopening it could mount Monaco against the base Git README before the asynchronous `loadLocalState()` finished. EditorTab's resource-aware effect would not retry when `overlays` eventually arrived, making the acknowledged private edit appear lost even though its durable bytes remained.
+
+`context.tsx > openRepository` now reads the old workspace's overlays, staging, committed files and local commits before publishing the next workspace to React, then sets all slices with the workspace identity in one synchronous React turn. It does not overwrite them with a second async read. `createBranch` similarly reads the atomically forked data and refs before activating the new branch; no intermediate render pairs source A with destination B's files.
+
+The new active GHC-00 Chromium regression verifies **failed save blocks switch → retry is acknowledged → public repository opens without private text → reload → reopen original private repository → original edit is restored in Monaco**. No test bypasses the authenticated repository flow or changes the owner ID.
+
 ## What this does not accept
 
 This is a behavioral improvement in the **inert GHCode source tree**, not a production root implementation or a substitute for the remaining work:
