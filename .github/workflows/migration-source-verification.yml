@@ -183,6 +183,8 @@ jobs:
         run: node ../../.github/tests/persistence/canvas-persistence.mjs
       - name: Verify standalone source-driven Canvas UI
         run: node ../../.github/tests/smoke_canvas.mjs ../../.canvas-dist/index.html
+      - name: Verify real CAN-03 IndexedDB layout cutover and lossless v2 recovery
+        run: node ../../.github/tests/live-layouts-browser.mjs ../../.canvas-dist/index.html
       - name: Bundle read-only injected repository adapter harness
         run: bun build tests/runtime-repository-browser-harness.ts --target browser --outfile ../../.github/tests/runtime-repository-browser.bundle.js
       - name: Verify injected source switching, stale promises and forbidden repository identity in Chromium
