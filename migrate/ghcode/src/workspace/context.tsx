@@ -450,7 +450,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         if (isCurrent(lease)) setLoading(false);
       }
     },
-    [authPhase, capture, assertCurrent, isCurrent, loadLocalState, principal, recent, token, workspace],
+    [authPhase, capture, assertCurrent, isCurrent, principal, recent, token, workspace],
   );
 
   const switchRef = useCallback(
@@ -969,7 +969,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [
       assertCurrent,
       capture,
-      loadLocalState,
       principal,
       token,
       workspace,
