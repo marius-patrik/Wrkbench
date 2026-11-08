@@ -390,7 +390,6 @@ export default function DockCanvas({
     void save(api)
       .then(() => notify.success(i18n.t("Layout reset")))
       .catch(() => {});
-
   }, [save]);
   const shell = useMemo(
     () => ({
