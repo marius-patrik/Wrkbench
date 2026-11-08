@@ -330,8 +330,8 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "22ba6bc8924f46a9194906a1b960d649104090a3",
-      "appSubtreeSHA": "7eda59fb76b2fe558286c3e436c8657546c64d70",
+      "snapshotTreeSHA": "1ab0f3c83571799a612359e6ca0425527ebabcad",
+      "appSubtreeSHA": "bc2aa4e3989a2fa729407a5c36c46ff76efd3c77",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
         "Canvas PR #41 complete standalone app, original persistence source, and app-specific browser/persistence tests preserved; no active runtime import"
@@ -407,17 +407,23 @@
         "note": "Canvas Chromium UI smoke and injected provider browser harness passed; C01 persistence adapter remains intentionally inactive and the unified root integration unverified."
       },
       "phaseDLayout": {
-        "sourceTreeSHA": "22ba6bc8924f46a9194906a1b960d649104090a3",
-        "appSubtreeSHA": "7eda59fb76b2fe558286c3e436c8657546c64d70",
+        "sourceTreeSHA": "1ab0f3c83571799a612359e6ca0425527ebabcad",
+        "appSubtreeSHA": "bc2aa4e3989a2fa729407a5c36c46ff76efd3c77",
         "scope": "Dockview layouts only; profile directory, preferences, drafts not yet migrated",
-        "status": "SINGLE_WRITER_SOURCE_IMPLEMENTED_PENDING_CHROMIUM_ACCEPTANCE",
+        "status": "REAL_CHROMIUM_CAN03_RECHECK_PENDING",
         "canonicalAdapter": "migrate/canvas/.github/app/src/persistence/live-layouts.ts",
         "ui": "migrate/canvas/.github/app/src/DockCanvas.tsx",
         "activeBrowserGate": "migrate/canvas/.github/tests/live-layouts-browser.mjs",
         "migration": "v2/v1 raw backup + IDB lease, createWorkspace and imported marker in one transaction; raw old key never deleted",
         "id": "SHA256 namespaced deterministic UUID v5",
         "concurrency": "per-window serial writes with revision CAS, foreign-tab conflict rejects",
-        "dataLossRisk": "editing a layout while storage unavailable shows error and cannot be acknowledged; no alternate writer"
+        "dataLossRisk": "editing a layout while storage unavailable shows error and cannot be acknowledged; no alternate writer",
+        "bugFixes": [
+          "Normalize live Dockview undefined optional fields via JSON round-trip before validating plain JSON payload",
+          "Preserve observer revision on load, compare against actual cached revision before writes; cross-tab stale writer rejected",
+          "Do not increment revision on unmodified layout open/reload in another tab"
+        ],
+        "newConcurrentBrowserTest": "two real pages sharing browser context, stale revision writer must show conflict and preserve first writer's durable layout"
       }
     }
   },
