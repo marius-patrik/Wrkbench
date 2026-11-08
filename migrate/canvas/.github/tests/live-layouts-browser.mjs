@@ -44,7 +44,11 @@ function assert(value, message) {
 try {
   // Live UI, not a test-only IndexedDB client. Editor open and reload must
   // roundtrip only through the canonical C01 workspace record.
-  const page = await browser.newPage({ viewport: { width: 1300, height: 850 } });
+  // A managed BrowserContext is required for testing two tabs against the
+  // exact same storage origin. Browser.newPage() creates an owned context that
+  // correctly refuses any additional tabs.
+  const sharedContext = await browser.newContext({ viewport: { width: 1300, height: 850 } });
+  const page = await sharedContext.newPage();
   page.setDefaultTimeout(11_000);
   await page.goto(url, { waitUntil: "load" });
   await page.getByTestId("empty-workspace").waitFor();
@@ -139,7 +143,7 @@ try {
   // Window B must not overwrite a layout it rendered at an older revision.
   await page.reload({ waitUntil: "load" });
   await page.locator('[data-dock-view="editor"]').waitFor();
-  const concurrent = await page.context().newPage();
+  const concurrent = await sharedContext.newPage();
   concurrent.setDefaultTimeout(11_000);
   await concurrent.goto(url, { waitUntil: "load" });
   await concurrent.locator('[data-dock-view="editor"]').waitFor();
