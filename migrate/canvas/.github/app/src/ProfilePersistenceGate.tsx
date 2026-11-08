@@ -49,6 +49,8 @@ export default function ProfilePersistenceGate({ children }: { children: ReactNo
   }, []);
 
   useEffect(() => {
+    // A recovery retry deliberately re-runs the verified C01 hydration.
+    void retryEpoch;
     mounted.current = true;
     let disposed = false;
     let detach = () => {};
