@@ -489,15 +489,19 @@ export default function DockCanvas({
         ]);
         let migrateCanvas = false;
         let migrateEditor = false;
+        let normalizedLegacy = false;
         for (const panel of [...api.panels]) {
           const oldView: unknown = panelKind(panel.id);
           if (oldView === "monaco" || oldView === "notepad") {
             migrateEditor = true;
+            normalizedLegacy = true;
             panel.api.close();
           } else if (typeof oldView === "string" && legacyRepositoryViews.has(oldView)) {
             migrateCanvas = true;
+            normalizedLegacy = true;
             panel.api.close();
           } else if (oldView === "activity" || oldView === "workspace") {
+            normalizedLegacy = true;
             panel.api.close();
           }
         }
@@ -537,7 +541,11 @@ export default function DockCanvas({
         // Route initialization is owned by the route effect after Dockview is ready.
         // Never instantiate another panel here: this callback may run during layout updates.
         hydratedLayout.current = true;
-        await save(api);
+        setEmpty(api.panels.length === 0);
+        // Merely opening a second window must not increment the durable
+        // revision. Otherwise the first window becomes "stale" without any
+        // user edit. Only a genuinely new or normalized layout is committed.
+        if (!restored || normalizedLegacy) await save(api);
         if (apiRef.current === api) setReady(true);
       } catch (error) {
         if (apiRef.current === api)
