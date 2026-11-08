@@ -44,6 +44,14 @@ The active repository-switch/reload test uncovered another **data-recovery defec
 
 The new active GHC-00 Chromium regression verifies **failed save blocks switch → retry is acknowledged → public repository opens without private text → reload → reopen original private repository → original edit is restored in Monaco**. No test bypasses the authenticated repository flow or changes the owner ID.
 
+## Exact-source acceptance — 2026-11-08
+
+[Migration source verification run 42460733067](https://github.com/marius-patrik/Wrkbench/actions/runs/42460733067) completed **SUCCESS (8/8 jobs)** at integration head `962e23e93d69dc4091392891d15412342778d1d8`. GHCode source tree `64bcbd414284d8a5f919cd405e74d6541fd40453` passed TypeScript, Biome and build checks; **27 Bun unit regressions** including ordered commit/IDB cleanup and identity/CAS contracts; and **49 real Chromium Playwright acceptance tests** including the promoted GHC-00 dirty Dockview move, private→public repository switch, same-path confidentiality check, reload/reopen and restored private editor content. All 49 passed.
+
+**Validated defect fix:** `openRepository` and `createBranch` now await the authorized persisted overlay/stage/commit snapshot **before** publishing the new workspace to React. A previously passing underlying IndexedDB write could appear lost to Monaco when an editor mounted against the base Git tree first; that source-level false recovery is now covered by the live GHC-00 reopened-private-README acceptance. No cross-principal legacy v2 data is automatically attributed or downloaded.
+
+**Scope:** GHCode is still a migrated source application inside `migrate/ghcode`, **not** the unified root runtime. This result accepts the tested source contracts, not the separate Pages deployment, native shell composition or untested live GitHub OAuth permission scenarios.
+
 ## What this does not accept
 
 This is a behavioral improvement in the **inert GHCode source tree**, not a production root implementation or a substitute for the remaining work:
