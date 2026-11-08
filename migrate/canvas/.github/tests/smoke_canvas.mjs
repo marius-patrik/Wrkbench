@@ -20,7 +20,9 @@ try {
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.goto(url, { waitUntil: "load" });
   await mobile.getByTestId("empty-workspace").waitFor();
-  const bootstrapFailure = await mobile.locator(".dock-layout-storage-error").textContent();
+  const bootstrapFailure = await mobile.locator(".dock-layout-storage-error").count()
+    ? await mobile.locator(".dock-layout-storage-error").textContent()
+    : null;
   if (bootstrapFailure) throw new Error("Canvas layout bootstrap failed on mobile: " + bootstrapFailure);
   await mobile.locator(".dock-welcome-options button").first().click();
   await mobile.locator(".cx-overview-scroll").waitFor();
