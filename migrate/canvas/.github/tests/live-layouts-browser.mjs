@@ -134,8 +134,39 @@ try {
     "Aborted layout update cannot advance durable revision");
   assert(afterFailure.original === null, "Failed save may not silently fallback to localStorage");
   await page.evaluate(() => window.__restoreLayoutPut?.());
+
+  // Two genuinely concurrent windows share the same IndexedDB origin.
+  // Window B must not overwrite a layout it rendered at an older revision.
+  await page.reload({ waitUntil: "load" });
+  await page.locator('[data-dock-view="editor"]').waitFor();
+  const concurrent = await page.context().newPage();
+  concurrent.setDefaultTimeout(11_000);
+  await concurrent.goto(url, { waitUntil: "load" });
+  await concurrent.locator('[data-dock-view="editor"]').waitFor();
+  const beforeConcurrentWrite = await inspect(page);
+  const observed = beforeConcurrentWrite.layouts.find((x) => x.id === global.id);
+  // Opening another window alone must not create an unsolicited revision.
+  assert(observed.revision === (await inspect(concurrent)).layouts.find((x) => x.id === global.id).revision,
+    "Opening an unchanged layout in a second window must not mutate it");
+  await page.locator(".activity-new-tab").click();
+  await page.locator('[data-dock-view="new"]').waitFor();
+  let newer;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    newer = (await inspect(page)).layouts.find((x) => x.id === global.id);
+    if (newer.revision > observed.revision) break;
+    await page.waitForTimeout(80);
+  }
+  assert(newer.revision > observed.revision, "First tab must durably commit a new layout revision");
+  await concurrent.locator(".activity-new-tab").click();
+  await concurrent.getByRole("alert").filter({
+    hasText: "Another window changed this Dockview layout",
+  }).waitFor();
+  const conflictSnapshot = (await inspect(page)).layouts.find((x) => x.id === global.id);
+  assert(conflictSnapshot.revision === newer.revision,
+    "Stale second window must not overwrite a newer canonical revision");
+  await concurrent.close();
   await page.close();
-  console.log("CAN-03 live Dockview: durable reload, lossless legacy import, fail-closed invalid input, abort alert PASS");
+  console.log("CAN-03 live Dockview: durable reload, lossless import, fail-closed invalid input, abort alert, concurrent revision CAS PASS");
 } finally {
   clearTimeout(timeout);
   await browser.close();
