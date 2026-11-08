@@ -26,9 +26,9 @@ import i18n from "./i18n";
 import { AnimatedIcon } from "./components/AnimatedIcon";
 import { CanvasContextMenu } from "./components/ui/ContextMenu";
 import { notify } from "./notifications";
+import { liveCanvasLayouts } from "./persistence/live-layouts";
 import { VIEWS, viewLabel, viewFromRoute, isCanvasView, type CanvasView } from "./views";
 
-const keyFor = (profileId: string) => `canvas-dockview-layout-v2-${profileId}`;
 let sequence = 0;
 type PaneContextValue = {
   render: (view: CanvasView) => ReactNode;
@@ -277,19 +277,23 @@ export default function DockCanvas({
   const disposables = useRef<Array<{ dispose: () => void }>>([]);
   const [empty, setEmpty] = useState(true);
   const [ready, setReady] = useState(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
+  const hydratedLayout = useRef(false);
   const latest = useRef({ route, onNavigate });
   latest.current = { route, onNavigate };
   const save = useCallback(
-    (api: DockviewApi) => {
-      try {
-        localStorage.setItem(
-          keyFor(profileId),
-          JSON.stringify({ schema: 2, layout: api.toJSON() }),
-        );
-      } catch {
-        /* Storage may be disabled. */
-      }
+    async (api: DockviewApi) => {
       setEmpty(api.panels.length === 0);
+      // Dockview emits transient layout changes during hydration. Until the
+      // canonical record is read and restored, none may replace durable state.
+      if (!hydratedLayout.current) return;
+      try {
+        await liveCanvasLayouts.save(profileId, api.toJSON());
+        setStorageError(null);
+      } catch (error) {
+        setStorageError(error instanceof Error ? error.message : String(error));
+        throw error; // a failed IDB transaction is never an acknowledged save
+      }
     },
     [profileId],
   );
@@ -382,9 +386,9 @@ export default function DockCanvas({
     const api = apiRef.current;
     if (!api) return;
     api.clear();
-    save(api);
     latest.current.onNavigate("/");
-    notify.success(i18n.t("Layout reset"));
+    void save(api).then(() => notify.success(i18n.t("Layout reset"))).catch(() => {});
+
   }, [save]);
   const shell = useMemo(
     () => ({
@@ -465,22 +469,14 @@ export default function DockCanvas({
 
   const onReady = ({ api }: DockviewReadyEvent) => {
     apiRef.current = api;
-    try {
-      const raw =
-        localStorage.getItem(keyFor(profileId)) ??
-        (profileId === "global" ? localStorage.getItem("canvas-dockview-layout-v1") : null);
-      if (raw) {
-        const state: unknown = JSON.parse(raw);
-        if (state && typeof state === "object" && "layout" in state)
-          api.fromJSON(state.layout as Parameters<DockviewApi["fromJSON"]>[0]);
-      }
-    } catch {
+    // Do not give the app a writable Dockview surface until the C01 adapter
+    // has atomically recovered/backed up any original layout.
+    void (async () => {
       try {
-        localStorage.removeItem(keyFor(profileId));
-      } catch {
-        /* no-op */
-      }
-    }
+        const restored = await liveCanvasLayouts.load(profileId);
+        if (apiRef.current !== api) return; // switched profiles during IDB read
+        if (restored)
+          api.fromJSON(restored as Parameters<DockviewApi["fromJSON"]>[0]);
     // Normalize older saved panels while retaining active editor, notes, library and split groups.
     const legacyRepositoryViews = new Set([
       "overview",
@@ -533,14 +529,20 @@ export default function DockCanvas({
           latest.current.onNavigate(`/${view}`);
       }),
       api.onDidLayoutChange(() => {
-        save(api);
+        void save(api).catch(() => {});
         if (api.panels.length === 0 && latest.current.route !== "/") latest.current.onNavigate("/");
       }),
     ];
     // Route initialization is owned by the route effect after Dockview is ready.
     // Never instantiate another panel here: this callback may run during layout updates.
-    save(api);
-    setReady(true);
+        hydratedLayout.current = true;
+        await save(api);
+        if (apiRef.current === api) setReady(true);
+      } catch (error) {
+        if (apiRef.current === api)
+          setStorageError(error instanceof Error ? error.message : String(error));
+      }
+    })();
   };
 
   return (
@@ -550,6 +552,15 @@ export default function DockCanvas({
           className={`dock-grid ${empty ? "dock-grid-empty" : ""}`}
           aria-label="Dockview panels"
         >
+          {storageError && (
+            <div className="dock-layout-storage-error" role="alert">
+              <strong>Dockview layout was not durably saved</strong>
+              <span>{storageError}</span>
+              <button type="button" onClick={() => window.location.reload()}>
+                Reload saved layout
+              </button>
+            </div>
+          )}
           <DockviewReact
             theme={dark ? themeDark : themeLight}
             components={components}
