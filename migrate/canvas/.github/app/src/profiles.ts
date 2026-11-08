@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 import { isCanvasView, type CanvasView } from "./views";
 
 export type Profile = {
@@ -35,9 +34,9 @@ type State = {
   setMonacoPath: (path: string) => void;
   setDraft: (path: string, content: string | null) => void;
 };
-export const useProfiles = create<State>()(
-  persist(
-    (set, get) => ({
+// The C01 profile authority is mounted and hydrated by ProfilePersistenceGate.
+// This in-memory Zustand projection is NEVER a second localStorage writer.
+export const useProfiles = create<State>()((set, get) => ({
       profiles: initialProfiles,
       currentId: "global",
       select: (id) => {
@@ -114,86 +113,4 @@ export const useProfiles = create<State>()(
             p.id === state.currentId ? { ...p, note: note.slice(0, 100000) } : p,
           ),
         })),
-    }),
-    {
-      name: "canvas-profiles-v1",
-      version: 1,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ profiles: state.profiles, currentId: state.currentId }),
-      merge: (saved, current) => {
-        if (!saved || typeof saved !== "object") return current;
-        const record = saved as { profiles?: unknown; currentId?: unknown };
-        const profiles: Profile[] = Array.isArray(record.profiles)
-          ? record.profiles
-              .filter(
-                (value): value is Record<string, unknown> =>
-                  value !== null &&
-                  typeof value === "object" &&
-                  typeof value.id === "string" &&
-                  value.id.length < 100 &&
-                  typeof value.name === "string" &&
-                  value.name.length > 0 &&
-                  value.name.length <= 48,
-              )
-              .slice(0, 50)
-              .map((value) => ({
-                id: value.id as string,
-                name: value.name as string,
-                route:
-                  typeof value.route === "string" &&
-                  (value.route === "/" || isCanvasView(value.route.slice(1).split("?")[0]))
-                    ? value.route
-                    : "/",
-                pinned: Array.isArray(value.pinned)
-                  ? [
-                      ...new Set(
-                        value.pinned.flatMap((view): CanvasView[] => {
-                          if (typeof view !== "string") return [];
-                          if (view === "monaco" || view === "notepad") return ["editor"];
-                          if (
-                            [
-                              "overview",
-                              "projects",
-                              "agents",
-                              "graph",
-                              "roadmap",
-                              "artifacts",
-                              "context",
-                            ].includes(view)
-                          )
-                            return ["canvas"];
-                          return isCanvasView(view) ? [view] : [];
-                        }),
-                      ),
-                    ].slice(0, 20)
-                  : [],
-                note: typeof value.note === "string" ? value.note.slice(0, 100000) : "",
-                selectedDocument:
-                  typeof value.selectedDocument === "string"
-                    ? value.selectedDocument.slice(0, 300)
-                    : "",
-                drafts:
-                  value.drafts && typeof value.drafts === "object" && !Array.isArray(value.drafts)
-                    ? Object.fromEntries(
-                        Object.entries(value.drafts)
-                          .filter(
-                            ([path, content]) => path.length <= 300 && typeof content === "string",
-                          )
-                          .slice(0, 64),
-                      )
-                    : {},
-              }))
-          : [];
-        if (!profiles.length) return current;
-        return {
-          ...current,
-          profiles,
-          currentId:
-            typeof record.currentId === "string" && profiles.some((p) => p.id === record.currentId)
-              ? record.currentId
-              : profiles[0].id,
-        };
-      },
-    },
-  ),
-);
+}));
