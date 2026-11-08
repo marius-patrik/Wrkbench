@@ -2762,3 +2762,64 @@ a:hover .code-icon-glyph,
   padding: 0;
   min-width: 0;
 }
+
+/* CAN-02 profile recovery remains visible above Dockview and all route pages.
+   Pending writes stay in memory and trigger beforeunload protection. */
+.profiles-storage-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 48px max(24px, calc((100vw - 740px) / 2));
+  background: var(--bg);
+  color: var(--text);
+}
+.profiles-storage-gate p {
+  max-width: 660px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.profiles-storage-gate button,
+.profiles-storage-error button {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--raised);
+  color: var(--text);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.profiles-storage-gate button:hover,
+.profiles-storage-error button:hover {
+  background: var(--hover);
+}
+.profiles-storage-error {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(460px, calc(100vw - 32px));
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 18%);
+}
+.profiles-storage-error span {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.profiles-storage-saving {
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  z-index: 100;
+  color: var(--muted);
+  font-size: 11px;
+  pointer-events: none;
+}
