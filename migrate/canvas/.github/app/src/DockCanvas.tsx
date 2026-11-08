@@ -476,65 +476,65 @@ export default function DockCanvas({
         const restored = await liveCanvasLayouts.load(profileId);
         if (apiRef.current !== api) return; // switched profiles during IDB read
         if (restored)
-          api.fromJSON(restored as Parameters<DockviewApi["fromJSON"]>[0]);
-    // Normalize older saved panels while retaining active editor, notes, library and split groups.
-    const legacyRepositoryViews = new Set([
-      "overview",
-      "projects",
-      "agents",
-      "graph",
-      "roadmap",
-      "artifacts",
-      "context",
-    ]);
-    let migrateCanvas = false;
-    let migrateEditor = false;
-    for (const panel of [...api.panels]) {
-      const oldView: unknown = panelKind(panel.id);
-      if (oldView === "monaco" || oldView === "notepad") {
-        migrateEditor = true;
-        panel.api.close();
-      } else if (typeof oldView === "string" && legacyRepositoryViews.has(oldView)) {
-        migrateCanvas = true;
-        panel.api.close();
-      } else if (oldView === "activity" || oldView === "workspace") {
-        panel.api.close();
-      }
-    }
-    for (const view of ["canvas", "editor"] as const) {
-      if (
-        (view === "canvas" ? migrateCanvas : migrateEditor) &&
-        !api.panels.some((panel) => panelKind(panel.id) === view)
-      ) {
-        api.addPanel({
-          id: `migrated:${view}:${++sequence}`,
-          component: "page",
-          tabComponent: "canvas",
-          title: title(view),
-          params: { view },
-        });
-      }
-    }
-    for (const listener of disposables.current) listener.dispose();
-    disposables.current = [
-      api.onDidActivePanelChange(({ panel, origin }) => {
-        if (origin !== "user") return;
-        if (!panel && api.panels.length === 0) latest.current.onNavigate("/");
-        const view: unknown = panel ? panelKind(panel.id) : undefined;
-        if (
-          typeof view === "string" &&
-          isCanvasView(view) &&
-          viewFromRoute(latest.current.route) !== view
-        )
-          latest.current.onNavigate(`/${view}`);
-      }),
-      api.onDidLayoutChange(() => {
-        void save(api).catch(() => {});
-        if (api.panels.length === 0 && latest.current.route !== "/") latest.current.onNavigate("/");
-      }),
-    ];
-    // Route initialization is owned by the route effect after Dockview is ready.
-    // Never instantiate another panel here: this callback may run during layout updates.
+          api.fromJSON(restored as unknown as Parameters<DockviewApi["fromJSON"]>[0]);
+        // Normalize older saved panels while retaining active editor, notes, library and split groups.
+        const legacyRepositoryViews = new Set([
+          "overview",
+          "projects",
+          "agents",
+          "graph",
+          "roadmap",
+          "artifacts",
+          "context",
+        ]);
+        let migrateCanvas = false;
+        let migrateEditor = false;
+        for (const panel of [...api.panels]) {
+          const oldView: unknown = panelKind(panel.id);
+          if (oldView === "monaco" || oldView === "notepad") {
+            migrateEditor = true;
+            panel.api.close();
+          } else if (typeof oldView === "string" && legacyRepositoryViews.has(oldView)) {
+            migrateCanvas = true;
+            panel.api.close();
+          } else if (oldView === "activity" || oldView === "workspace") {
+            panel.api.close();
+          }
+        }
+        for (const view of ["canvas", "editor"] as const) {
+          if (
+            (view === "canvas" ? migrateCanvas : migrateEditor) &&
+            !api.panels.some((panel) => panelKind(panel.id) === view)
+          ) {
+            api.addPanel({
+              id: `migrated:${view}:${++sequence}`,
+              component: "page",
+              tabComponent: "canvas",
+              title: title(view),
+              params: { view },
+            });
+          }
+        }
+        for (const listener of disposables.current) listener.dispose();
+        disposables.current = [
+          api.onDidActivePanelChange(({ panel, origin }) => {
+            if (origin !== "user") return;
+            if (!panel && api.panels.length === 0) latest.current.onNavigate("/");
+            const view: unknown = panel ? panelKind(panel.id) : undefined;
+            if (
+              typeof view === "string" &&
+              isCanvasView(view) &&
+              viewFromRoute(latest.current.route) !== view
+            )
+              latest.current.onNavigate(`/${view}`);
+          }),
+          api.onDidLayoutChange(() => {
+            void save(api).catch(() => {});
+            if (api.panels.length === 0 && latest.current.route !== "/") latest.current.onNavigate("/");
+          }),
+        ];
+        // Route initialization is owned by the route effect after Dockview is ready.
+        // Never instantiate another panel here: this callback may run during layout updates.
         hydratedLayout.current = true;
         await save(api);
         if (apiRef.current === api) setReady(true);
