@@ -69,11 +69,9 @@ export const useProfiles = create<State>()(
           const profiles = state.profiles.filter((p) => p.id !== id);
           return { profiles, currentId: state.currentId === id ? profiles[0].id : state.currentId };
         });
-        try {
-          localStorage.removeItem(`canvas-dockview-layout-v2-${id}`);
-        } catch {
-          /* Browsers may deny storage access. */
-        }
+        // Historical v2 layout bytes are migration evidence, not disposable
+        // cache. CAN-C01 retains them unchanged after the verified IDB cutover;
+        // deleting a profile cannot destroy its original recovery material.
       },
       setRoute: (route) =>
         set((state) => ({
