@@ -8,6 +8,7 @@ import { Router } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import "./i18n";
 import App from "./App";
+import ProfilePersistenceGate from "./ProfilePersistenceGate";
 import { RuntimeRepositoryGate, RuntimeRepositoryProvider } from "./runtime-repository";
 import "./styles.css";
 import "@xyflow/react/dist/style.css";
@@ -50,9 +51,11 @@ function AppProviders() {
     >
       <RuntimeRepositoryProvider>
         <RuntimeRepositoryGate>
-          <Router hook={useHashLocation}>
-            <App />
-          </Router>
+          <ProfilePersistenceGate>
+            <Router hook={useHashLocation}>
+              <App />
+            </Router>
+          </ProfilePersistenceGate>
         </RuntimeRepositoryGate>
       </RuntimeRepositoryProvider>
     </HotkeysProvider>
