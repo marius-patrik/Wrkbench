@@ -330,8 +330,8 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "e8eaa94f5988b7fce3b2d571d441393d8fbb8d8e",
-      "appSubtreeSHA": "bc2aa4e3989a2fa729407a5c36c46ff76efd3c77",
+      "snapshotTreeSHA": "e23e8338455c93be79b28055324d1908cadcbf4f",
+      "appSubtreeSHA": "e95245c9158cbf67805dac7c41a5458f758e3190",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
         "Canvas PR #41 complete standalone app, original persistence source, and app-specific browser/persistence tests preserved; no active runtime import"
@@ -343,7 +343,8 @@
         "W03: injected read-only runtime selected-repository provider with immutable identity/revision validation, async stale-load abort, controlled repository UI selection and bounded document/graph/search consumer rewiring. Standalone generated source remains fallback only when no adapter is supplied.",
         "W05: SidebarResize persists authoritative pointerup coordinates to avoid coalesced pointermove causing lost resizing; independent real browser smoke retest pending.",
         "W06: captured pointer on Canvas sidebar separator while Dockview flex panes move, extended 4px visual divider to 14px invisible hit area; Chromium smoke now fails with event tracing instead of opaque 9s drag timeout. Exact-head browser smoke pending.",
-        "Phase D CAN-03: active Dockview layout cutover from canvas-dockview-layout-v2-* localStorage to canonical C01 IndexedDB WorkspaceRecord (deterministic UUID, revision CAS, crash-consistent immutable raw v2 backup+import marker, fail-closed on invalid/blocked migration, visible quota abort). Profile/config/editor draft writers remain legacy and must be independently migrated. New live Chromium acceptance job pending."
+        "Phase D CAN-03: active Dockview layout cutover from canvas-dockview-layout-v2-* localStorage to canonical C01 IndexedDB WorkspaceRecord (deterministic UUID, revision CAS, crash-consistent immutable raw v2 backup+import marker, fail-closed on invalid/blocked migration, visible quota abort). Profile/config/editor draft writers remain legacy and must be independently migrated. New live Chromium acceptance job pending.",
+        "CAN-02 source: replaced standalone Zustand profiles localStorage persist writer with C01 IndexedDB immutable-profile directory authority, migration/backups of the exact old Zustand v1 state including notes and scratch drafts, and React hydration/unacknowledged-save guard with actual retry. Real browser gate added; pending exact-head check."
       ],
       "knownUnresolved": [
         "Standalone Canvas generator still publishes curated build-time repository documents, not a live runtime selected-repository adapter.",
@@ -407,8 +408,8 @@
         "note": "Canvas Chromium UI smoke and injected provider browser harness passed; C01 persistence adapter remains intentionally inactive and the unified root integration unverified."
       },
       "phaseDLayout": {
-        "sourceTreeSHA": "e8eaa94f5988b7fce3b2d571d441393d8fbb8d8e",
-        "appSubtreeSHA": "bc2aa4e3989a2fa729407a5c36c46ff76efd3c77",
+        "sourceTreeSHA": "e23e8338455c93be79b28055324d1908cadcbf4f",
+        "appSubtreeSHA": "e95245c9158cbf67805dac7c41a5458f758e3190",
         "scope": "Dockview layouts only; profile directory, preferences, drafts not yet migrated",
         "status": "CHROMIUM_CAN03_LAYOUT_AND_MULTI_WINDOW_CONFLICT_ACCEPTANCE_PENDING",
         "canonicalAdapter": "migrate/canvas/.github/app/src/persistence/live-layouts.ts",
@@ -429,6 +430,19 @@
           "require": "real compiled UI single-writer layout, reload, raw v2 backup, malformed preservation, quota fail alert, two-window stale CAS",
           "lastKnownResult": "At source run 42460578036 legacy/reload/abort cases passed before test harness failed to create second tab under Playwright browser.newPage() owned context; shared BrowserContext test harness fixed. Pending exact-head rerun."
         }
+      },
+      "phaseDProfiles": {
+        "status": "IMPLEMENTED_PENDING_EXACT_HEAD_CAN02_CHROMIUM_ACCEPTANCE",
+        "sourceTreeSHA": "e23e8338455c93be79b28055324d1908cadcbf4f",
+        "appSubtreeSHA": "e95245c9158cbf67805dac7c41a5458f758e3190",
+        "scope": "single writer profile catalog, notes, scratch editor drafts, selected document and pinned routes",
+        "source": "migrate/canvas/.github/app/src/persistence/live-profiles.ts",
+        "uiGate": "migrate/canvas/.github/app/src/ProfilePersistenceGate.tsx",
+        "browserTest": "migrate/canvas/.github/tests/live-profiles-browser.mjs",
+        "id": "SHA-256 namespaced deterministic UUID",
+        "legacyPolicy": "Zustand canvas-profiles-v1 original localStorage raw bytes backed up exactly once with C01 migration lease and atomic import marker; old writer removed",
+        "concurrency": "C01 profile workspace CAS; save chain serial, latest unacknowledged in-memory state retained and guarded on unload",
+        "exclusions": "Canvas config preferences and hotkeys retain their own legacy writers; no root or unified product cutover"
       }
     }
   },
