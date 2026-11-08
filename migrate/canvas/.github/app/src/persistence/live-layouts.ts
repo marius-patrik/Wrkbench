@@ -156,7 +156,17 @@ class LiveCanvasLayouts {
    */
   save(profileId: string, layout: unknown): Promise<void> {
     profileName(profileId);
-    const snapshot = demand(asJsonObject(layout), "Invalid Dockview layout");
+    // Dockview.toJSON() is a JS object, not a JSON value: optional params
+    // include undefined fields. Serialize with the SAME standard JSON semantics
+    // as the previous storage writer, then validate the resulting plain
+    // object before committing. Do not persist or acknowledge unparsed data.
+    let serialized: unknown;
+    try {
+      serialized = JSON.parse(JSON.stringify(layout));
+    } catch {
+      throw new Error("Dockview layout cannot be serialized losslessly as JSON.");
+    }
+    const snapshot = demand(asJsonObject(serialized), "Invalid Dockview layout");
     const previous = this.writeQueue.get(profileId) ?? Promise.resolve();
     const attempt = previous
       .catch(() => {})
