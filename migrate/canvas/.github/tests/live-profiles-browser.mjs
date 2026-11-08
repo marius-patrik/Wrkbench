@@ -58,7 +58,10 @@ async function createProfile(page, name) {
 
 try {
   // The actual React UI must use a single IDB writer for profile creation.
-  const ui = await browser.newPage({ viewport: { width: 1350, height: 850 } });
+  // Playwright's browser.newPage() creates a page-owned context which cannot
+  // open a second tab; a shared explicit context is required for true CAS.
+  const shared = await browser.newContext({ viewport: { width: 1350, height: 850 } });
+  const ui = await shared.newPage();
   ui.setDefaultTimeout(12_000);
   await ui.goto(url, { waitUntil: "load" });
   await ui.getByTestId("profile-select").waitFor();
