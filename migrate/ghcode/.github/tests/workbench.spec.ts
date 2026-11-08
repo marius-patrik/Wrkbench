@@ -529,7 +529,7 @@ test("GHC-00 pending private edits block repository switch until a committed sav
   await seedAuthenticatedSession(page);
   await openPrivateRepository(page);
   await tab(page, "primary", "Explorer").click();
-  await surface(page, "primary").getByTitle("README.md").click();
+  await surface(page, "primary").locator(".explorer-entry-main[title=\"README.md\"]").click();
   await expect(tab(page, "main", "README.md")).toBeVisible();
 
   await page.evaluate(() => {
@@ -568,7 +568,7 @@ test("GHC-00 pending private edits block repository switch until a committed sav
   // Each verified repository session has its own Dockview layout, so
   // opening the public README must NOT retain the old private tab or title.
   await tab(page, "primary", "Explorer").click();
-  await surface(page, "primary").getByTitle("README.md").click();
+  await surface(page, "primary").locator(".explorer-entry-main[title=\"README.md\"]").click();
   await expect(surface(page, "main").locator(".dv-tab").filter({ hasText: "README.md" }))
     .toHaveCount(1);
 
@@ -581,7 +581,7 @@ test("GHC-00 pending private edits block repository switch until a committed sav
   await expect(page.getByTitle("Sign out")).toBeVisible();
   await openPrivateRepository(page);
   await tab(page, "primary", "Explorer").click();
-  await surface(page, "primary").getByTitle("README.md").click();
+  await surface(page, "primary").locator(".explorer-entry-main[title=\"README.md\"]").click();
   await expect(tab(page, "main", "README.md")).toBeVisible();
   await expect(surface(page, "main").locator(".monaco-editor .view-line")
     .filter({ hasText: "SWITCH_PRIVATE_SENTINEL" })).toBeVisible();
