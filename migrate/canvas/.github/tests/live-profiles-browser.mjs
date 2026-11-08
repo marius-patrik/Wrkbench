@@ -168,8 +168,27 @@ try {
   assert(await ui.getByRole("alert").filter({ hasText: "Profile or scratch changes were not saved" }).count() === 0,
     "Successful retry must clear its actual durable-save warning");
 
+  // Two real same-origin windows must not overwrite one another's profile
+  // directory through the optimistic Zustand in-memory projection.
+  const staleWindow = await ui.context().newPage();
+  staleWindow.setDefaultTimeout(12_000);
+  await staleWindow.goto(url, { waitUntil: "load" });
+  await staleWindow.getByTestId("profile-select").waitFor();
+  await createProfile(ui, "Canonical Writer A");
+  const fromA = await canonical(ui, (row) =>
+    row.data.directory.profiles.some((p) => p.name === "Canonical Writer A"));
+  await createProfile(staleWindow, "Stale Writer B");
+  await staleWindow.getByRole("alert")
+    .filter({ hasText: "Profile or scratch changes were not saved" }).waitFor();
+  const rejected = await inspect(ui);
+  assert(rejected.directories[0].revision === fromA.directories[0].revision,
+    "Stale second window must not advance canonical directory revision");
+  assert(!rejected.directories[0].data.directory.profiles.some((p) => p.name === "Stale Writer B"),
+    "Stale second window must never overwrite another window's acknowledged profile bytes");
+  await staleWindow.close();
+
   await ui.close();
-  console.log("CAN-02 live profiles: canonical create/reload, lossless notes+draft import, malformed quarantine, quota retry PASS");
+  console.log("CAN-02 live profiles: canonical create/reload, lossless notes+draft import, malformed quarantine, quota retry, stale-tab CAS PASS");
 } finally {
   clearTimeout(watchdog);
   await browser.close();
