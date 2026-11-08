@@ -330,7 +330,7 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "a3b5e5aa334df9827ff4e770d34b7c38602e076d",
+      "snapshotTreeSHA": "a81685d6608f014dce6123d3bf89a6ba330e0610",
       "appSubtreeSHA": "50fffa919b203995d663bb7fae5ffae91df0f91f",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
@@ -408,7 +408,7 @@
         "note": "Canvas Chromium UI smoke and injected provider browser harness passed; C01 persistence adapter remains intentionally inactive and the unified root integration unverified."
       },
       "phaseDLayout": {
-        "sourceTreeSHA": "a3b5e5aa334df9827ff4e770d34b7c38602e076d",
+        "sourceTreeSHA": "a81685d6608f014dce6123d3bf89a6ba330e0610",
         "appSubtreeSHA": "50fffa919b203995d663bb7fae5ffae91df0f91f",
         "scope": "Dockview layouts only; profile directory, preferences, drafts not yet migrated",
         "status": "CHROMIUM_CAN03_LAYOUT_AND_MULTI_WINDOW_CONFLICT_ACCEPTANCE_PENDING",
@@ -432,8 +432,8 @@
         }
       },
       "phaseDProfiles": {
-        "status": "CAN02_UI_WRITER_MIGRATION_AND_MULTITAB_CAS_PENDING_EXACT_HEAD_ACCEPTANCE",
-        "sourceTreeSHA": "a3b5e5aa334df9827ff4e770d34b7c38602e076d",
+        "status": "IMPLEMENTED_PENDING_FINAL_EXACT_HEAD_MULTITAB_CHROMIUM",
+        "sourceTreeSHA": "a81685d6608f014dce6123d3bf89a6ba330e0610",
         "appSubtreeSHA": "50fffa919b203995d663bb7fae5ffae91df0f91f",
         "scope": "single writer profile catalog, notes, scratch editor drafts, selected document and pinned routes",
         "source": "migrate/canvas/.github/app/src/persistence/live-profiles.ts",
