@@ -943,15 +943,25 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         // leave no half-cloned destination workspace in IndexedDB.
         await forkOwnedWorkspaceState(workspace, nextWorkspace);
         assertCurrent(lease);
-
+        // Read the committed fork before exposing its workspace ID to React.
+        // Otherwise new editor tabs can mount with old overlays/staging.
+        const [nextOverlays, nextStaged, nextCommitted, nextCommits, nextRefs] =
+          await Promise.all([
+            loadOverlays(nextId),
+            loadStaged(nextId),
+            loadCommittedFiles(nextId),
+            loadLocalCommits(nextId),
+            listGithubRefs(workspace.repository.fullName, token),
+          ]);
         assertCurrent(lease);
+        setOverlays(nextOverlays);
+        setStaged(nextStaged);
+        setCommittedFiles(nextCommitted);
+        setCommits(nextCommits);
         setWorkspace(nextWorkspace);
         setRemoteHeadSha(workspace.baseSha);
         setRecent(rememberWorkspace(nextWorkspace));
-        const nextRefs = await listGithubRefs(workspace.repository.fullName, token);
-        assertCurrent(lease);
         setRefs(nextRefs);
-        await loadLocalState(nextId, lease);
       } finally {
         setLoading(false);
       }
