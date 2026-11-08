@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { liveProfileDirectory, type ProfileDirectory } from "./persistence/live-profiles";
 import { useProfiles } from "./profiles";
 
-const message = (cause: unknown) => cause instanceof Error ? cause.message : String(cause);
+const message = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause));
 
 /**
  * The single canonical authority for Canvas profiles, notes and scratch
@@ -56,7 +56,8 @@ export default function ProfilePersistenceGate({ children }: { children: ReactNo
     let detach = () => {};
     setReady(false);
     setLoadError(null);
-    void liveProfileDirectory.load()
+    void liveProfileDirectory
+      .load()
       .then((directory) => {
         if (disposed) return;
         if (directory)
@@ -91,11 +92,18 @@ export default function ProfilePersistenceGate({ children }: { children: ReactNo
   if (!ready) {
     return (
       <div className="profiles-storage-gate" role={loadError ? "alert" : "status"}>
-        <strong>{loadError ? "Saved profiles could not be recovered" : "Loading saved workspace profiles…"}</strong>
+        <strong>
+          {loadError
+            ? "Saved profiles could not be recovered"
+            : "Loading saved workspace profiles…"}
+        </strong>
         {loadError && (
           <>
             <p>{loadError}</p>
-            <p>Original local data is preserved. The workspace will not load defaults over an unverified profile directory.</p>
+            <p>
+              Original local data is preserved. The workspace will not load defaults over an
+              unverified profile directory.
+            </p>
             <button type="button" onClick={() => setRetryEpoch((value) => value + 1)}>
               Retry recovery
             </button>
