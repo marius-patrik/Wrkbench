@@ -387,7 +387,9 @@ export default function DockCanvas({
     if (!api) return;
     api.clear();
     latest.current.onNavigate("/");
-    void save(api).then(() => notify.success(i18n.t("Layout reset"))).catch(() => {});
+    void save(api)
+      .then(() => notify.success(i18n.t("Layout reset")))
+      .catch(() => {});
 
   }, [save]);
   const shell = useMemo(
@@ -475,8 +477,7 @@ export default function DockCanvas({
       try {
         const restored = await liveCanvasLayouts.load(profileId);
         if (apiRef.current !== api) return; // switched profiles during IDB read
-        if (restored)
-          api.fromJSON(restored as unknown as Parameters<DockviewApi["fromJSON"]>[0]);
+        if (restored) api.fromJSON(restored as unknown as Parameters<DockviewApi["fromJSON"]>[0]);
         // Normalize older saved panels while retaining active editor, notes, library and split groups.
         const legacyRepositoryViews = new Set([
           "overview",
@@ -530,7 +531,8 @@ export default function DockCanvas({
           }),
           api.onDidLayoutChange(() => {
             void save(api).catch(() => {});
-            if (api.panels.length === 0 && latest.current.route !== "/") latest.current.onNavigate("/");
+            if (api.panels.length === 0 && latest.current.route !== "/")
+              latest.current.onNavigate("/");
           }),
         ];
         // Route initialization is owned by the route effect after Dockview is ready.
