@@ -330,8 +330,8 @@
       "originalBranch": "development",
       "originalSHA": "5f462ea6e73c570e483149d6846dcc9190c09d51",
       "reconciliationSourceSHA": "bf17d45c8068a3bda8de5d4786a829bb4c511a86",
-      "snapshotTreeSHA": "e23e8338455c93be79b28055324d1908cadcbf4f",
-      "appSubtreeSHA": "e95245c9158cbf67805dac7c41a5458f758e3190",
+      "snapshotTreeSHA": "dd2335914bdb867aac49d8a0cdbd4c2f1e1898e6",
+      "appSubtreeSHA": "7f023a9ede2c7e4445ae41f26769a6b033c216c0",
       "expectedOwner": "DarkFactory-web unified app UI layer",
       "acceptedChanges": [
         "Canvas PR #41 complete standalone app, original persistence source, and app-specific browser/persistence tests preserved; no active runtime import"
@@ -408,8 +408,8 @@
         "note": "Canvas Chromium UI smoke and injected provider browser harness passed; C01 persistence adapter remains intentionally inactive and the unified root integration unverified."
       },
       "phaseDLayout": {
-        "sourceTreeSHA": "e23e8338455c93be79b28055324d1908cadcbf4f",
-        "appSubtreeSHA": "e95245c9158cbf67805dac7c41a5458f758e3190",
+        "sourceTreeSHA": "dd2335914bdb867aac49d8a0cdbd4c2f1e1898e6",
+        "appSubtreeSHA": "7f023a9ede2c7e4445ae41f26769a6b033c216c0",
         "scope": "Dockview layouts only; profile directory, preferences, drafts not yet migrated",
         "status": "CHROMIUM_CAN03_LAYOUT_AND_MULTI_WINDOW_CONFLICT_ACCEPTANCE_PENDING",
         "canonicalAdapter": "migrate/canvas/.github/app/src/persistence/live-layouts.ts",
@@ -432,9 +432,9 @@
         }
       },
       "phaseDProfiles": {
-        "status": "IMPLEMENTED_PENDING_EXACT_HEAD_CAN02_CHROMIUM_ACCEPTANCE",
-        "sourceTreeSHA": "e23e8338455c93be79b28055324d1908cadcbf4f",
-        "appSubtreeSHA": "e95245c9158cbf67805dac7c41a5458f758e3190",
+        "status": "SOURCE_CODE_AND_FORMAT_RECHECK_PENDING_CAN02_CHROMIUM",
+        "sourceTreeSHA": "dd2335914bdb867aac49d8a0cdbd4c2f1e1898e6",
+        "appSubtreeSHA": "7f023a9ede2c7e4445ae41f26769a6b033c216c0",
         "scope": "single writer profile catalog, notes, scratch editor drafts, selected document and pinned routes",
         "source": "migrate/canvas/.github/app/src/persistence/live-profiles.ts",
         "uiGate": "migrate/canvas/.github/app/src/ProfilePersistenceGate.tsx",
