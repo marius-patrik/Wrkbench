@@ -80,7 +80,7 @@ test('global navigation/details sidebars and label preferences survive reload',a
 
 test('printable typing from a non-editable surface goes into the omnibar',async({page})=>{
  const exceptions=await boot(page);
- await page.locator('.workspace-toolbar').click({position:{x:12,y:20}});
+ await page.locator('.workspace-toolbar').evaluate(element=>{(element as HTMLElement).tabIndex=0;(element as HTMLElement).focus()});
  await page.keyboard.type('canvas');
  await expect(page.getByRole('combobox',{name:'Omnibar'})).toHaveValue('canvas');
  await expect(page.getByRole('combobox',{name:'Omnibar'})).toBeFocused();
