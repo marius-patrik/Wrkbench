@@ -24,3 +24,61 @@
 
 /* The real Radix popover portal is used for toolbar tooltips. */
 .wrk-tooltip{z-index:100000;max-width:320px;padding:6px 9px;border-radius:8px;background:#2a2a2a;color:#f1f1f1;font:11px system-ui,sans-serif;box-shadow:0 8px 24px #0008;border:1px solid #555}.wrk-tooltip-arrow{fill:#2a2a2a}
+
+/* Shared shell regions are global navigation/details, never Dockview tab groups. */
+.app-center{padding-top:9px}
+.workspace{border-radius:16px}
+.workspace-toolbar{height:42px;min-height:42px}
+.workspace-interior{padding:0 8px 8px}
+.shell-workspace-grid{position:relative;display:flex;align-items:stretch;gap:8px;min-height:0;height:100%}
+.shell-editor-stage{flex:1;min-width:0;min-height:0}
+.shell-sidebar{width:216px;flex:0 0 216px;min-width:0;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.shell-sidebar .sidebar-heading{height:41px;min-height:41px;padding:0 13px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);color:var(--text)}
+.shell-sidebar .sidebar-heading strong{font-size:12px;font-weight:650}
+.sidebar-caption{font-size:9px;font-weight:650;letter-spacing:.65px;color:var(--faint);padding:15px 13px 7px}
+.sidebar-entries{min-height:0;flex:1;overflow-y:auto;padding:0 6px 10px}
+.sidebar-entry{width:100%;display:flex;align-items:center;gap:9px;min-width:0;padding:9px 10px!important;text-align:left!important;border-radius:7px!important;color:var(--muted)!important}
+.sidebar-entry span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar-entry:hover{background:var(--hover)!important;color:var(--text)!important}
+.sidebar-entry.selected{background:var(--active)!important;color:var(--text)!important}
+.sidebar-empty{color:var(--faint);line-height:1.6;font-size:11px;padding:8px 13px}
+.sidebar-details{overflow-y:auto;min-height:0;padding-bottom:20px}
+.sidebar-details .details-title{display:block;padding:0 13px 13px;font-size:12px;overflow-wrap:anywhere}
+.sidebar-details dl{display:grid;grid-template-columns:1fr;gap:4px;margin:0 13px}
+.sidebar-details dt{color:var(--faint);font-size:10px;margin-top:12px}
+.sidebar-details dd{color:var(--text);font-size:12px;margin:0;overflow-wrap:anywhere;line-height:1.4}
+.sidebar-details .details-path{font-family:ui-monospace,monospace;font-size:11px}
+.sidebar-detail-action{height:32px;display:flex;align-items:center;gap:8px;border:1px solid var(--border)!important;border-radius:8px!important;margin:16px 13px;padding:0 12px!important;background:var(--surface)!important}
+.sidebar-detail-action:hover{background:var(--hover)!important}
+.statusbar{padding:0 11px;height:40px;min-height:40px;gap:8px;z-index:60}
+.status-left{flex:1;min-width:0;gap:2px}
+.status-right{flex:0 0 auto;gap:2px}
+.status-left>.status-wrap{flex:0 0 auto;min-width:0}
+.statusbar .status-button{height:29px;padding:0 7px!important;gap:5px;border-radius:7px!important}
+.statusbar .status-button .selector-label{max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.statusbar .status-left>svg{color:var(--faint);flex:none}
+.statusbar .status-button.selected{background:var(--active)!important;color:var(--text)!important}
+.statusbar .shell-side-toggle{width:29px;justify-content:center;padding:0!important}
+.workbench-status-menu{left:0;bottom:34px;max-height:min(580px,75vh);overflow-y:auto;min-width:290px}
+.shell-settings-menu{right:0;bottom:34px;width:275px}
+.shell-setting-row{display:flex;flex-direction:column;gap:7px;font-size:11px;color:var(--muted);padding:10px 11px}
+.shell-setting-row select{height:32px;width:100%;background:var(--field);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:0 8px;cursor:pointer}
+.omnibar{height:29px;min-width:125px;max-width:760px;flex:1;display:flex;align-items:center;gap:8px;position:relative;border:1px solid var(--border);border-radius:8px;padding:0 8px;color:var(--faint);background:var(--raised)}
+.omnibar:focus-within{border-color:var(--muted)}
+.omnibar>svg{flex:none}
+.omnibar input{width:100%;flex:1;min-width:0;border:0;outline:0;background:none;color:var(--text);font-size:11px;padding:0}
+.omnibar input::placeholder{color:var(--faint)}
+.omnibar kbd{flex:none;padding:2px 5px;background:var(--surface);border-color:var(--line);font-size:9px}
+.omnibar-options{position:absolute;bottom:calc(100% + 8px);left:-1px;width:max(100%,min(520px,75vw));max-height:min(390px,60vh);overflow:auto;z-index:700;border:1px solid var(--border);border-radius:11px;background:var(--raised2);padding:6px;box-shadow:var(--shadow)}
+.omnibar-option{display:flex;width:100%;align-items:center;gap:10px;padding:10px!important;border-radius:7px!important;text-align:left!important;color:var(--muted)!important}
+.omnibar-option:hover,.omnibar-option.selected{background:var(--hover)!important;color:var(--text)!important}
+.omnibar-option span{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
+.omnibar-option strong{font-weight:600;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.omnibar-option small{font-size:10px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.omnibar-option em{font-style:normal;color:var(--faint);font-size:9px}
+.popover,.wrk-tooltip{background:var(--raised2);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow)}
+.wrk-tooltip{padding:7px 10px;font:11px 'DM Sans',Inter,system-ui,sans-serif}
+.wrk-tooltip-arrow{fill:var(--raised2)}
+@media(max-width:990px){.shell-sidebar{width:170px;flex-basis:170px}.statusbar .status-button .selector-label{max-width:130px}}
+@media(max-width:720px){.shell-sidebar{position:absolute;z-index:45;top:0;bottom:0;width:min(220px,70vw);flex-basis:auto;box-shadow:var(--shadow)}.secondary-sidebar{right:0}.primary-sidebar{left:0}.statusbar .status-button .selector-label{max-width:85px}.omnibar{min-width:85px}.omnibar>svg{display:none}.statusbar .status-left>svg{width:9px}.omnibar kbd{display:none}}
+@media(max-width:510px){.statusbar{padding:0 4px;gap:3px}.status-left{gap:0}.statusbar .status-button{padding:0 4px!important}.status-right .shell-side-toggle{width:24px}.statusbar .status-button .selector-label{max-width:70px}.omnibar input{font-size:10px}.workspace-toolbar{min-height:39px;height:39px}}

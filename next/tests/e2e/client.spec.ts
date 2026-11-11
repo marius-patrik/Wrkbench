@@ -34,11 +34,15 @@ test('switches workbenches without discarding individual layouts',async({page})=
  expect(exceptions).toEqual([]);
 });
 
-test('command palette, contextual status menus and appearance',async({page})=>{
+test('status omnibar, contextual menus and appearance settings',async({page})=>{
  const exceptions=await boot(page);
- await page.getByTitle('Open tool palette (⌘/Ctrl+K)').click();
- await expect(page.getByRole('dialog')).toBeVisible();
+ await page.keyboard.press('ControlOrMeta+k');
+ await expect(page.getByRole('combobox',{name:'Omnibar'})).toBeFocused();
+ await expect(page.getByRole('listbox',{name:'Available views and commands'})).toBeVisible();
+ await page.getByRole('combobox',{name:'Omnibar'}).fill('notes');
+ await expect(page.getByRole('option',{name:/Notes/}).first()).toBeVisible();
  await page.keyboard.press('Escape');
+ await expect(page.getByRole('listbox',{name:'Available views and commands'})).toHaveCount(0);
  await page.getByTitle('Open context switcher').click();
  await expect(page.getByRole('menu')).toBeVisible();
  await page.keyboard.press('Escape');
@@ -46,10 +50,40 @@ test('command palette, contextual status menus and appearance',async({page})=>{
  await expect(page.getByRole('menu')).toBeVisible();
  await page.keyboard.press('Escape');
  const before=await page.locator('.app').getAttribute('class');
+ await page.getByRole('button',{name:'Settings'}).click();
  await page.getByTitle(/Switch to (light|dark) mode/).click();
  expect(await page.locator('.app').getAttribute('class')).not.toBe(before);
  await page.reload();
  await expect(page.locator('.app')).not.toHaveAttribute('class',before??'');
+ expect(exceptions).toEqual([]);
+});
+
+test('global navigation/details sidebars and label preferences survive reload',async({page})=>{
+ const exceptions=await boot(page);
+ await expect(page.getByRole('complementary',{name:'Primary navigation'})).toBeVisible();
+ await expect(page.getByRole('complementary',{name:'Details'})).toHaveCount(0);
+ await page.keyboard.press('ControlOrMeta+b');
+ await expect(page.getByRole('complementary',{name:'Primary navigation'})).toHaveCount(0);
+ await page.keyboard.press('Alt+ControlOrMeta+b');
+ await expect(page.getByRole('complementary',{name:'Details'})).toBeVisible();
+ await page.getByRole('button',{name:'Settings'}).click();
+ await page.getByRole('combobox',{name:'Workspace label mode'}).selectOption('both');
+ await page.getByRole('combobox',{name:'Context label mode'}).selectOption('icon');
+ await expect(page.getByRole('button',{name:'Select workspace'}).locator('svg')).toHaveCount(1);
+ await page.reload();
+ await expect(page.getByRole('complementary',{name:'Primary navigation'})).toHaveCount(0);
+ await expect(page.getByRole('complementary',{name:'Details'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Select workspace'}).locator('svg')).toHaveCount(1);
+ await expect(page.getByRole('button',{name:'Execution context'}).locator('.selector-label')).toHaveCount(0);
+ expect(exceptions).toEqual([]);
+});
+
+test('printable typing from a non-editable surface goes into the omnibar',async({page})=>{
+ const exceptions=await boot(page);
+ await page.locator('.workspace-toolbar').evaluate(element=>{(element as HTMLElement).tabIndex=0;(element as HTMLElement).focus()});
+ await page.keyboard.type('canvas');
+ await expect(page.getByRole('combobox',{name:'Omnibar'})).toHaveValue('canvas');
+ await expect(page.getByRole('combobox',{name:'Omnibar'})).toBeFocused();
  expect(exceptions).toEqual([]);
 });
 
